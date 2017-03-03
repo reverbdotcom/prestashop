@@ -1,0 +1,16 @@
+web:
+  container_name: reverb
+  build: .
+  ports:
+    - "8082:80"
+  links:
+    - smtp
+  env_file:
+    - ./conf/env
+  volumes:
+    - ./src/reverb:/var/www/html/modules/reverb
+smtp:
+  image: schickling/mailcatcher
+  container_name: smtp-reverb
+  ports:
+    - "1082:1080"
