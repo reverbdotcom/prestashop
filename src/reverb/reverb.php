@@ -31,6 +31,7 @@ if (!defined('_PS_VERSION_')) {
 class Reverb extends Module
 {
     protected $config_form = false;
+    public $configReverb;
 
     public function __construct()
     {
@@ -51,6 +52,8 @@ class Reverb extends Module
         $this->description = $this->l('Sync your inventory to and from Reverb, and streamline shipping.');
 
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+
+        $this->configReverb = $this->getConfigReverb();
     }
 
     /**
@@ -60,18 +63,55 @@ class Reverb extends Module
     public function install()
     {
         Configuration::updateValue('REVERB_LIVE_MODE', false);
+        Configuration::updateValue('REVERB_CONFIG', '');
+
+        $sql = array();
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
+            `id_sync` int(11) NOT NULL AUTO_INCREMENT,
+            `id_product` int(11) NOT NULL,
+            `reverb_ref` varchar(32) NOT NULL,
+            `status` varchar(32) NOT NULL,
+            `details` text,
+            `date` datetime,
+            PRIMARY KEY  (`id_sync`)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_mapping` (
+            `id_mapping` int(11) NOT NULL AUTO_INCREMENT,
+            `id_category` int(11) NOT NULL,
+            `reverb_code` varchar(32) NOT NULL,
+            PRIMARY KEY  (`id_mapping`)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
+        foreach ($sql as $query) {
+            if (Db::getInstance()->execute($query) == false) {
+                return false;
+            }
+        }
 
         return parent::install() &&
             $this->registerHook('backOfficeHeader') &&
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
             $this->registerHook('actionObjectProductDeleteAfter') &&
-            $this->registerHook('actionObjectShopUpdateAfter');
+            $this->registerHook('actionObjectProductUpdateAfter');
     }
 
     public function uninstall()
     {
         Configuration::deleteByName('REVERB_LIVE_MODE');
+        Configuration::deleteByName('REVERB_CONFIG');
+
+        $sql = array();
+
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync`;';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_mapping`;';
+
+        foreach ($sql as $query) {
+            if (Db::getInstance()->execute($query) == false) {
+                return false;
+            }
+        }
 
         return parent::uninstall();
     }
@@ -88,7 +128,11 @@ class Reverb extends Module
             $this->postProcess();
         }
 
-        $this->context->smarty->assign('module_dir', $this->_path);
+        $this->context->smarty->assign([
+                'module_dir' => $this->_path,
+                'form_reverb' => $this->renderForm(),
+                'reverb_config' => $this->configReverb,
+            ]);
 
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
@@ -188,14 +232,49 @@ class Reverb extends Module
     }
 
     /**
+     * Functions to init the configuration HiPay
+     */
+    public function getConfigReverb()
+    {
+        // init multistore
+        $id_shop = (int)$this->context->shop->id;
+        $id_shop_group = (int)Shop::getContextShopGroupID();
+        $confReverb = Configuration::get('REVERB_CONFIG', null, $id_shop_group, $id_shop);
+
+        // if config exist but empty, init new object for confReverb
+        if (!$confReverb || empty($confReverb)) {
+            // init multistore
+            $id_shop = (int)$this->context->shop->id;
+            $id_shop_group = (int)Shop::getContextShopGroupID();
+
+            $for_json_reverb = [];
+
+            // the config is stacked in JSON
+            if (Configuration::updateValue('REVERB_CONFIG', Tools::jsonEncode($for_json_reverb), false, $id_shop_group, $id_shop)) {
+                return true;
+            } else {
+                throw new Exception($this->l('Update failed, try again.'));
+            }
+        }
+
+        // not empty in bdd and the config is stacked in JSON
+        $result = Tools::jsonDecode(Configuration::get('REVERB_CONFIG', null, $id_shop_group, $id_shop));
+        return $result;
+    }
+
+    /**
      * Save form data.
      */
     protected function postProcess()
     {
         $form_values = $this->getConfigFormValues();
 
+        // init multistore
+        $id_shop = (int)$this->context->shop->id;
+        $id_shop_group = (int)Shop::getContextShopGroupID();
+
         foreach (array_keys($form_values) as $key) {
-            Configuration::updateValue($key, Tools::getValue($key));
+            Configuration::updateValue($key, Tools::getValue($key), false, $id_shop_group, $id_shop);
         }
     }
 
