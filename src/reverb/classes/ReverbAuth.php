@@ -4,7 +4,7 @@ namespace Reverb;
 class ReverbAuth extends ReverbClient
 {
 
-    private $scope = ['read_listings', 'write_listings'];
+    private $scope = array('read_listings', 'write_listings');
 
     /**
      * @return null|string

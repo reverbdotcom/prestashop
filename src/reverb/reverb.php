@@ -139,22 +139,22 @@ class Reverb extends Module
             $reverbAuth = new \Reverb\ReverbAuth($this);
             $randomState = uniqid();
             $this->updateReverbConfiguration(self::KEY_RANDOM_STATE, $randomState);
-            $this->context->smarty->assign([
+            $this->context->smarty->assign(array(
                 self::KEY_APP_REDIRECT_URI => $reverbAuth->getRequestAccessUrl($randomState),
-            ]);
+            ));
         }
 
         if (!empty($this->configReverb[self::KEY_API_TOKEN])) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
-            $this->context->smarty->assign([
+            $this->context->smarty->assign(array(
                 'categories' => $reverbCategories->getCategories(),
-            ]);
+            ));
         }
 
-        $this->context->smarty->assign([
+        $this->context->smarty->assign(array(
             'module_dir' => $this->_path,
             'reverb_form' => $this->renderForm(),
-        ]);
+        ));
 
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
@@ -263,9 +263,9 @@ class Reverb extends Module
             $id_shop = (int)$this->context->shop->id;
             $id_shop_group = (int)Shop::getContextShopGroupID();
 
-            $for_json_reverb = [
+            $for_json_reverb = array(
                 self::KEY_SANDBOX_MODE => true,
-            ];
+            );
 
             // the config is stacked in JSON
             if (!Configuration::updateValue(self::KEY_REVERB_CONFIG, Tools::jsonEncode($for_json_reverb), false, $id_shop_group, $id_shop)) {

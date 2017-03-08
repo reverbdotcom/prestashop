@@ -10,11 +10,10 @@ class ReverbClient extends Client
     protected $context = false;
     protected $module = false;
     protected $client;
-    protected $headers = ['Accept: application/json', 'Content-Type: application/json'];
+    protected $headers = array('Accept: application/json', 'Content-Type: application/json');
 
     protected $prod_url = 'https://reverb.com';
-    //protected $sandbox_url = 'https://sandbox.reverb.com';
-    protected $sandbox_url = 'http://s621260625.onlinehome.fr';
+    protected $sandbox_url = 'https://sandbox.reverb.com';
 
     public $configReverb;
 
@@ -25,12 +24,12 @@ class ReverbClient extends Client
         $this->configReverb = $module_instance->configReverb;
 
         if (!empty($this->configReverb[\Reverb::KEY_API_TOKEN])) {
-            $this->addHeaders([
+            $this->addHeaders(array(
                 'Authorization: Bearer ' . $this->configReverb[\Reverb::KEY_API_TOKEN],
-            ]);
+            ));
         }
 
-        parent::__construct(['base_url' => $this->getBaseUrl()]);
+        parent::__construct(array('base_url' => $this->getBaseUrl()));
     }
 
     /**
@@ -69,7 +68,6 @@ class ReverbClient extends Client
             $url = $this->sandbox_url;
         }
 
-        return $url . '/';
         return $url . '/api/';
     }
 
@@ -86,7 +84,7 @@ class ReverbClient extends Client
 
             $response = $this->get(
                 $endpoint,
-                ['headers' => $this->getHeaders()]
+                array('headers' => $this->getHeaders())
             );
 
             return $this->convertResponse($response);
@@ -108,7 +106,7 @@ class ReverbClient extends Client
         try {
             $this->module->logs->requestLogs('# POST ' . $this->getBaseUrl() . $endpoint);
 
-            $request = $this->createRequest('POST', $endpoint, ['json' => $params]);
+            $request = $this->createRequest('POST', $endpoint, array('json' => $params));
 
             $this->module->logs->requestLogs('# with body ' . $request->getBody());
             $this->module->logs->requestLogs('# with header Content-Type ' . var_export($this->getHeaders(), true));
