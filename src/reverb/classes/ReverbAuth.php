@@ -11,7 +11,7 @@ class ReverbAuth extends ReverbClient
      */
     public function getAppClientId()
     {
-        return isset($this->configReverb[\Reverb::KEY_APP_CLIENT_ID]) ? $this->configReverb[\Reverb::KEY_APP_CLIENT_ID]: null;
+        return isset($this->reverbConfig[\Reverb::KEY_APP_CLIENT_ID]) ? $this->reverbConfig[\Reverb::KEY_APP_CLIENT_ID]: null;
     }
 
     /**
@@ -19,7 +19,7 @@ class ReverbAuth extends ReverbClient
      */
     public function getAppRedirectUri()
     {
-        return isset($this->configReverb[\Reverb::KEY_APP_REDIRECT_URI]) ? $this->configReverb[\Reverb::KEY_APP_REDIRECT_URI]: null;
+        return isset($this->reverbConfig[\Reverb::KEY_APP_REDIRECT_URI]) ? $this->reverbConfig[\Reverb::KEY_APP_REDIRECT_URI]: null;
     }
 
     /**

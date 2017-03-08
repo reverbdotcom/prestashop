@@ -9,8 +9,8 @@ class ReverLogs
     {
         $this->module = $module_instance;
         // init reverb config
-        $this->configReverb = $module_instance->configReverb;
-        $this->enable = (isset($this->configReverb[\Reverb::KEY_DEBUG_MODE]) ? $this->configReverb[\Reverb::KEY_DEBUG_MODE] : true);
+        $this->reverbConfig = $module_instance->reverbConfig;
+        $this->enable = (isset($this->reverbConfig[\Reverb::KEY_DEBUG_MODE]) ? $this->reverbConfig[\Reverb::KEY_DEBUG_MODE] : true);
     }
 
     /**
