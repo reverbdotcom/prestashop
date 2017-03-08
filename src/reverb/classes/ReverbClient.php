@@ -10,7 +10,7 @@ class ReverbClient extends Client
     protected $context = false;
     protected $module = false;
     protected $client;
-    protected $headers = ['Accept: application/json', 'Content-Type: application/json'];
+    protected $headers = array('Accept: application/json', 'Content-Type: application/json');
 
     protected $prod_url = 'https://reverb.com';
     protected $sandbox_url = 'https://sandbox.reverb.com';
@@ -29,7 +29,7 @@ class ReverbClient extends Client
             ]);
         }
 
-        parent::__construct(['base_url' => $this->getBaseUrl()]);
+        parent::__construct(array('base_url' => $this->getBaseUrl()));
     }
 
     /**
@@ -84,7 +84,7 @@ class ReverbClient extends Client
 
             $response = $this->get(
                 $endpoint,
-                ['headers' => $this->getHeaders()]
+                array('headers' => $this->getHeaders())
             );
 
             return $this->convertResponse($response);
@@ -106,7 +106,7 @@ class ReverbClient extends Client
         try {
             $this->module->logs->requestLogs('# POST ' . $this->getBaseUrl() . $endpoint);
 
-            $request = $this->createRequest('POST', $endpoint, ['json' => $params]);
+            $request = $this->createRequest('POST', $endpoint, array('json' => $params));
 
             $this->module->logs->requestLogs('# with body ' . $request->getBody());
             $this->module->logs->requestLogs('# with header Content-Type ' . var_export($this->getHeaders(), true));

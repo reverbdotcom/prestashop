@@ -140,23 +140,24 @@ class Reverb extends Module
             $randomState = uniqid();
             $this->reverbConfig[self::KEY_RANDOM_STATE] = $randomState;
             $this->saveReverbConfiguration();
-            $this->context->smarty->assign([
+            $this->context->smarty->assign(array(
                 self::KEY_APP_REDIRECT_URI => $reverbAuth->getRequestAccessUrl($randomState),
-            ]);
+            ));
         }
 
         if (!empty($this->reverbConfig[self::KEY_API_TOKEN])) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
-            $this->context->smarty->assign([
+            $this->context->smarty->assign(array(
                 'categories' => $reverbCategories->getCategories(),
-            ]);
+            ));
         }
 
-        $this->context->smarty->assign([
+        $this->context->smarty->assign(array(
             'module_dir' => $this->_path,
             'reverb_form' => $this->renderForm(),
             'reverb_config' => $this->getReverbConfig(),
-        ]);
+        ));
+
 
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
