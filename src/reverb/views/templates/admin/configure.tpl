@@ -39,32 +39,8 @@
 	<div class="moduleconfig-content">
 		<div class="row">
 			<div class="col-xs-12">
-				<p>
-					<h4>{l s='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor' mod='reverb'}</h4>
-					<ul class="ul-spaced">
-						<li><strong>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</strong></li>
-						<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
-						<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
-						<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
-						<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
-					</ul>
-				</p>
-
-				<br />
-
-				<p class="text-center">
-					<strong>
-						<a href="http://www.prestashop.com" target="_blank" title="Lorem ipsum dolor">
-							{l s='Lorem ipsum dolor' mod='reverb' }
-						</a>
-					</strong>
-				</p>
+                {$reverb_form}
 			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-xs-12">
-		{$form_reverb}
 		</div>
 	</div>
 </div>
