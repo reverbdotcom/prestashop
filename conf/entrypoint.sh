@@ -9,16 +9,18 @@ echo "\n Parent Entrypoint \n";
 #===================================#
 #       CUSTOMS CONFIGURATIONS
 #===================================#
-echo "\n Installation prestashop Console \n";
-cd /var/www/html/ \
+if [ ! -f /var/www/html/console/console.php ];then
+    echo "\n Installation prestashop Console \n";
+    cd /var/www/html/ \
     && git clone https://github.com/nenes25/prestashop_console.git console \
     && cd console \
     && composer install
 
 
-# Installation  Reverb's module
-echo "\n Installation Reverb's module \n";
-php console.php module:install reverb
+    # Installation  Reverb's module
+    echo "\n Installation Reverb's module \n";
+    php console.php module:install reverb
+fi
 
 #===================================#
 #       START WEBSERVER

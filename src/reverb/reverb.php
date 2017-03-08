@@ -30,8 +30,17 @@ if (!defined('_PS_VERSION_')) {
 
 class Reverb extends Module
 {
+    CONST KEY_REVERB_CONFIG = 'REVERB_CONFIG';
+    CONST KEY_SANDBOX_MODE = 'sandbox_mode';
+    CONST KEY_APP_CLIENT_ID = 'app_client_id';
+    CONST KEY_APP_REDIRECT_URI = 'app_redirect_api';
+    CONST KEY_API_TOKEN = 'api_token';
+    CONST KEY_RANDOM_STATE = 'random_state';
+    CONST KEY_DEBUG_MODE = 'debug_mode';
+
     protected $config_form = false;
     public $configReverb;
+    public $logs;
 
     public function __construct()
     {
@@ -48,6 +57,9 @@ class Reverb extends Module
 
         parent::__construct();
 
+        // init log object
+        $this->logs = new \Reverb\ReverLogs($this);
+
         $this->displayName = $this->l('Reverb');
         $this->description = $this->l('Sync your inventory to and from Reverb, and streamline shipping.');
 
@@ -62,8 +74,7 @@ class Reverb extends Module
      */
     public function install()
     {
-        Configuration::updateValue('REVERB_LIVE_MODE', false);
-        Configuration::updateValue('REVERB_CONFIG', '');
+        Configuration::updateValue(self::KEY_REVERB_CONFIG, '');
 
         $sql = array();
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
@@ -99,8 +110,7 @@ class Reverb extends Module
 
     public function uninstall()
     {
-        Configuration::deleteByName('REVERB_LIVE_MODE');
-        Configuration::deleteByName('REVERB_CONFIG');
+        Configuration::deleteByName(self::KEY_REVERB_CONFIG);
 
         $sql = array();
 
@@ -121,18 +131,30 @@ class Reverb extends Module
      */
     public function getContent()
     {
-        /**
-         * If values have been submitted in the form, process.
-         */
-        if (((bool)Tools::isSubmit('submitReverbModule')) == true) {
-            $this->postProcess();
+
+        $this->postProcess();
+
+        /* @deprecated: Build request access uri */
+        if (false && empty($this->configReverb[self::KEY_API_TOKEN])) {
+            $reverbAuth = new \Reverb\ReverbAuth($this);
+            $randomState = uniqid();
+            $this->updateReverbConfiguration(self::KEY_RANDOM_STATE, $randomState);
+            $this->context->smarty->assign([
+                self::KEY_APP_REDIRECT_URI => $reverbAuth->getRequestAccessUrl($randomState),
+            ]);
+        }
+
+        if (!empty($this->configReverb[self::KEY_API_TOKEN])) {
+            $reverbCategories = new \Reverb\ReverbCategories($this);
+            $this->context->smarty->assign([
+                'categories' => $reverbCategories->getCategories(),
+            ]);
         }
 
         $this->context->smarty->assign([
-                'module_dir' => $this->_path,
-                'form_reverb' => $this->renderForm(),
-                'reverb_config' => $this->configReverb,
-            ]);
+            'module_dir' => $this->_path,
+            'reverb_form' => $this->renderForm(),
+        ]);
 
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
@@ -153,7 +175,7 @@ class Reverb extends Module
         $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 0);
 
         $helper->identifier = $this->identifier;
-        $helper->submit_action = 'submitReverbModule';
+        $helper->submit_action = 'submitReverbModuleConfiguration';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
             .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
@@ -181,10 +203,10 @@ class Reverb extends Module
                 'input' => array(
                     array(
                         'type' => 'switch',
-                        'label' => $this->l('Live mode'),
-                        'name' => 'REVERB_LIVE_MODE',
+                        'label' => $this->l('Sandbox mode'),
+                        'name' => self::KEY_SANDBOX_MODE,
                         'is_bool' => true,
-                        'desc' => $this->l('Use this module in live mode'),
+                        'desc' => $this->l('Use this module in sandbox mode'),
                         'values' => array(
                             array(
                                 'id' => 'active_on',
@@ -201,15 +223,9 @@ class Reverb extends Module
                     array(
                         'col' => 3,
                         'type' => 'text',
-                        'prefix' => '<i class="icon icon-envelope"></i>',
-                        'desc' => $this->l('Enter a valid email address'),
-                        'name' => 'REVERB_ACCOUNT_EMAIL',
-                        'label' => $this->l('Email'),
-                    ),
-                    array(
-                        'type' => 'password',
-                        'name' => 'REVERB_ACCOUNT_PASSWORD',
-                        'label' => $this->l('Password'),
+                        'desc' => $this->l('From https://reverb.com/my/api_settings'),
+                        'name' => self::KEY_API_TOKEN,
+                        'label' => $this->l('API Token'),
                     ),
                 ),
                 'submit' => array(
@@ -225,21 +241,21 @@ class Reverb extends Module
     protected function getConfigFormValues()
     {
         return array(
-            'REVERB_LIVE_MODE' => Configuration::get('REVERB_LIVE_MODE', true),
-            'REVERB_ACCOUNT_EMAIL' => Configuration::get('REVERB_ACCOUNT_EMAIL', 'demo@reverb.com'),
-            'REVERB_ACCOUNT_PASSWORD' => Configuration::get('REVERB_ACCOUNT_PASSWORD', null),
+            self::KEY_SANDBOX_MODE => $this->getConfigReverb(self::KEY_SANDBOX_MODE),
+            self::KEY_API_TOKEN => $this->getConfigReverb(self::KEY_API_TOKEN),
         );
     }
 
     /**
-     * Functions to init the configuration HiPay
+     * Functions to init the reverb configuration
+     * or get all or specific reverb configuration
      */
-    public function getConfigReverb()
+    public function getConfigReverb($key = null)
     {
         // init multistore
         $id_shop = (int)$this->context->shop->id;
         $id_shop_group = (int)Shop::getContextShopGroupID();
-        $confReverb = Configuration::get('REVERB_CONFIG', null, $id_shop_group, $id_shop);
+        $confReverb = Configuration::get(self::KEY_REVERB_CONFIG, null, $id_shop_group, $id_shop);
 
         // if config exist but empty, init new object for confReverb
         if (!$confReverb || empty($confReverb)) {
@@ -247,19 +263,39 @@ class Reverb extends Module
             $id_shop = (int)$this->context->shop->id;
             $id_shop_group = (int)Shop::getContextShopGroupID();
 
-            $for_json_reverb = [];
+            $for_json_reverb = [
+                self::KEY_SANDBOX_MODE => true,
+            ];
 
             // the config is stacked in JSON
-            if (Configuration::updateValue('REVERB_CONFIG', Tools::jsonEncode($for_json_reverb), false, $id_shop_group, $id_shop)) {
-                return true;
-            } else {
+            if (!Configuration::updateValue(self::KEY_REVERB_CONFIG, Tools::jsonEncode($for_json_reverb), false, $id_shop_group, $id_shop)) {
                 throw new Exception($this->l('Update failed, try again.'));
             }
         }
 
         // not empty in bdd and the config is stacked in JSON
-        $result = Tools::jsonDecode(Configuration::get('REVERB_CONFIG', null, $id_shop_group, $id_shop));
+        $result = Tools::jsonDecode(Configuration::get(self::KEY_REVERB_CONFIG, null, $id_shop_group, $id_shop), true);
+
+        if ($key) {
+            return isset($result[$key]) ? $result[$key] : null;
+        }
         return $result;
+    }
+
+    protected function updateReverbConfiguration($key, $value)
+    {
+        $reverbConfig = $this->getConfigReverb();
+
+        $reverbConfig[$key] = $value;
+
+        // init multistore
+        $id_shop = (int)$this->context->shop->id;
+        $id_shop_group = (int)Shop::getContextShopGroupID();
+
+        if (!Configuration::updateValue(self::KEY_REVERB_CONFIG, Tools::jsonEncode($reverbConfig), false, $id_shop_group, $id_shop)) {
+            throw new Exception($this->l('Update failed, try again.'));
+        }
+        $this->configReverb = $reverbConfig;
     }
 
     /**
@@ -267,14 +303,13 @@ class Reverb extends Module
      */
     protected function postProcess()
     {
-        $form_values = $this->getConfigFormValues();
+        // First form with api token and env mode
+        if (Tools::isSubmit('submitReverbModuleConfiguration')) {
+            $form_values = $this->getConfigFormValues();
 
-        // init multistore
-        $id_shop = (int)$this->context->shop->id;
-        $id_shop_group = (int)Shop::getContextShopGroupID();
-
-        foreach (array_keys($form_values) as $key) {
-            Configuration::updateValue($key, Tools::getValue($key), false, $id_shop_group, $id_shop);
+            foreach (array_keys($form_values) as $key) {
+                $this->updateReverbConfiguration($key, Tools::getValue($key));
+            }
         }
     }
 
@@ -309,3 +344,8 @@ class Reverb extends Module
         /* Place your code here. */
     }
 }
+
+require_once(dirname(__FILE__) . '/classes/ReverbLogs.php');
+require_once(dirname(__FILE__) . '/classes/ReverbClient.php');
+require_once(dirname(__FILE__) . '/classes/ReverbAuth.php');
+require_once(dirname(__FILE__) . '/classes/ReverbCategories.php');

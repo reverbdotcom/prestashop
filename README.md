@@ -13,3 +13,15 @@ Open a browse and go to http://localhost:8082/
 Access to the Back Office http://localhost:8082/admin-reverb
 
 Login / Password : demo@reverb.com / 123456
+
+Access to reverb container
+
+<code>docker exec -it reverb bash</code>
+
+Compte Rerverb de sandbox:
+https://sandbox.reverb.com
+vincent.dossantos@gmail.com / reverb-test-account
+
+Token : 5b520e1fc15b429b3f6693c03a3bafa09b536b0b8e00db9c1cc746c12ff44f71
+
+A récupérer ici : https://sandbox.reverb.com/my/api_settings
