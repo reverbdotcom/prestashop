@@ -38,6 +38,8 @@ class Reverb extends Module
     CONST KEY_RANDOM_STATE = 'random_state';
     CONST KEY_DEBUG_MODE = 'debug_mode';
 
+    CONST LIST_ID = 'ps_product';
+
     protected $config_form = false;
     public $configReverb;
     public $logs;
@@ -79,12 +81,13 @@ class Reverb extends Module
         $sql = array();
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
             `id_sync` int(11) NOT NULL AUTO_INCREMENT,
-            `id_product` int(11) NOT NULL,
+            `id_product` int(10) unsigned NOT NULL,
             `reverb_ref` varchar(32) NOT NULL,
             `status` varchar(32) NOT NULL,
             `details` text,
             `date` datetime,
-            PRIMARY KEY  (`id_sync`)
+            PRIMARY KEY  (`id_sync`),
+            FOREIGN KEY fk_rever_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_mapping` (
@@ -93,6 +96,11 @@ class Reverb extends Module
             `reverb_code` varchar(32) NOT NULL,
             PRIMARY KEY  (`id_mapping`)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
+        /**
+         *     CUSTOMS FIELDS ON PRODUCT TABLE
+         */
+        $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'product` ADD `reverb_enabled` tinyint(1);';
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -131,7 +139,6 @@ class Reverb extends Module
      */
     public function getContent()
     {
-
         $this->postProcess();
 
         /* @deprecated: Build request access uri */
@@ -152,12 +159,18 @@ class Reverb extends Module
         }
 
         $this->context->smarty->assign(array(
-            'module_dir' => $this->_path,
-            'reverb_form' => $this->renderForm(),
-        ));
+                'module_dir' => $this->_path,
+                'reverb_form' => $this->renderForm(),
+                'reverb_config' => $this->configReverb,
+                'reverb_sync_status' => $this->getViewSyncStatus()
+
+            ));
+
 
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
+        if (Tools::isSubmit('submitFilter')) {
 
+        }
         return $output;
     }
 
@@ -343,8 +356,107 @@ class Reverb extends Module
     {
         /* Place your code here. */
     }
+
+    /**
+     *   Prepare view sync status
+     *
+     * @return HelperList
+     */
+    public function getViewSyncStatus()
+    {
+        //=========================================
+        //         PREPARE VIEW
+        //=========================================
+        $helper = new HelperListReverb();
+
+        $this->fields_list = array(
+            'id_product' => array(
+                'title' => $this->l('Product'),
+                'width' => 140,
+                'type' => 'int',
+                'filter_key' => 'p.id_product'
+            ),
+            'id_sync' => array(
+                'title' => $this->l('Variant'),
+                'width' => 140,
+                'type' => 'text',
+                'filter_key' => 'id_sync'
+            ),
+            'reference' => array(
+                'title' => $this->l('SKU'),
+                'width' => 140,
+                'type' => 'text',
+                'filter_key' => 'reference'
+            ),
+            'status' => array(
+                'title' => $this->l('Sync Status'),
+                'width' => 140,
+                'type' => 'select',
+                'search' => true,
+                'orderby' => true,
+                'cast' => 'intval',
+                'identifier' => 'name',
+                'filter_key' => 'status',
+                'list' => array('success','error')
+            ),
+            'details' => array(
+                'title' => $this->l('Sync Detail'),
+                'width' => 140,
+                'type' => 'text',
+                'search' => 'true',
+                'orderby' => 'true',
+                'filter_key' => 'details'
+            ),
+            'last_synced' => array(
+                'title' => $this->l('Last synced'),
+                'width' => 140,
+                'type' => 'text',
+                'filter_key' => 'last_synced'
+            ),
+            'url' => array(
+                'title' => $this->l('Action'),
+                'width' => 140,
+                'type' => 'text',
+                'filter_key' => 'last_synced'
+            ),
+        );
+
+        //=========================================
+        //         GET DATAS FOR LIST
+        //=========================================
+        $datas = ReverbSync::getListProductsWithStatus($this->fields_list);
+
+        $helper->override_folder = 'ReverbSync/';
+        $helper->table = self::LIST_ID;
+        $helper->allow_export = true;
+        $helper->shopLinkType = '';
+        $helper->selected_pagination = false;
+        $helper->default_pagination = 20;
+        $helper->list_total = count($datas);
+        $helper->module = $this;
+
+        $helper->simple_header = false;
+        $helper->show_toolbar = true;
+        $helper->identifier = 'id_product';
+
+        $helper->toolbar_btn['new'] =  array(
+            'href' => AdminController::$currentIndex.'&configure='.$this->name.'&add'.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'),
+            'desc' => $this->l('Add new')
+        );
+
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
+            .'&configure='.$this->name. '&module_name='.$this->name;
+
+        //=========================================
+        //              GENERATE VIEW
+        //=========================================
+        return $helper->generateList($datas, $this->fields_list);
+    }
 }
 
+require_once(dirname(__FILE__) . '/classes/helper/HelperListReverb.php');
+require_once(dirname(__FILE__) . '/classes/models/ReverbSync.php');
 require_once(dirname(__FILE__) . '/classes/ReverbLogs.php');
 require_once(dirname(__FILE__) . '/classes/ReverbClient.php');
 require_once(dirname(__FILE__) . '/classes/ReverbAuth.php');
