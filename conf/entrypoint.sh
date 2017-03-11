@@ -22,6 +22,11 @@ if [ ! -f /var/www/html/console/console.php ];then
     php console.php module:install reverb
 fi
 
+if [ $ACTIVE_XDEBUG ];then
+    echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/xdebug.ini
+    echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
+fi
+
 #===================================#
 #       START WEBSERVER
 #===================================#
