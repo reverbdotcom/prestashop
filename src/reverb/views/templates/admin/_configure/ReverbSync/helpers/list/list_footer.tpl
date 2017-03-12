@@ -32,7 +32,7 @@
                 cache: false,
                 data: "ajax=1&tab=AdminModules&configure=reverb&token={getAdminToken tab='AdminModules'}&action=syncronizeProduct&id_product="+ $(this).data('id'),
                 success: function (response) {
-                    alert(response);
+                    alert("TODO");
                 },
                 error: function (response) {
                     showErrorMessage(jQuery.parseJSON(response.responseText).message);
