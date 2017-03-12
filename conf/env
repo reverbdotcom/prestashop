@@ -22,4 +22,6 @@ PS_HANDLE_DYNAMIC_DOMAIN=0
 ###    X DEBUG
 ####################################
 ACTIVE_XDEBUG=true
-XDEBUG_CONFIG=remote_host=172.16.44.35
+XDEBUG_CONFIG=remote_host=192.168.1.24
+
+IMPORT_SAMPLE_DATA=true

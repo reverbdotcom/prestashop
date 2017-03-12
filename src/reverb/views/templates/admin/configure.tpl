@@ -35,10 +35,51 @@
 	</div>
 
 	<hr />
+
 	<div class="moduleconfig-content">
 		<div class="row">
 			<div class="col-xs-12">
-                {$reverb_form}
+				<p>
+				<h4>{l s='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor' mod='reverb'}</h4>
+				<ul class="ul-spaced">
+					<li><strong>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</strong></li>
+					<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
+					<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
+					<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
+					<li>{l s='Lorem ipsum dolor sit amet' mod='reverb'}</li>
+				</ul>
+				</p>
+
+				<br />
+
+				<p class="text-center">
+					<strong>
+						<a href="http://www.prestashop.com" target="_blank" title="Lorem ipsum dolor">
+                            {l s='Lorem ipsum dolor' mod='reverb' }
+						</a>
+					</strong>
+				</p>
+			</div>
+		</div>
+	</div>
+	<div role="tabpanel">
+		<ul class="nav nav-tabs" role="tablist">
+			<li role="presentation" class="settings"><a href="#sync_status" aria-controls="settings" role="tab" data-toggle="tab">{l s='Sync status' mod='reverb'}
+					<span class="icon icon-cogs"></a></li>
+			<li role="presentation" class="settings"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">{l s='Settings' mod='reverb'}
+					<span class="icon icon-cogs"></a></li>
+		</ul>
+
+		<div class="tab-content">
+			<div role="tabpanel"
+				 class="tab-pane  {if ((isset($active_tab) == false) || ($active_tab == 'sync_status'))} active{/if}"
+				 id="sync_status">
+                {include file='./tabs/sync_status.tpl'}
+			</div>
+			<div role="tabpanel"
+				 class="tab-pane  {if ((isset($active_tab) == true) && ($active_tab == 'settings'))} active{/if}"
+				 id="settings">
+                {include file='./tabs/settings.tpl'}
 			</div>
 		</div>
 	</div>

@@ -85,6 +85,7 @@ class Reverb extends Module
             `reverb_ref` varchar(32) NOT NULL,
             `status` varchar(32) NOT NULL,
             `details` text,
+            `url_reverb` varchar(150) ,
             `date` datetime,
             PRIMARY KEY  (`id_sync`),
             FOREIGN KEY fk_rever_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
@@ -109,7 +110,7 @@ class Reverb extends Module
         }
 
         return parent::install() &&
-            $this->registerHook('backOfficeHeader') &&
+            $this->registerHook('hookBackOfficeHeader') &&
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
             $this->registerHook('actionObjectProductDeleteAfter') &&
@@ -381,13 +382,13 @@ class Reverb extends Module
         $this->fields_list = array(
             'id_product' => array(
                 'title' => $this->l('Product'),
-                'width' => 140,
+                'width' => 70,
                 'type' => 'int',
                 'filter_key' => 'p.id_product'
             ),
             'id_sync' => array(
                 'title' => $this->l('Variant'),
-                'width' => 140,
+                'width' => 70,
                 'type' => 'text',
                 'filter_key' => 'id_sync'
             ),
@@ -399,18 +400,19 @@ class Reverb extends Module
             ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
-                'width' => 140,
+                'width' => 100,
                 'type' => 'select',
                 'search' => true,
                 'orderby' => true,
                 'cast' => 'intval',
                 'identifier' => 'name',
                 'filter_key' => 'status',
+                'badge_success' => true,
                 'list' => array('success','error')
             ),
             'details' => array(
                 'title' => $this->l('Sync Detail'),
-                'width' => 140,
+                'width' => 300,
                 'type' => 'text',
                 'search' => 'true',
                 'orderby' => 'true',
@@ -422,11 +424,13 @@ class Reverb extends Module
                 'type' => 'text',
                 'filter_key' => 'last_synced'
             ),
-            'url' => array(
-                'title' => $this->l('Action'),
-                'width' => 140,
+            'url_reverb' => array(
+                'title' => '',
+                'width' => 230,
                 'type' => 'text',
-                'filter_key' => 'last_synced'
+                'filter_key' => 'last_synced',
+                'search' => false,
+                'orderby' => false,
             ),
         );
 
@@ -439,18 +443,26 @@ class Reverb extends Module
         $helper->table = self::LIST_ID;
         $helper->allow_export = true;
         $helper->shopLinkType = '';
-        $helper->selected_pagination = false;
         $helper->default_pagination = 20;
-        $helper->list_total = count($datas);
+        $helper->listTotal = ReverbSync::getListProductsWithStatusTotals($this->fields_list);
         $helper->module = $this;
+        $helper->no_link = true;
 
         $helper->simple_header = false;
         $helper->show_toolbar = true;
         $helper->identifier = 'id_product';
 
-        $helper->toolbar_btn['new'] =  array(
+/*        $helper->toolbar_btn['new'] =  array(
             'href' => AdminController::$currentIndex.'&configure='.$this->name.'&add'.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'),
             'desc' => $this->l('Add new')
+        );*/
+
+        $helper->bulk_actions = array(
+            'Syncronize' => array(
+                'text' => $this->l('Syncronize selected products'),
+                'icon' => 'icon-trash',
+                'confirm' => $this->l('Are you sure ?')
+            )
         );
 
         $helper->token = Tools::getAdminTokenLite('AdminModules');
@@ -462,7 +474,19 @@ class Reverb extends Module
         //=========================================
         return $helper->generateList($datas, $this->fields_list);
     }
+
+    /**
+     *  Proccess ajax call from view
+     *
+     */
+    public function ajaxProcessSyncronizeProduct(){
+        die(json_encode(array(
+            'result' => true,
+        )));
+    }
 }
+
+
 
 require_once(dirname(__FILE__) . '/classes/helper/HelperListReverb.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbSync.php');
