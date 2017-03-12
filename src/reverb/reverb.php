@@ -64,7 +64,7 @@ class Reverb extends Module
         $this->logs = new \Reverb\ReverLogs($this);
 
         $this->displayName = $this->l('Reverb');
-        $this->description = $this->l('Sync your inventory to and from Reverb, and streamline shipping.');
+        $this->description = $this->l('Reverb is the best place anywhere to sell your guitar, amp, drums, bass, or other music gear.Built for and by musicians, our marketplace offers a broad variety of tools to help buy and sell, and has the lowest transaction fees of any online marketplace.');
 
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
 
@@ -111,7 +111,7 @@ class Reverb extends Module
         }
 
         return parent::install() &&
-            $this->registerHook('hookBackOfficeHeader') &&
+            $this->registerHook('backOfficeHeader') &&
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
             $this->registerHook('actionObjectProductDeleteAfter') &&
@@ -126,6 +126,10 @@ class Reverb extends Module
 
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_mapping`;';
+        /**
+         *     CUSTOMS FIELDS ON PRODUCT TABLE
+         */
+        $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'product` DROP `reverb_enabled`;';
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -410,7 +414,7 @@ class Reverb extends Module
     */
     public function hookBackOfficeHeader()
     {
-        if (Tools::getValue('module_name') == $this->name) {
+        if (Tools::getValue('configure') == $this->name) {
             $this->context->controller->addJS($this->_path.'views/js/back.js');
             $this->context->controller->addCSS($this->_path.'views/css/back.css');
         }

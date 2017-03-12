@@ -25,12 +25,13 @@
 
 <div class="panel">
 	<div class="row moduleconfig-header">
-		<div class="col-xs-5 text-right">
-			<img src="{$module_dir|escape:'html':'UTF-8'}views/img/logo.jpg" />
+		<div class="col-xs-2 text-right">
+			<h1 class="site-header__logo"></h1>
 		</div>
-		<div class="col-xs-7 text-left">
-			<h2>{l s='Lorem' mod='reverb'}</h2>
-			<h4>{l s='Lorem ipsum dolor' mod='reverb'}</h4>
+		<div class="col-xs-10 text-left">
+			<h2>{l s='Welcome to the world’s most popular music gear website.' mod='reverb'}</h2>
+			<h4>{l s='Reverb.com is the online marketplace for musicians to buy, sell and learn about new, used, vintage and handmade music gear. When Reverb launched in 2013, it was founded on the principle that buying and selling musical instruments should be easy and affordable. Since then we’ve become a thriving marketplace that connects millions of people around the world to the gear and the inspiration needed to make music.' mod='reverb'}</h4>
+			<h4>{l s='The Reverb Marketplace is made up of hundreds of thousands of buyers and sellers – from beginner musicians to collectors, mom-and-pop shops to large retailers, and popular manufacturers to boutique builders and luthiers. You might even run into some of your favorite rock stars buying and selling on Reverb!' mod='reverb'}</h4>
 		</div>
 	</div>
 
