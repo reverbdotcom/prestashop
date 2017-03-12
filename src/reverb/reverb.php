@@ -43,6 +43,7 @@ class Reverb extends Module
     protected $config_form = false;
     public $reverbConfig;
     public $logs;
+    public $active_tab;
 
     public function __construct()
     {
@@ -94,7 +95,7 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_mapping` (
             `id_mapping` int(11) NOT NULL AUTO_INCREMENT,
             `id_category` int(11) NOT NULL,
-            `reverb_code` varchar(32) NOT NULL,
+            `reverb_code` varchar(50) NOT NULL,
             PRIMARY KEY  (`id_mapping`)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
@@ -155,22 +156,78 @@ class Reverb extends Module
 
         if (!empty($this->reverbConfig[self::KEY_API_TOKEN])) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
+
             $this->context->smarty->assign(array(
-                'categories' => $reverbCategories->getCategories(),
+                'reverb_categories' => $reverbCategories->getFormattedCategories(),
+                'ps_categories' => ReverbMapping::getFormattedPsCategories($this->context->language->id),
+                'is_logged' => true,
+                'token' => Tools::getAdminTokenLite('AdminModules'),
+            ));
+            if (!$this->active_tab) {
+                $this->active_tab = 'sync_status';
+            }
+        } else {
+            $this->context->smarty->assign(array(
+                'active_tab' => 'login',
+                'is_logged' => false,
             ));
         }
 
         $this->context->smarty->assign(array(
-                'module_dir' => $this->_path,
-                'reverb_form' => $this->renderForm(),
-                'reverb_config' => $this->configReverb,
-                'reverb_sync_status' => $this->getViewSyncStatus()
+            'module_dir' => $this->_path,
+            'reverb_form' => $this->renderForm(),
+            'reverb_config' => $this->reverbConfig,
+            'reverb_sync_status' => $this->getViewSyncStatus(),
+            'logs' => $this->getLogFiles(),
+            'active_tab' => $this->active_tab,
             ));
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
         if (Tools::isSubmit('submitFilter')) {
 
         }
         return $output;
+    }
+
+    /**
+     * Get the appropriate logs
+     * @return string
+     */
+    protected function getLogFiles()
+    {
+        // scan log dir
+        $dir = _PS_MODULE_DIR_ . '/reverb/logs/';
+        $files = scandir($dir, 1);
+        // init array files
+        $error_files = [];
+        $info_files = [];
+        $callback_files = [];
+        $request_files = [];
+        $refund_files = [];
+        // dispatch files
+        foreach ($files as $file) {
+            if (preg_match("/error/i", $file) && count($error_files) < 10) {
+                $error_files[] = $file;
+            }
+            if (preg_match("/callback/i", $file) && count($callback_files) < 10) {
+                $callback_files[] = $file;
+            }
+            if (preg_match("/infos/i", $file) && count($info_files) < 10) {
+                $info_files[] = $file;
+            }
+            if (preg_match("/request/i", $file) && count($request_files) < 10) {
+                $request_files[] = $file;
+            }
+            if (preg_match("/refund/i", $file) && count($refund_files) < 10) {
+                $refund_files[] = $file;
+            }
+        }
+        return [
+            'error' => $error_files,
+            'infos' => $info_files,
+            'callback' => $callback_files,
+            'request' => $request_files,
+            'refund' => $refund_files
+        ];
     }
 
     /**
@@ -208,10 +265,6 @@ class Reverb extends Module
     {
         return array(
             'form' => array(
-                'legend' => array(
-                'title' => $this->l('Settings'),
-                'icon' => 'icon-cogs',
-                ),
                 'input' => array(
                     array(
                         'type' => 'switch',
@@ -333,6 +386,22 @@ class Reverb extends Module
             }
 
             $this->saveReverbConfiguration();
+        }
+
+        // Product type mapping form submission (ajax)
+        if (Tools::isSubmit('submitReverbModuleCategoryMapping')) {
+
+            $reverbMapping = new ReverbMapping($this);
+            $psCategoryId = Tools::getValue('ps_category_id');
+            $reverbCode = Tools::getValue('reverb_code');
+            $mappingId = Tools::getValue('mapping_id');
+
+            $newMappingId = $reverbMapping->createOrUpdateMapping($psCategoryId, $reverbCode, $mappingId);
+            if ($this->isXmlHttpRequest()) {
+                die($newMappingId);
+            } else {
+                $this->active_tab = 'categories';
+            }
         }
     }
 
@@ -484,12 +553,22 @@ class Reverb extends Module
             'result' => true,
         )));
     }
+
+    /**
+     * Checks if the page has been called from XmlHttpRequest (AJAX)
+     * @return bool
+     */
+    private function isXmlHttpRequest()
+    {
+        return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+    }
 }
 
 
 
 require_once(dirname(__FILE__) . '/classes/helper/HelperListReverb.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbSync.php');
+require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
 require_once(dirname(__FILE__) . '/classes/ReverbLogs.php');
 require_once(dirname(__FILE__) . '/classes/ReverbClient.php');
 require_once(dirname(__FILE__) . '/classes/ReverbAuth.php');

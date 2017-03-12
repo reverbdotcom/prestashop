@@ -25,3 +25,9 @@ vincent.dossantos@gmail.com / reverb-test-account
 Token : 5b520e1fc15b429b3f6693c03a3bafa09b536b0b8e00db9c1cc746c12ff44f71
 
 A récupérer ici : https://sandbox.reverb.com/my/api_settings
+
+6-view-sync-status
+ALTER TABLE ps_reverb_sync ADD COLUMN url_reverb varchar(150);
+
+7-view-mapping-categories
+ALTER TABLE ps_reverb_mapping MODIFY reverb_code varchar(50);
