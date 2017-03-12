@@ -15,18 +15,18 @@ class ReverbClient extends Client
     protected $prod_url = 'https://reverb.com';
     protected $sandbox_url = 'https://sandbox.reverb.com';
 
-    public $configReverb;
+    public $reverbConfig;
 
     public function __construct(\Reverb $module_instance)
     {
         $this->module = $module_instance;
         // init reverb config
-        $this->configReverb = $module_instance->configReverb;
+        $this->reverbConfig = $module_instance->reverbConfig;
 
-        if (!empty($this->configReverb[\Reverb::KEY_API_TOKEN])) {
-            $this->addHeaders(array(
-                'Authorization: Bearer ' . $this->configReverb[\Reverb::KEY_API_TOKEN],
-            ));
+        if (!empty($this->reverbConfig[\Reverb::KEY_API_TOKEN])) {
+            $this->addHeaders([
+                'Authorization: Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
+            ]);
         }
 
         parent::__construct(array('base_url' => $this->getBaseUrl()));
@@ -64,7 +64,7 @@ class ReverbClient extends Client
     {
         $url = $this->prod_url;
 
-        if ((bool)$this->configReverb[\Reverb::KEY_SANDBOX_MODE]) {
+        if ((bool)$this->reverbConfig[\Reverb::KEY_SANDBOX_MODE]) {
             $url = $this->sandbox_url;
         }
 
