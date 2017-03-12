@@ -28,7 +28,7 @@ class ReverLogs
      * LOG APP
      *
      */
-    public function logsReverb($msg)
+    public function infoLogs($msg)
     {
         $this->writeLogs(1, $msg);
     }
@@ -41,11 +41,6 @@ class ReverLogs
     public function requestLogs($msg)
     {
         $this->writeLogs(3, $msg);
-    }
-
-    public function refundLogs($msg)
-    {
-        $this->writeLogs(4, $msg);
     }
 
     private function writeLogs($code, $msg)
@@ -62,10 +57,7 @@ class ReverLogs
                     $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-callback.txt', 'a+');
                     break;
                 case 3:
-                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-request-new-order.txt', 'a+');
-                    break;
-                case 4:
-                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-refund-order.txt', 'a+');
+                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-request.txt', 'a+');
                     break;
                 default:
                     $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-infos-logs.txt', 'a+');

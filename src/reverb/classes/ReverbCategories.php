@@ -34,4 +34,37 @@ class ReverbCategories extends ReverbClient
 
         return $uuid ? $categories : $categories['categories'];
     }
+
+    /**
+     * Return formatted categories for mapping
+     */
+    public function getFormattedCategories()
+    {
+        $categories = $this->getCategories();
+
+        $formattedCategories = array();
+
+        foreach ($categories as $category) {
+            $formattedCategories[$category['uuid']] = $category['name'];
+            $formattedCategories = array_merge($formattedCategories, $this->getSubCategories($category));
+        }
+
+        return $formattedCategories;
+    }
+
+    /**
+     * Return sub categories
+     * @param array $category
+     * @return array
+     */
+    private function getSubCategories(array $category)
+    {
+        $subCategories = array();
+        if (isset($category['subcategories'])) {
+            foreach ($category['subcategories'] as $subCategory) {
+                $subCategories[$subCategory['uuid']] = $subCategory['full_name'];
+            }
+        }
+        return $subCategories;
+    }
 }
