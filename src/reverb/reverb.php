@@ -157,6 +157,7 @@ class Reverb extends Module
         if (!empty($this->reverbConfig[self::KEY_API_TOKEN])) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
 
+<<<<<<< HEAD
             $this->context->smarty->assign(array(
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
                 'ps_categories' => ReverbMapping::getFormattedPsCategories($this->context->language->id),
@@ -168,6 +169,19 @@ class Reverb extends Module
             }
         } else {
             $this->context->smarty->assign(array(
+=======
+            $this->context->smarty->assign(array(
+                'reverb_categories' => $reverbCategories->getFormattedCategories(),
+                'ps_categories' => ReverbMapping::getFormattedPsCategories($this->context->language->id),
+                'is_logged' => true,
+                'token' => Tools::getAdminTokenLite('AdminModules'),
+            ));
+            if (!$this->active_tab) {
+                $this->active_tab = 'sync_status';
+            }
+        } else {
+            $this->context->smarty->assign(array(
+>>>>>>> f5b4325c8a384ed45b77abfbeb6e74fa041d8bb8
                 'active_tab' => 'login',
                 'is_logged' => false,
             ));
@@ -563,8 +577,6 @@ class Reverb extends Module
         return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
     }
 }
-
-
 
 require_once(dirname(__FILE__) . '/classes/helper/HelperListReverb.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbSync.php');
