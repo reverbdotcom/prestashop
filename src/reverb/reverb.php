@@ -410,18 +410,6 @@ class Reverb extends Module
 
             $this->saveReverbConfiguration();
         }
-
-        // Product type mapping form submission (ajax)
-        if (Tools::isSubmit('submitReverbModuleCategoryMapping')) {
-
-            $reverbMapping = new ReverbMapping($this);
-            $psCategoryId = Tools::getValue('ps_category_id');
-            $reverbCode = Tools::getValue('reverb_code');
-            $mappingId = Tools::getValue('mapping_id');
-
-            $newMappingId = $reverbMapping->createOrUpdateMapping($psCategoryId, $reverbCode, $mappingId);
-            $this->active_tab = 'categories';
-        }
     }
 
     /**
