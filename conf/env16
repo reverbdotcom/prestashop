@@ -1,14 +1,14 @@
 ####################################
 ###    PRESTASHOP
 ####################################
-PS_DOMAIN=localhost:8082
+PS_DOMAIN=localhost:8016
 PS_DEV_MODE=1
 PS_HOST_MODE=0
 DB_SERVER=mysql
 DB_USER=root
 DB_PASSWD=admin
 DB_PREFIX=ps_
-DB_NAME=reverb
+DB_NAME=reverb16
 PS_INSTALL_AUTO=1
 PS_LANGUAGE=en
 PS_COUNTRY=gb
@@ -24,4 +24,4 @@ PS_HANDLE_DYNAMIC_DOMAIN=0
 ACTIVE_XDEBUG=true
 XDEBUG_CONFIG=remote_host=192.168.1.24
 
-IMPORT_SAMPLE_DATA=true
+IMPORT_SAMPLE_DATA=0

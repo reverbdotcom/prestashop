@@ -163,7 +163,7 @@ class Reverb extends Module
         $this->context->smarty->assign(array(
                 'module_dir' => $this->_path,
                 'reverb_form' => $this->renderForm(),
-                'reverb_config' => $this->configReverb,
+                'reverb_config' => $this->reverbConfig,
                 'reverb_sync_status' => $this->getViewSyncStatus()
             ));
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');

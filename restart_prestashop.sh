@@ -6,7 +6,7 @@
 docker-compose stop
 docker-compose rm -fv
 sudo rm -Rf data/
-sudo rm -Rf web/
+sudo rm -Rf web17/ web16/
 docker-compose build --no-cache
 docker-compose up -d
 

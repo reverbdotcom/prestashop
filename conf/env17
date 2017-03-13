@@ -1,0 +1,27 @@
+####################################
+###    PRESTASHOP
+####################################
+PS_DOMAIN=localhost:8017
+PS_DEV_MODE=1
+PS_HOST_MODE=0
+DB_SERVER=mysql
+DB_USER=root
+DB_PASSWD=admin
+DB_PREFIX=ps_
+DB_NAME=reverb17
+PS_INSTALL_AUTO=1
+PS_LANGUAGE=en
+PS_COUNTRY=gb
+PS_FOLDER_ADMIN=admin-reverb
+PS_FOLDER_INSTALL=installOLD
+ADMIN_MAIL=demo@reverb.com
+ADMIN_PASSWD=123456
+PS_HANDLE_DYNAMIC_DOMAIN=0
+
+####################################
+###    X DEBUG
+####################################
+ACTIVE_XDEBUG=true
+XDEBUG_CONFIG=remote_host=192.168.1.24
+
+IMPORT_SAMPLE_DATA=0
