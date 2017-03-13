@@ -422,6 +422,15 @@ class Reverb extends Module
     }
 
     public function hookDisplayAdminProductsExtra($params) {
+
+        /* Exemple pour le front afin de setter le title et le content
+        
+        $array = array();
+        $array[] = (new PrestaShop\PrestaShop\Core\Product\ProductExtraContent())
+                ->setTitle('Reverb Sync')
+                ->setContent('Reverb content: lorem ipsum...');
+        return $array;*/
+
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/product-tab-content.tpl');
         return $output;
     }
