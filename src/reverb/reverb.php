@@ -112,6 +112,7 @@ class Reverb extends Module
 
         return parent::install() &&
             $this->registerHook('backOfficeHeader') &&
+            $this->registerHook('displayAdminProductsExtra') &&
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
             $this->registerHook('actionObjectProductDeleteAfter') &&
@@ -418,6 +419,11 @@ class Reverb extends Module
             $this->context->controller->addJS($this->_path.'views/js/back.js');
             $this->context->controller->addCSS($this->_path.'views/css/back.css');
         }
+    }
+
+    public function hookDisplayAdminProductsExtra($params) {
+        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/product-tab-content.tpl');
+        return $output;
     }
 
     public function hookActionObjectOrderAddAfter()
