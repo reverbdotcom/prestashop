@@ -14,7 +14,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
     /**
      * Upload ajax images payment button
      */
-    public function ajaxProcessExample()
+    public function ajaxProcessCategoryMapping()
     {
         $reverbMapping = new ReverbMapping($this->module);
         $psCategoryId = Tools::getValue('ps_category_id');
