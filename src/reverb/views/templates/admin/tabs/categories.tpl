@@ -43,7 +43,7 @@
             select.attr('disabled', 'disabled');
 
             // Ajax call with secure token
-            $.post(form.attr('action'),
+            $.post('{$ajax_url}&action=Example&ajax=true',
                 formData,
                 function (response) {
                     form.find("input[name='mapping_id']").val(response);
