@@ -12,7 +12,7 @@ class ReverbMapping
 {
     protected $module = false;
 
-    public function __construct(\Reverb $module_instance)
+    public function __construct(Module $module_instance)
     {
         $this->module = $module_instance;
     }

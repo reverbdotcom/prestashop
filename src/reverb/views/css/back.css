@@ -39,3 +39,20 @@
 .moduleconfig-header h2 {
 	color: #d27900;
 }
+
+#categories-mapping .action-result {
+    min-width: 35px;
+}
+#categories-mapping .icon-ok-circle {
+    display: none;
+}
+#categories-mapping .icon-ok-circle:before {
+    color: green;
+}
+
+#categories-mapping .icon-remove-circle {
+    display: none;
+}
+#categories-mapping .icon-remove-circle:before {
+    color: red;
+}
