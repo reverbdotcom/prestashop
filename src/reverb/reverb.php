@@ -13,6 +13,13 @@ class Reverb extends Module
     CONST KEY_API_TOKEN = 'api_token';
     CONST KEY_RANDOM_STATE = 'random_state';
     CONST KEY_DEBUG_MODE = 'debug_mode';
+    CONST KEY_SETTINGS_AUTO_SYNC = 'settings_auto_sync';
+    CONST KEY_SETTINGS_AUTO_PUBLISH = 'settings_auto_publish';
+    CONST KEY_SETTINGS_CREATE_NEW_LISTINGS = 'settings_create_new_listings';
+    CONST KEY_SETTINGS_DESCRIPTION = 'settings_description';
+    CONST KEY_SETTINGS_PHOTOS = 'settings_photos';
+    CONST KEY_SETTINGS_CONDITION = 'settings_condition';
+    CONST KEY_SETTINGS_PRICE = 'settings_price';
 
     CONST LIST_ID = 'ps_product';
 
@@ -197,7 +204,8 @@ class Reverb extends Module
 
         $this->context->smarty->assign(array(
             'module_dir' => $this->_path,
-            'reverb_form' => $this->renderForm(),
+            'reverb_login_form' => $this->renderLoginForm(),
+            'reverb_settings_form' => $this->renderSettingsForm(),
             'reverb_config' => $this->reverbConfig,
             'reverb_sync_status' => $this->getViewSyncStatus(),
             'logs' => $this->getLogFiles(),
@@ -256,7 +264,7 @@ class Reverb extends Module
     /**
      * Create the form that will be displayed in the configuration of your module.
      */
-    protected function renderForm()
+    protected function renderLoginForm()
     {
         $helper = new HelperForm();
 
@@ -267,24 +275,52 @@ class Reverb extends Module
         $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 0);
 
         $helper->identifier = $this->identifier;
-        $helper->submit_action = 'submitReverbModuleConfiguration';
+        $helper->submit_action = 'submitReverbModuleLogin';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
             .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
 
         $helper->tpl_vars = array(
-            'fields_value' => $this->getConfigFormValues(), /* Add values for your inputs */
+            'fields_value' => $this->getConfigLoginFormValues(), /* Add values for your inputs */
             'languages' => $this->context->controller->getLanguages(),
             'id_language' => $this->context->language->id,
         );
 
-        return $helper->generateForm(array($this->getConfigForm()));
+        return $helper->generateForm(array($this->getConfigLoginForm()));
     }
 
     /**
-     * Create the structure of your form.
+     * Create the form that will be displayed in the configuration settings tab of your module.
      */
-    protected function getConfigForm()
+    protected function renderSettingsForm()
+    {
+        $helper = new HelperForm();
+
+        $helper->show_toolbar = false;
+        $helper->table = $this->table;
+        $helper->module = $this;
+        $helper->default_form_language = $this->context->language->id;
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 0);
+
+        $helper->identifier = $this->identifier;
+        $helper->submit_action = 'submitReverbModuleSettings';
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
+            .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+
+        $helper->tpl_vars = array(
+            'fields_value' => $this->getConfigSettingsFormValues(), /* Add values for your inputs */
+            'languages' => $this->context->controller->getLanguages(),
+            'id_language' => $this->context->language->id,
+        );
+
+        return $helper->generateForm(array($this->getConfigSettingsForm()));
+    }
+
+    /**
+     * Create the structure of your login form.
+     */
+    protected function getConfigLoginForm()
     {
         return array(
             'form' => array(
@@ -324,13 +360,104 @@ class Reverb extends Module
     }
 
     /**
-     * Set values for the inputs.
+     * Create the structure of your settings form.
      */
-    protected function getConfigFormValues()
+    protected function getConfigSettingsForm()
+    {
+        $fields = array(
+            array(
+                'name' => self::KEY_SETTINGS_AUTO_SYNC,
+                'label' => $this->l('Automatically sync Prestashop changes to reverb'),
+                'desc' => $this->l('You can selectively disable sync for certain items by tagging them with the prestashop tag.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_AUTO_PUBLISH,
+                'label' => $this->l('Automatically publish listings after sync'),
+                'desc' => $this->l('To publish the listing right away requires more fields such as images and shipping rates, and may not always be possible.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_CREATE_NEW_LISTINGS,
+                'label' => $this->l('Create new listings'),
+                'desc' => $this->l('If the settings is off, only updates will be synced. New listings will not be automatically created.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_DESCRIPTION,
+                'label' => $this->l('Description'),
+                'desc' => $this->l('You may want to turn this off if you have emails/phone numbers in yours descriptions, wich are not allowed on Reverb.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_PHOTOS,
+                'label' => $this->l('Photos'),
+                'desc' => $this->l('On first time sync to Reverb, photos will be ignored if Reverb already has photos. On subsequent syncs, only new photos will be copied over. Reordering will not be synced.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_CONDITION,
+                'label' => $this->l('Condition'),
+                'desc' => $this->l('On first time listing create, we will always sync the condition. This setting controls wether we sync the field on updates. Condition will be read from a tag (example: condition:Brand New). If the condition tag is not specified, we will use Brand New for inventory items and Mint for non-inventory items.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_PRICE,
+                'label' => $this->l('Price'),
+                'desc' => $this->l('On first time listing create, we will always sync price. If you set special prices on Reverb, turn off this settings to avoid updating price.'),
+            ),
+        );
+
+        $input = array();
+        foreach ($fields as $field) {
+            $input[] = array(
+                'type' => 'switch',
+                'label' => $field['label'],
+                'name' => $field['name'],
+                'is_bool' => true,
+                'desc' => $field['desc'],
+                'values' => array(
+                    array(
+                        'id' => 'active_on',
+                        'value' => true,
+                        'label' => $this->l('Enabled')
+                    ),
+                    array(
+                        'id' => 'active_off',
+                        'value' => false,
+                        'label' => $this->l('Disabled')
+                    )
+                ),
+            );
+        }
+        return array(
+            'form' => array(
+                'input' => $input,
+                'submit' => array(
+                    'title' => $this->l('Save'),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Set values for the login form inputs.
+     */
+    protected function getConfigLoginFormValues()
     {
         return array(
             self::KEY_SANDBOX_MODE => $this->getReverbConfig(self::KEY_SANDBOX_MODE),
             self::KEY_API_TOKEN => $this->getReverbConfig(self::KEY_API_TOKEN),
+        );
+    }
+
+    /**
+     * Set values for the settings form inputs.
+     */
+    protected function getConfigSettingsFormValues()
+    {
+        return array(
+            self::KEY_SETTINGS_AUTO_SYNC => $this->getReverbConfig(self::KEY_SETTINGS_AUTO_SYNC),
+            self::KEY_SETTINGS_AUTO_PUBLISH => $this->getReverbConfig(self::KEY_SETTINGS_AUTO_PUBLISH),
+            self::KEY_SETTINGS_CREATE_NEW_LISTINGS => $this->getReverbConfig(self::KEY_SETTINGS_CREATE_NEW_LISTINGS),
+            self::KEY_SETTINGS_CONDITION => $this->getReverbConfig(self::KEY_SETTINGS_CONDITION),
+            self::KEY_SETTINGS_DESCRIPTION => $this->getReverbConfig(self::KEY_SETTINGS_DESCRIPTION),
+            self::KEY_SETTINGS_PHOTOS => $this->getReverbConfig(self::KEY_SETTINGS_PHOTOS),
+            self::KEY_SETTINGS_PRICE => $this->getReverbConfig(self::KEY_SETTINGS_PRICE),
         );
     }
 
@@ -401,8 +528,19 @@ class Reverb extends Module
     protected function postProcess()
     {
         // First form with api token and env mode
-        if (Tools::isSubmit('submitReverbModuleConfiguration')) {
-            $form_values = $this->getConfigFormValues();
+        if (Tools::isSubmit('submitReverbModuleLogin')) {
+            $form_values = $this->getConfigLoginFormValues();
+
+            foreach (array_keys($form_values) as $key) {
+                $this->reverbConfig[$key] = Tools::getValue($key);
+            }
+
+            $this->saveReverbConfiguration();
+        }
+
+        // Settings form
+        if (Tools::isSubmit('submitReverbModuleSettings')) {
+            $form_values = $this->getConfigSettingsFormValues();
 
             foreach (array_keys($form_values) as $key) {
                 $this->reverbConfig[$key] = Tools::getValue($key);

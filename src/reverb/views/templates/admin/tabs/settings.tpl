@@ -1,3 +1,3 @@
 <div class="panel">
-SETTINGS (TODO)
+    {$reverb_settings_form}
 </div>
