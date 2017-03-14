@@ -22,6 +22,8 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $mappingId = Tools::getValue('mapping_id');
 
         $newMappingId = $reverbMapping->createOrUpdateMapping($psCategoryId, $reverbCode, $mappingId);
+
+        // return the saved mapping ID
         die($newMappingId);
     }
 
