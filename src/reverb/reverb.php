@@ -91,7 +91,7 @@ class Reverb extends Module
 
         return parent::install() &&
             $this->createAdminTab() &&
-            $this->registerHook('backOfficeHeader') &&
+            $this->registerHook('displayBackOfficeHeader') &&
             $this->registerHook('displayAdminProductsExtra') &&
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
@@ -415,11 +415,11 @@ class Reverb extends Module
     /**
     * Add the CSS & JavaScript files you want to be loaded in the BO.
     */
-    public function hookBackOfficeHeader()
+    public function hookDisplayBackOfficeHeader()
     {
         if (Tools::getValue('configure') == $this->name) {
-            $this->context->controller->addJS($this->_path.'views/js/back.js');
-            $this->context->controller->addCSS($this->_path.'views/css/back.css');
+            $this->context->controller->addJS($this->_path.'views/js/back.js','all');
+            $this->context->controller->addCSS($this->_path.'views/css/back.css','all');
         }
     }
 
