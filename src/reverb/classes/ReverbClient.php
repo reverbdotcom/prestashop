@@ -10,7 +10,7 @@ class ReverbClient extends Client
     protected $context = false;
     protected $module = false;
     protected $client;
-    protected $headers = array('Accept: application/json', 'Content-Type: application/json');
+    protected $headers = array('Accept' => 'application/json', 'Content-Type'=>'application/json');
 
     protected $prod_url = 'https://reverb.com';
     protected $sandbox_url = 'https://sandbox.reverb.com';
@@ -20,12 +20,19 @@ class ReverbClient extends Client
     public function __construct(\Reverb $module_instance)
     {
         $this->module = $module_instance;
+
+        $this->context = \Context::getContext();
+
+        $iso_code = \Language::getIsoById($this->context->employee->id_lang);
+
         // init reverb config
         $this->reverbConfig = $module_instance->reverbConfig;
 
         if (!empty($this->reverbConfig[\Reverb::KEY_API_TOKEN])) {
             $this->addHeaders([
-                'Authorization: Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
+                'Authorization'=> 'Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
+                'Accept-Language'=> $iso_code,
+                'Accept-Version'=> '1.0',
             ]);
         }
 
