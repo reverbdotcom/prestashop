@@ -32,7 +32,7 @@ class ReverbClient extends Client
             $this->addHeaders([
                 'Authorization'=> 'Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
                 'Accept-Language'=> $iso_code,
-                'Accept-Version'=> '1.0',
+                'Accept-Version'=> '3.0',
             ]);
         }
 
