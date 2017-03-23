@@ -571,8 +571,20 @@ class Reverb extends Module
             $this->saveReverbConfiguration();
         }
 
+<<<<<<< f9821b1d940a1f2874eec0c81a2794fee2136adb
+        // Product type mapping form submission (ajax)
+        if (Tools::isSubmit('submitReverbModuleCategoryMapping')) {
+
+            $reverbMapping = new ReverbMapping($this);
+            $psCategoryId = Tools::getValue('ps_category_id');
+            $reverbCode = Tools::getValue('reverb_code');
+            $mappingId = Tools::getValue('mapping_id');
+
+            $newMappingId = $reverbMapping->createOrUpdateMapping($psCategoryId, $reverbCode, $mappingId);
+=======
         // Settings form
         if (Tools::isSubmit('submitFilterps_mapping_category')) {
+>>>>>>> Add pagination to mapping categories
             $this->active_tab = 'categories';
         }
     }
@@ -821,6 +833,8 @@ class Reverb extends Module
     }
 
     /**
+<<<<<<< f9821b1d940a1f2874eec0c81a2794fee2136adb
+=======
      *   Prepare view mapping categories
      *
      * @return HelperList
@@ -885,6 +899,7 @@ class Reverb extends Module
     }
 
     /**
+>>>>>>> Add pagination to mapping categories
      * Checks if the page has been called from XmlHttpRequest (AJAX)
      * @return bool
      */
