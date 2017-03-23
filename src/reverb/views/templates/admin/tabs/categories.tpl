@@ -7,12 +7,12 @@
             .removeAttr('disabled') // Remove disabled attribute
             .change(function() {
 
-                select = $(this);
+                var select = $(this);
                 select.attr('disabled', 'disabled');
 
-                ps_category_id = select.data('ps-category-id');
-                reverb_code = select.val();
-                mapping_id = select.data('mapping-id');
+                var ps_category_id = select.data('ps-category-id');
+                var reverb_code = select.val();
+                var mapping_id = select.data('mapping-id');
 
                 // Ajax call with secure token
                 $.post('{$ajax_url}&action=CategoryMapping&ajax=true', {
@@ -22,7 +22,7 @@
                     }, function (response) {
                         select.attr("data-mapping-id", response);
                         showSuccessMessage("{l s='Mapping category updated' mod='reverb'}");
-                        successSpan = select.parent('td').find('.icon-ok-circle');
+                        var successSpan = select.parent('td').find('.icon-ok-circle');
                         successSpan.fadeIn('slow', function() {
                             setTimeout(function() {
                                 successSpan.fadeOut('slow');
@@ -32,7 +32,7 @@
                 )
                 .fail(function() {
                     showErrorMessage("{l s='An error has occured. Please try again' mod='reverb'}");
-                    successSpan = select.parent('td').find('.icon-remove-circle');
+                    var successSpan = select.parent('td').find('.icon-remove-circle');
                     successSpan.fadeIn('slow', function() {
                         setTimeout(function() {
                             successSpan.fadeOut('slow');
