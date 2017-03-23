@@ -1,1 +1,1 @@
-{$reverb_form}
+{$reverb_login_form}
