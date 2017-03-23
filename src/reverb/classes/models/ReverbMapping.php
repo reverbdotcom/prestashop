@@ -10,6 +10,7 @@
  */
 class ReverbMapping
 {
+    const DEFAULT_PAGINATION = 20;
     protected $module = false;
 
     public function __construct(Module $module_instance)
@@ -41,6 +42,17 @@ class ReverbMapping
             ->orderBy('c.`id_parent` ASC, cl.`name` ASC')
         ;
 
+        //=========================================
+        //          PAGINATION
+        //=========================================
+        $page = (int)Tools::getValue('submitFilterps_mapping_category');
+
+        if ($page > 1) {
+            $sql->limit(Tools::getValue('selected_pagination'), ($page-1) * Tools::getValue('selected_pagination'));
+        }else{
+            $sql->limit(self::DEFAULT_PAGINATION);
+        }
+
         $result = Db::getInstance()->executeS($sql);
 
         $indexedCategories = $categories = array();
@@ -50,13 +62,37 @@ class ReverbMapping
 
         foreach ($indexedCategories as $categoryId => $category) {
             $categories[$categoryId] = array(
-                'name' => self::getPsFullName($category, $indexedCategories),
+                'ps_category_id' => $categoryId,
+                'ps_category' => self::getPsFullName($category, $indexedCategories),
                 'reverb_code' => $category['reverb_code'],
                 'id_mapping' => $category['id_mapping'],
             );
         }
 
         return $categories;
+    }
+
+    /**
+     * Return number of PS categories for mapping
+     *
+     * @param int $languageId
+     * @return int
+     */
+    public static function countPsCategories($languageId)
+    {
+        $sql = new DbQuery();
+        $sql->select('count(*) as totals')
+
+            ->from('category', 'c')
+            ->leftJoin('category_lang', 'cl', 'cl.`id_category` = c.`id_category`')
+            ->leftJoin('reverb_mapping', 'rm', 'rm.`id_category` = c.`id_category`')
+
+            ->where('c.`id_parent` != 0 AND `id_lang` = '.(int) $languageId)
+        ;
+
+        $result = Db::getInstance()->executeS($sql);
+
+        return $result[0]['totals'];
     }
 
     /**
