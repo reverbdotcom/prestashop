@@ -95,13 +95,31 @@ class ReverbMapping
      * @param int $psCategoryId
      * @return int|false
      */
-    private function getMappingId($psCategoryId)
+    public static function getMappingId($psCategoryId)
     {
         $sql = new DbQuery();
         $sql->select('rm.id_mapping')
             ->from('reverb_mapping', 'rm')
             ->where('rm.`id_category` = ' . $psCategoryId)
             ;
+        $result = Db::getInstance()->getValue($sql);
+        return $result;
+    }
+
+    /**
+     * Return the Reverb code from PS category
+     *
+     * @param int $psCategoryId
+     * @return int|false
+     */
+    public static function getReverbCode($psCategoryId)
+    {
+        $sql = new DbQuery();
+        $sql->select('rm.reverb_code')
+            ->from('reverb_mapping', 'rm')
+            ->where('rm.`id_category` = ' . $psCategoryId)
+        ;
+
         $result = Db::getInstance()->getValue($sql);
         return $result;
     }

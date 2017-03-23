@@ -25,8 +25,10 @@ class Reverb extends Module
 
     protected $config_form = false;
     public $reverbConfig;
+    public $reverbSync;
     public $logs;
     public $active_tab;
+    public $language_id;
     protected $class_names = array(
         'AdminReverbConfiguration',
     );
@@ -49,10 +51,14 @@ class Reverb extends Module
         // init log object
         $this->logs = new \Reverb\ReverLogs($this);
 
+        $this->reverbSync = new \ReverbSync($this);
+
         $this->displayName = $this->l('Reverb');
         $this->description = $this->l('Reverb is the best place anywhere to sell your guitar, amp, drums, bass, or other music gear.Built for and by musicians, our marketplace offers a broad variety of tools to help buy and sell, and has the lowest transaction fees of any online marketplace.');
 
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+
+        $this->language_id = $this->context->language->id;
 
         $this->reverbConfig = $this->getReverbConfig();
     }
@@ -69,7 +75,7 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
             `id_sync` int(11) NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
-            `reverb_ref` varchar(32) NOT NULL,
+            `reverb_ref` varchar(32) ,
             `status` varchar(32) NOT NULL,
             `details` text,
             `url_reverb` varchar(150) ,
@@ -85,10 +91,19 @@ class Reverb extends Module
             PRIMARY KEY  (`id_mapping`)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
-        /**
-         *     CUSTOMS FIELDS ON PRODUCT TABLE
-         */
-        $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'product` ADD `reverb_enabled` tinyint(1);';
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_attributes` (
+            `id_attribute` int(11) NOT NULL AUTO_INCREMENT,
+            `reverb_enabled` tinyint(1),
+            `id_product` int(11) NOT NULL ,
+            `id_lang` int(11) NOT NULL,
+            `sold_as_is` tinyint(1),
+            `finish` varchar(50) ,
+            `origin_country_code` varchar(50),
+            `year` varchar(50),
+            `id_condition` varchar(50),
+            PRIMARY KEY  (`id_attribute`)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -96,10 +111,13 @@ class Reverb extends Module
             }
         }
 
+
         return parent::install() &&
             $this->createAdminTab() &&
-            $this->registerHook('displayBackOfficeHeader') &&
+            $this->registerHook('backOfficeHeader') &&
             $this->registerHook('displayAdminProductsExtra') &&
+            $this->registerHook('actionProductUpdate') &&
+            $this->registerHook('actionProductSave') &&
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
             $this->registerHook('actionObjectProductDeleteAfter') &&
@@ -114,7 +132,10 @@ class Reverb extends Module
 
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_mapping`;';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_attributes`;';
+
         /**
+         *
          *     CUSTOMS FIELDS ON PRODUCT TABLE
          */
         $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'product` DROP `reverb_enabled`;';
@@ -548,29 +569,64 @@ class Reverb extends Module
 
             $this->saveReverbConfiguration();
         }
+
+        // Product type mapping form submission (ajax)
+        if (Tools::isSubmit('submitReverbModuleCategoryMapping')) {
+
+            $reverbMapping = new ReverbMapping($this);
+            $psCategoryId = Tools::getValue('ps_category_id');
+            $reverbCode = Tools::getValue('reverb_code');
+            $mappingId = Tools::getValue('mapping_id');
+
+            $newMappingId = $reverbMapping->createOrUpdateMapping($psCategoryId, $reverbCode, $mappingId);
+            $this->active_tab = 'categories';
+        }
     }
 
     /**
     * Add the CSS & JavaScript files you want to be loaded in the BO.
     */
-    public function hookDisplayBackOfficeHeader()
+    public function hookBackOfficeHeader()
     {
-        if (Tools::getValue('configure') == $this->name) {
-            $this->context->controller->addJS($this->_path.'views/js/back.js','all');
-            $this->context->controller->addCSS($this->_path.'views/css/back.css','all');
+        if (Tools::getValue('controller') == 'AdminProducts' || Tools::getValue('configure') == $this->name) {
+            $this->context->controller->addJS($this->_path.'views/js/back.js');
+            $this->context->controller->addCSS($this->_path.'views/css/back.css');
         }
     }
 
+    /**
+     *   Add Tab in product Page
+     *
+     * @param $params
+     * @return Smarty_Internal_Data|string
+     */
     public function hookDisplayAdminProductsExtra($params) {
+        //=========================================
+        //     LOADING CONFIGURATION REVERB
+        //=========================================
+        $id_product = $params['id_product'];
+        if (isset($id_product)){
+            $result = Db::getInstance()->executeS('SELECT * from `'._DB_PREFIX_.'reverb_attributes` '
+                                                 .' WHERE `id_product` = '.(int)$id_product . ' AND `id_lang` = ' . $this->language_id);
 
-        /* Exemple pour le front afin de setter le title et le content
-        
-        $array = array();
-        $array[] = (new PrestaShop\PrestaShop\Core\Product\ProductExtraContent())
-                ->setTitle('Reverb Sync')
-                ->setContent('Reverb content: lorem ipsum...');
-        return $array;*/
+            $reverbConditions = new \Reverb\ReverbConditions($this);
 
+            $this->context->smarty->assign(array(
+                'reverb_enabled' => $result[0]['reverb_enabled'],
+                'reverb_finish' => $result[0]['finish'],
+                'reverb_condition' => $result[0]['id_condition'],
+                'reverb_year' => $result[0]['year'],
+                'reverb_sold' => $result[0]['sold_as_is'],
+                'reverb_country' => $result[0]['origin_country_code'],
+                'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
+                'reverb_list_country' => Country::getCountries($this->context->language->id),
+                )
+            );
+        }
+
+        //=========================================
+        //     PROCESS TEMPLATE
+        //=========================================
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/product-tab-content.tpl');
         return $output;
     }
@@ -593,6 +649,73 @@ class Reverb extends Module
     public function hookActionObjectShopUpdateAfter()
     {
         /* Place your code here. */
+    }
+
+    /**
+     *  Hook for save reverb's configuration on product page
+     *
+     * @param $params
+     */
+    public function hookActionProductSave($params) {
+        $id_product = Tools::getValue('id_product');
+
+        if (isset($id_product)) {
+            $settingsReverb = Tools::getValue('reverb_enabled');
+            $condition =Tools::getValue('reverb_condition');
+            $finish =Tools::getValue('reverb_finish');
+            $year=Tools::getValue('reverb_year');
+            $soldAsIs =Tools::getValue('reverb_sold');
+            $reverb_country = Tools::getValue('reverb_country');
+
+            //TODO Controle de validité ?
+            $values = array(
+                'reverb_enabled' => pSQL($settingsReverb),
+                'id_condition' => pSQL($condition),
+                'finish' => pSQL($finish),
+                'year' => pSql($year),
+                'sold_as_is' => pSql($soldAsIs),
+                'origin_country_code' => pSql($reverb_country))
+            ;
+
+            $idAttribute = $this->getAttributesId($id_product);
+            if ($idAttribute) {
+                Db::getInstance()->update('reverb_attributes',$values
+                , 'id_attribute = ' . (int)$idAttribute );
+            }else{
+                Db::getInstance()->insert('reverb_attributes', array_merge($values,array(
+                    'id_lang' => pSql($this->language_id),
+                    'id_product' => pSql($id_product),
+                )));
+            }
+        }
+    }
+
+    /**
+     * Get Attributes from product
+     *
+     * @param int $psCategoryId
+     * @return int|false
+     */
+    public function getAttributesId($idProduct)
+    {
+        $sql = new DbQuery();
+        $sql->select('ra.id_attribute')
+            ->from('reverb_attributes', 'ra')
+            ->where('ra.`id_product` = ' . $idProduct)
+            ->where('ra.`id_lang` = ' . $this->language_id)
+        ;
+        $result = Db::getInstance()->getValue($sql);
+        return $result;
+    }
+
+    /**
+     *  Hook for reverb's syncronization
+     *
+     * @param $params
+     */
+    public function hookActionProductUpdate($params) {
+        $id_product = Tools::getValue('id_product');
+
     }
 
     /**
@@ -646,11 +769,11 @@ class Reverb extends Module
                 'orderby' => 'true',
                 'filter_key' => 'details'
             ),
-            'last_synced' => array(
+            'last_sync' => array(
                 'title' => $this->l('Last synced'),
                 'width' => 140,
-                'type' => 'text',
-                'filter_key' => 'last_synced'
+                'type' => 'datetime',
+                'filter_key' => 'date'
             ),
             'url_reverb' => array(
                 'title' => '',
@@ -665,14 +788,14 @@ class Reverb extends Module
         //=========================================
         //         GET DATAS FOR LIST
         //=========================================
-        $datas = ReverbSync::getListProductsWithStatus($this->fields_list);
+        $datas = $this->reverbSync->getListProductsWithStatus($this->fields_list);
 
         $helper->override_folder = 'ReverbSync/';
         $helper->table = self::LIST_ID;
         $helper->allow_export = true;
         $helper->shopLinkType = '';
         $helper->default_pagination = 20;
-        $helper->listTotal = ReverbSync::getListProductsWithStatusTotals($this->fields_list);
+        $helper->listTotal = $this->reverbSync->getListProductsWithStatusTotals($this->fields_list);
         $helper->module = $this;
         $helper->no_link = true;
 
@@ -704,16 +827,6 @@ class Reverb extends Module
     }
 
     /**
-     *  Proccess ajax call from view
-     *
-     */
-    public function ajaxProcessSyncronizeProduct(){
-        die(json_encode(array(
-            'result' => true,
-        )));
-    }
-
-    /**
      * Checks if the page has been called from XmlHttpRequest (AJAX)
      * @return bool
      */
@@ -723,10 +836,24 @@ class Reverb extends Module
     }
 }
 
+require_once(dirname(__FILE__) . '/controllers/admin/AdminReverbConfigurationController.php');
 require_once(dirname(__FILE__) . '/classes/helper/HelperListReverb.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbSync.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
+require_once(dirname(__FILE__) . '/classes/mapper/models/AbstractModel.php');
+require_once(dirname(__FILE__) . '/classes/mapper/models/Category.php');
+require_once(dirname(__FILE__) . '/classes/mapper/models/Price.php');
+require_once(dirname(__FILE__) . '/classes/mapper/models/Condition.php');
 require_once(dirname(__FILE__) . '/classes/ReverbLogs.php');
 require_once(dirname(__FILE__) . '/classes/ReverbClient.php');
 require_once(dirname(__FILE__) . '/classes/ReverbAuth.php');
 require_once(dirname(__FILE__) . '/classes/ReverbCategories.php');
+require_once(dirname(__FILE__) . '/classes/ReverbConditions.php');
+require_once(dirname(__FILE__) . '/classes/ReverbUtils.php');
+require_once(dirname(__FILE__) . '/classes/ReverbProduct.php');
+require_once(dirname(__FILE__) . '/classes/mapper/ProductMapper.php');
+require_once(dirname(__FILE__) . '/classes/helper/RequestSerializer.php');
+
+
+
+
