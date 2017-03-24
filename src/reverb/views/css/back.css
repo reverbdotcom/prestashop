@@ -40,20 +40,19 @@
 	color: #d27900;
 }
 
-#categories-mapping .action-result {
-    min-width: 35px;
-}
-#categories-mapping .icon-ok-circle {
-    display: none;
-}
-#categories-mapping .icon-ok-circle:before {
-    color: green;
+.reverb-category {
+    display: inline-block !important;
+    width: 80% !important;
 }
 
-#categories-mapping .icon-remove-circle {
+.hide-ps {
     display: none;
 }
-#categories-mapping .icon-remove-circle:before {
+
+.icon-ok-circle:before {
+    color: green;
+}
+.icon-remove-circle:before {
     color: red;
 }
 table.ps_product tr {

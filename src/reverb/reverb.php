@@ -23,6 +23,7 @@ class Reverb extends Module
     CONST KEY_SETTINGS_PAYPAL = 'settings_paypal';
 
     CONST LIST_ID = 'ps_product';
+    CONST LIST_CATEGORY_ID = 'ps_mapping_category';
 
     protected $config_form = false;
     public $reverbConfig;
@@ -210,7 +211,6 @@ class Reverb extends Module
 
             $this->context->smarty->assign(array(
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
-                'ps_categories' => ReverbMapping::getFormattedPsCategories($this->context->language->id),
                 'is_logged' => true,
                 'token' => Tools::getAdminTokenLite('AdminModules'),
             ));
@@ -230,6 +230,7 @@ class Reverb extends Module
             'reverb_settings_form' => $this->renderSettingsForm(),
             'reverb_config' => $this->reverbConfig,
             'reverb_sync_status' => $this->getViewSyncStatus(),
+            'reverb_mapping_categories' => $this->getViewMappingCategories(),
             'logs' => $this->getLogFiles(),
             'active_tab' => $this->active_tab,
             'ajax_url' => $this->context->link->getAdminLink('AdminReverbConfiguration'),
@@ -588,15 +589,8 @@ class Reverb extends Module
             $this->saveReverbConfiguration();
         }
 
-        // Product type mapping form submission (ajax)
-        if (Tools::isSubmit('submitReverbModuleCategoryMapping')) {
-
-            $reverbMapping = new ReverbMapping($this);
-            $psCategoryId = Tools::getValue('ps_category_id');
-            $reverbCode = Tools::getValue('reverb_code');
-            $mappingId = Tools::getValue('mapping_id');
-
-            $newMappingId = $reverbMapping->createOrUpdateMapping($psCategoryId, $reverbCode, $mappingId);
+        // Settings form
+        if (Tools::isSubmit('submitFilterps_mapping_category')) {
             $this->active_tab = 'categories';
         }
     }
@@ -848,6 +842,70 @@ class Reverb extends Module
         //              GENERATE VIEW
         //=========================================
         return $helper->generateList($datas, $this->fields_list);
+    }
+
+    /**
+     *   Prepare view mapping categories
+     *
+     * @return HelperList
+     */
+    public function getViewMappingCategories()
+    {
+        //=========================================
+        //         PREPARE VIEW
+        //=========================================
+        $helper = new HelperListReverb();
+
+        $this->fields_list = array(
+            'ps_category' => array(
+                'title' => $this->l('Prestashop Name'),
+                'width' => 70,
+                'search' => false,
+            ),
+            'reverb_category' => array(
+                'title' => $this->l('Reverb Name'),
+                'width' => 70,
+                'search' => false,
+            ),
+        );
+
+        //=========================================
+        //         GET DATAS FOR LIST
+        //=========================================
+        $datas = ReverbMapping::getFormattedPsCategories($this->context->language->id);
+
+        $helper->override_folder = 'ReverbMapping/';
+        $helper->table = self::LIST_CATEGORY_ID;
+        $helper->allow_export = true;
+        $helper->shopLinkType = '';
+        $helper->default_pagination = ReverbMapping::DEFAULT_PAGINATION;
+        $helper->listTotal = ReverbMapping::countPsCategories($this->context->language->id);
+        $helper->module = $this;
+        $helper->no_link = true;
+        $helper->show_filters = false;
+
+        $helper->simple_header = false;
+        $helper->show_toolbar = true;
+        $helper->identifier = 'ps_category';
+
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
+            .'&configure='.$this->name. '&module_name='.$this->name;
+
+        //=========================================
+        //              GENERATE VIEW
+        //=========================================
+        return $helper->generateList($datas, $this->fields_list);
+    }
+
+    /**
+     *  Proccess ajax call from view
+     *
+     */
+    public function ajaxProcessSyncronizeProduct(){
+        die(json_encode(array(
+            'result' => true,
+        )));
     }
 
     /**
