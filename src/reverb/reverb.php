@@ -20,6 +20,7 @@ class Reverb extends Module
     CONST KEY_SETTINGS_PHOTOS = 'settings_photos';
     CONST KEY_SETTINGS_CONDITION = 'settings_condition';
     CONST KEY_SETTINGS_PRICE = 'settings_price';
+    CONST KEY_SETTINGS_PAYPAL = 'settings_paypal';
 
     CONST LIST_ID = 'ps_product';
 
@@ -421,29 +422,45 @@ class Reverb extends Module
                 'label' => $this->l('Price'),
                 'desc' => $this->l('On first time listing create, we will always sync price. If you set special prices on Reverb, turn off this settings to avoid updating price.'),
             ),
+            array(
+                'name' => self::KEY_SETTINGS_PAYPAL,
+                'label' => $this->l('Paypal email'),
+                'desc' => $this->l('Put your Paypal email'),
+                'type' => 'text'
+            ),
         );
 
         $input = array();
         foreach ($fields as $field) {
-            $input[] = array(
-                'type' => 'switch',
-                'label' => $field['label'],
-                'name' => $field['name'],
-                'is_bool' => true,
-                'desc' => $field['desc'],
-                'values' => array(
-                    array(
-                        'id' => 'active_on',
-                        'value' => true,
-                        'label' => $this->l('Enabled')
+            if (array_key_exists('type',$field) && $field['type'] == 'text'){
+                $input[] = array(
+                    'type' => 'text',
+                    'label' => $field['label'],
+                    'name' => $field['name'],
+                    'desc' => $field['desc'],
+                );
+            }else{
+                $input[] = array(
+                    'type' => 'switch',
+                    'label' => $field['label'],
+                    'name' => $field['name'],
+                    'is_bool' => true,
+                    'desc' => $field['desc'],
+                    'values' => array(
+                        array(
+                            'id' => 'active_on',
+                            'value' => true,
+                            'label' => $this->l('Enabled')
+                        ),
+                        array(
+                            'id' => 'active_off',
+                            'value' => false,
+                            'label' => $this->l('Disabled')
+                        )
                     ),
-                    array(
-                        'id' => 'active_off',
-                        'value' => false,
-                        'label' => $this->l('Disabled')
-                    )
-                ),
-            );
+                );
+            }
+
         }
         return array(
             'form' => array(
@@ -479,6 +496,7 @@ class Reverb extends Module
             self::KEY_SETTINGS_DESCRIPTION => $this->getReverbConfig(self::KEY_SETTINGS_DESCRIPTION),
             self::KEY_SETTINGS_PHOTOS => $this->getReverbConfig(self::KEY_SETTINGS_PHOTOS),
             self::KEY_SETTINGS_PRICE => $this->getReverbConfig(self::KEY_SETTINGS_PRICE),
+            self::KEY_SETTINGS_PAYPAL => $this->getReverbConfig(self::KEY_SETTINGS_PAYPAL),
         );
     }
 
@@ -733,12 +751,12 @@ class Reverb extends Module
         $this->fields_list = array(
             'id_product' => array(
                 'title' => $this->l('Product'),
-                'width' => 70,
+                'width' => 30,
                 'type' => 'int',
                 'filter_key' => 'p.id_product'
             ),
-            'id_sync' => array(
-                'title' => $this->l('Variant'),
+            'reverb_ref' => array(
+                'title' => $this->l('Reference'),
                 'width' => 70,
                 'type' => 'text',
                 'filter_key' => 'id_sync'
@@ -751,7 +769,7 @@ class Reverb extends Module
             ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
-                'width' => 100,
+                'width' => 50,
                 'type' => 'select',
                 'search' => true,
                 'orderby' => true,
@@ -777,7 +795,13 @@ class Reverb extends Module
             ),
             'url_reverb' => array(
                 'title' => '',
-                'width' => 230,
+                'type' => 'text',
+                'filter_key' => 'last_synced',
+                'search' => false,
+                'orderby' => false,
+            ),
+            'icon' => array(
+                'title' => '',
                 'type' => 'text',
                 'filter_key' => 'last_synced',
                 'search' => false,
@@ -843,6 +867,7 @@ require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/AbstractModel.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Category.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Price.php');
+require_once(dirname(__FILE__) . '/classes/mapper/models/Seller.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Condition.php');
 require_once(dirname(__FILE__) . '/classes/ReverbLogs.php');
 require_once(dirname(__FILE__) . '/classes/ReverbClient.php');

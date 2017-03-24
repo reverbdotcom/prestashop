@@ -26,16 +26,23 @@
 {block name="after"}
 	<script type="text/javascript">
 		$('a.btn-view-sync').on('click',function(e){
+		    var me =  $(this).data('id');
+		    $('#icon-' + me).fadeIn();
             $.ajax({
                 type: 'POST',
                 url: "index.php",
                 cache: false,
                 data: "ajax=1&controller=AdminReverbConfiguration&token={getAdminToken tab='AdminReverbConfiguration'}&action=syncronizeProduct&id_product="+ $(this).data('id'),
                 success: function (response) {
-
+                    $('#icon-' + me).hide();
+                    $('#icon-' + me + '-success').fadeIn(1000);
+                    $('#icon-' + me + '-success').fadeOut(1000);
                 },
                 error: function (response) {
-                    showErrorMessage(jQuery.parseJSON(response.responseText).message);
+                    $('#icon-' + me).hide();
+                    $('#icon-' + me + '-error').fadeIn(1000);
+                    $('#icon-' + me + '-error').fadeOut(1000);
+                    //showErrorMessage(jQuery.parseJSON(response.responseText).message);
                 },
             });
 		});

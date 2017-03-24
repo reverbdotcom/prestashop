@@ -66,7 +66,7 @@ class ReverbSync
         $sql->select('p.id_product as id_product,  ' .
             'p.reference as reference,' .
             'rs.status as status,' .
-            'rs.id_sync as id_sync,' .
+            'rs.reverb_ref as reverb_ref,' .
             'rs.details as details,' .
             'rs.url_reverb as url_reverb, ' .
             'rs.date as last_sync');
