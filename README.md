@@ -31,3 +31,6 @@ ALTER TABLE ps_reverb_sync ADD COLUMN url_reverb varchar(150);
 
 7-view-mapping-categories
 ALTER TABLE ps_reverb_mapping MODIFY reverb_code varchar(50);
+
+6-view-sync-status V2
+see conf/sql/changes.sql

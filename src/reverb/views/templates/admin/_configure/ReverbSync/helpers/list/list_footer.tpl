@@ -25,24 +25,37 @@
 {extends file="helpers/list/list_footer.tpl"}
 {block name="after"}
 	<script type="text/javascript">
+
+        function showReverbMessage(id, status, message)
+        {
+            $('#icon-' + id).hide();
+            $('#icon-' + id + '-' + status)
+                .fadeIn(2000)
+                .fadeOut(2000);
+
+            if (status == 'success') {
+                showSuccessMessage(message);
+            } else {
+                showErrorMessage(message);
+            }
+        }
+
 		$('a.btn-view-sync').on('click',function(e){
-		    var me =  $(this).data('id');
-		    $('#icon-' + me).fadeIn();
+		    var id =  $(this).data('id');
+		    $('#icon-' + id).fadeIn();
             $.ajax({
                 type: 'POST',
                 url: "index.php",
                 cache: false,
                 data: "ajax=1&controller=AdminReverbConfiguration&token={getAdminToken tab='AdminReverbConfiguration'}&action=syncronizeProduct&id_product="+ $(this).data('id'),
+                dataType: 'json',
                 success: function (response) {
-                    $('#icon-' + me).hide();
-                    $('#icon-' + me + '-success').fadeIn(1000);
-                    $('#icon-' + me + '-success').fadeOut(1000);
+                    console.log(response);
+                    showReverbMessage(id, response.status, response.message);
                 },
                 error: function (response) {
-                    $('#icon-' + me).hide();
-                    $('#icon-' + me + '-error').fadeIn(1000);
-                    $('#icon-' + me + '-error').fadeOut(1000);
-                    //showErrorMessage(jQuery.parseJSON(response.responseText).message);
+                    console.log(response);
+                    showReverbMessage(id, 'error', 'An error occured. Please try again later');
                 },
             });
 		});

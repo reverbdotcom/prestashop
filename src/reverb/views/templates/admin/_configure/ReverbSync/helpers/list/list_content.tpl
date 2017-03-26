@@ -35,7 +35,7 @@
         <span class="label color_field" style="{if $tr.$key == 'success'}background-color:#95CC6B;{elseif $tr.$key == 'error'}background-color:#8f0621;{/if}color:white">
 			{$smarty.block.parent}
         </span>
-    {elseif $key == 'url_reverb'}
+    {elseif $key == 'reverb_slug'}
         <a href="#" title="" data-id="{$tr.$identifier}" class="btn btn-default btn-view-sync"><i class="icon-refresh"></i> Syncronization</a>
         {if $tr.$key}
             <a href="{$tr.$key}" title="" target="_blank" class="btn btn-default"><i class="icon-search-plus"> View</i></a>

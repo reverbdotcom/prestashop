@@ -34,7 +34,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
     public function ajaxProcessSyncronizeProduct() {
         $productId = Tools::getValue('id_product');
 
-        if (isset($productId)) {
+        if (isset($productId) && !empty($productId)) {
             $reverbProduct = new \Reverb\ReverbProduct($this->module);
 
             $sql = new DbQuery();
@@ -42,26 +42,35 @@ class AdminReverbConfigurationController extends ModuleAdminController
                           p.*,
                           pl.*,
                           m.name as manufacturer_name,
-                          ra.*');
+                          ra.*,
+                          rs.id_sync, rs.reverb_id, rs.reverb_slug')
 
-            $sql->from('product', 'p');
-            $sql->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`');
-            $sql->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`');
-            $sql->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`');
+                ->from('product', 'p')
 
-            $sql->where('p.`id_product` = ' . (int) $productId);
-            $sql->where('pl.`id_lang` = '.(int)$this->module->language_id);
+                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
+                ->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
+                ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`')
+                ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`')
 
-            $product = Db::getInstance()->executeS($sql);
+                ->where('p.`id_product` = ' . (int) $productId)
+                ->where('pl.`id_lang` = '.(int)$this->module->language_id);
 
-            if ($product[0]['reverb_enabled']) {
-                $reverbProduct->syncProduct($product[0]);
-            }else{
-                //TODO Gérer un retour Success/Erreur
+            $res = Db::getInstance()->executeS($sql);
+
+            if (!empty($res) && isset($res[0])) {
+                $product = $res[0];
+                if ($product['reverb_enabled']) {
+                    $res = $reverbProduct->syncProduct($product);
+                    die(json_encode($res));
+                } else {
+                    die(json_encode(array('status' => 'error', 'message' => 'Product ' . $productId . ' not enabled for reverb sync')));
+                }
+            } else {
+                die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $productId . ' and lang ' . $this->module->language_id)));
             }
-        }else{
-            //TODO Gérer un retour Success/Erreur
-            die('An error is occured');
+
+        } else{
+            die(array('status' => 'error', 'An error occured'));
         }
     }
 

@@ -77,10 +77,10 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
             `id_sync` int(11) NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
-            `reverb_ref` varchar(32) ,
+            `reverb_id` varchar(32) ,
             `status` varchar(32) NOT NULL,
             `details` text,
-            `url_reverb` varchar(150) ,
+            `reverb_slug` varchar(150) ,
             `date` datetime,
             PRIMARY KEY  (`id_sync`),
             FOREIGN KEY fk_rever_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
@@ -744,13 +744,13 @@ class Reverb extends Module
 
         $this->fields_list = array(
             'id_product' => array(
-                'title' => $this->l('Product'),
+                'title' => $this->l('ID'),
                 'width' => 30,
                 'type' => 'int',
                 'filter_key' => 'p.id_product'
             ),
-            'reverb_ref' => array(
-                'title' => $this->l('Reference'),
+            'reverb_id' => array(
+                'title' => $this->l('Reverb ID'),
                 'width' => 70,
                 'type' => 'text',
                 'filter_key' => 'id_sync'
@@ -787,9 +787,8 @@ class Reverb extends Module
                 'type' => 'datetime',
                 'filter_key' => 'date'
             ),
-            'url_reverb' => array(
+            'reverb_slug' => array(
                 'title' => '',
-                'type' => 'text',
                 'filter_key' => 'last_synced',
                 'search' => false,
                 'orderby' => false,
