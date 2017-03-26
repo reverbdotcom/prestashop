@@ -217,6 +217,7 @@ class Reverb extends Module
                 'is_logged' => true,
                 'token' => Tools::getAdminTokenLite('AdminModules'),
                 'reverb_product_preview_url' => $this->getReverbProductPreviewUrl(),
+                'ps_product_preview_base_url' => _PS_BASE_URL_,
             ));
             if (!$this->active_tab) {
                 $this->active_tab = 'sync_status';
