@@ -35,6 +35,9 @@ class Reverb extends Module
         'AdminReverbConfiguration',
     );
 
+    public $prod_url = 'https://reverb.com';
+    public $sandbox_url = 'https://sandbox.reverb.com';
+
     public function __construct()
     {
         $this->name = 'reverb';
@@ -213,6 +216,7 @@ class Reverb extends Module
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
                 'is_logged' => true,
                 'token' => Tools::getAdminTokenLite('AdminModules'),
+                'reverb_product_preview_url' => $this->getReverbProductPreviewUrl(),
             ));
             if (!$this->active_tab) {
                 $this->active_tab = 'sync_status';
@@ -908,12 +912,25 @@ class Reverb extends Module
     }
 
     /**
-     * Checks if the page has been called from XmlHttpRequest (AJAX)
-     * @return bool
+     * @return string
      */
-    private function isXmlHttpRequest()
+    public function getReverbUrl()
     {
-        return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+        $url = $this->prod_url;
+
+        if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE]) {
+            $url = $this->sandbox_url;
+        }
+
+        return $url;
+    }
+
+    /**
+     * @return string
+     */
+    private function getReverbProductPreviewUrl()
+    {
+        return $this->getReverbUrl(). '/preview/';
     }
 }
 

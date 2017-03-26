@@ -38,7 +38,7 @@
     {elseif $key == 'reverb_slug'}
         <a href="#" title="" data-id="{$tr.$identifier}" class="btn btn-default btn-view-sync"><i class="icon-refresh"></i> Syncronization</a>
         {if $tr.$key}
-            <a href="{$tr.$key}" title="" target="_blank" class="btn btn-default"><i class="icon-search-plus"> View</i></a>
+            <a href="{$reverb_product_preview_url}{$tr.$key}" title="" target="_blank" class="btn btn-default"><i class="icon-search-plus"> View</i></a>
         {/if}
     {elseif $key == 'icon'}
         <div class="icon-status loading-mask" id="icon-{$tr.$identifier}">Synchronisation</div>
