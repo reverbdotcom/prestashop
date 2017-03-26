@@ -15,9 +15,6 @@ class ReverbClient extends Client
     protected $client;
     protected $headers = array('Accept' => 'application/json', 'Content-Type'=>'application/json','Accept-Version'=> '3.0');
 
-    protected $prod_url = 'https://reverb.com';
-    protected $sandbox_url = 'https://sandbox.reverb.com';
-
     public $reverbConfig;
 
     public function __construct(\Reverb $module_instance)
@@ -71,12 +68,7 @@ class ReverbClient extends Client
 
     public function getBaseUrl()
     {
-        $url = $this->prod_url;
-
-        if ((bool)$this->reverbConfig[\Reverb::KEY_SANDBOX_MODE]) {
-            $url = $this->sandbox_url;
-        }
-
+        $url = $this->module->getReverbUrl();
         return $url . '/api/';
     }
 
