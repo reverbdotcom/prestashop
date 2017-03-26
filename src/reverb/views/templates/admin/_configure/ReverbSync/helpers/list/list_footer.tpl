@@ -39,8 +39,42 @@
                 showErrorMessage(message);
             }
         }
+        function showReverbInformations(response, tr)
+        {
+            // Update sync details
+            tr.find('.reverb-sync-details').html(response.message);
 
-		$('a.btn-view-sync').on('click',function(e){
+            // Update sync status
+            var syncStatus = tr.find('.reverb-sync-status span');
+            syncStatus.removeClass('label-success').removeClass('label-error')
+                .addClass('label-' + response.status)
+                .html(response.status);
+
+            // Update Reverb ID
+            if (response['reverb-id'] !== 'undefined') {
+                tr.find('.reverb-id').html(response['reverb-id']);
+            }
+
+            // Update last sync
+            if (response['last-synced'] !== 'undefined') {
+                tr.find('.reverb-last-sync').html(response['last-synced']);
+            }
+
+            // Update preview button
+            if (response['reverb-slug'] !== 'undefined') {
+                var reverbButton = tr.find('.reverb-buttons .btn-reverb-preview');
+                var href = reverbButton.attr('href');
+                if (reverbButton.hasClass('hide-ps')) {
+                    reverbButton.attr('href', href + response['reverb-slug']).removeClass('hide-ps');
+                }
+            }
+
+        }
+
+		$('a.btn-view-sync').on('click',function(e) {
+		    var link = $(this);
+		    link.attr('disabled', 'disabled');
+		    var tr =  $(this).parents('tr');
 		    var id =  $(this).data('id');
 		    $('#icon-' + id).fadeIn();
             $.ajax({
@@ -52,12 +86,17 @@
                 success: function (response) {
                     console.log(response);
                     showReverbMessage(id, response.status, response.message);
+                    showReverbInformations(response, tr);
                 },
                 error: function (response) {
                     console.log(response);
                     showReverbMessage(id, 'error', 'An error occured. Please try again later');
                 },
+                complete: function () {
+                    link.removeAttr('disabled');
+                }
             });
+            return false;
 		});
 	</script>
 {/block}
