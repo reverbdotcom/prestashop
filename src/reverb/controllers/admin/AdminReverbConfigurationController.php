@@ -36,29 +36,11 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
         if (isset($productId) && !empty($productId)) {
             $reverbProduct = new \Reverb\ReverbProduct($this->module);
+            $reverbSync = new ReverbSync($this->module);
+            
+            $product = $reverbSync->getProductWithStatus($productId);
 
-            $sql = new DbQuery();
-            $sql->select('distinct(p.id_product),
-                          p.*,
-                          pl.*,
-                          m.name as manufacturer_name,
-                          ra.*,
-                          rs.id_sync, rs.reverb_id, rs.reverb_slug')
-
-                ->from('product', 'p')
-
-                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
-                ->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
-                ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`')
-                ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`')
-
-                ->where('p.`id_product` = ' . (int) $productId)
-                ->where('pl.`id_lang` = '.(int)$this->module->language_id);
-
-            $res = Db::getInstance()->executeS($sql);
-
-            if (!empty($res) && isset($res[0])) {
-                $product = $res[0];
+            if (!empty($product)) {
                 if ($product['reverb_enabled']) {
                     $res = $reverbProduct->syncProduct($product);
                     die(json_encode($res));

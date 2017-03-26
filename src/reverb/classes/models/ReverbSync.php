@@ -26,7 +26,8 @@ class ReverbSync
      *
      * @param $list_field
      */
-    public function getListProductsWithStatusTotals($list_field){
+    public function getListProductsWithStatusTotals($list_field)
+    {
         //=========================================
         //          SELECT CLAUSE
         //=========================================
@@ -240,6 +241,35 @@ class ReverbSync
             ->where('rs.`id_product` = ' . $idProduct);
 
         $result = Db::getInstance()->getRow($sql);
+        return $result;
+    }
+
+    /**
+     * @param $productId
+     * @return array|bool|null|object
+     */
+    public function getProductWithStatus($productId)
+    {
+        $sql = new DbQuery();
+        $sql->select('distinct(p.id_product),
+                          p.*,
+                          pl.*,
+                          m.name as manufacturer_name,
+                          ra.*,
+                          rs.id_sync, rs.reverb_id, rs.reverb_slug')
+
+            ->from('product', 'p')
+
+            ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
+            ->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
+            ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`')
+            ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`')
+
+            ->where('p.`id_product` = ' . (int) $productId)
+            ->where('pl.`id_lang` = '.(int)$this->module->language_id);
+
+        $result = Db::getInstance()->getRow($sql);
+
         return $result;
     }
 }
