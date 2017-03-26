@@ -903,16 +903,6 @@ class Reverb extends Module
     }
 
     /**
-     *  Proccess ajax call from view
-     *
-     */
-    public function ajaxProcessSyncronizeProduct(){
-        die(json_encode(array(
-            'result' => true,
-        )));
-    }
-
-    /**
      * @return string
      */
     public function getReverbUrl()

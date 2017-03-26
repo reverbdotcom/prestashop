@@ -32,13 +32,16 @@ class AdminReverbConfigurationController extends ModuleAdminController
      *
      */
     public function ajaxProcessSyncronizeProduct() {
+        if (!$this->module instanceof Reverb) {
+            die(array('status' => 'error', 'An error occured'));
+        }
+
         $productId = Tools::getValue('id_product');
 
         if (isset($productId) && !empty($productId)) {
             $reverbProduct = new \Reverb\ReverbProduct($this->module);
-            $reverbSync = new ReverbSync($this->module);
-            
-            $product = $reverbSync->getProductWithStatus($productId);
+
+            $product = $this->module->reverbSync->getProductWithStatus($productId);
 
             if (!empty($product)) {
                 if ($product['reverb_enabled']) {

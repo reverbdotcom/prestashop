@@ -36,3 +36,6 @@ ALTER TABLE ps_reverb_mapping MODIFY reverb_code varchar(50);
 
 6-view-sync-status V2
 see conf/sql/changes.sql
+
+To launch sync CRON from container:
+<code>php /var/www/html/modules/reverb/crons/reverb-products-sync.php</code>

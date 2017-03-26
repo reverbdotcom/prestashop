@@ -17,6 +17,7 @@ class ReverbProduct extends ReverbClient
 
     CONST REVERB_CODE_SUCCESS = 'success';
     CONST REVERB_CODE_ERROR = 'error';
+    CONST REVERB_CODE_TO_SYNC = 'to_sync';
 
     /**
      *  Send a product to reverb (POST or PUT)
