@@ -169,7 +169,7 @@ class ReverbSync
      * @param $reverbSlug
      */
     private function updateSyncStatus($idProduct,$status,$details,$reverbId,$reverbSlug) {
-        $res = Db::getInstance()->update(
+        Db::getInstance()->update(
             'reverb_sync',
             array(
                 'date' => (new \DateTime())->format('Y-m-d H:i:s'),
@@ -266,9 +266,38 @@ class ReverbSync
             ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`')
 
             ->where('p.`id_product` = ' . (int) $productId)
-            ->where('pl.`id_lang` = '.(int)$this->module->language_id);
+            ->where('pl.`id_lang` = '.(int)$this->module->language_id)
+        ;
 
         $result = Db::getInstance()->getRow($sql);
+
+        return $result;
+    }
+
+    /**
+     * @return array|bool|null|object
+     */
+    public function getProductsToSync()
+    {
+        $sql = new DbQuery();
+        $sql->select('distinct(p.id_product),
+                          p.*,
+                          pl.*,
+                          m.name as manufacturer_name,
+                          ra.*,
+                          rs.id_sync, rs.reverb_id, rs.reverb_slug')
+
+            ->from('product', 'p')
+
+            ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
+            ->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
+            ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`')
+            ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`')
+
+            ->where('rs.`status` = \'' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . '\'')
+        ;
+
+        $result = Db::getInstance()->executeS($sql);
 
         return $result;
     }

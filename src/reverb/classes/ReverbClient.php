@@ -21,16 +21,20 @@ class ReverbClient extends Client
 
         $this->context = \Context::getContext();
 
-        $iso_code = \Language::getIsoById($this->context->employee->id_lang);
+        if ($this->context->employee) {
+            $iso_code = \Language::getIsoById($this->context->employee->id_lang);
+        } else {
+            $iso_code = \Language::getIsoById(\Configuration::get('PS_LANG_DEFAULT'));
+        }
 
         // init reverb config
         $this->reverbConfig = $module_instance->reverbConfig;
 
         if (!empty($this->reverbConfig[\Reverb::KEY_API_TOKEN])) {
-            $this->addHeaders([
-                'Authorization'=> 'Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
-                'Accept-Language'=> $iso_code
-            ]);
+            $this->addHeaders(array(
+                'Authorization' => 'Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
+                'Accept-Language' => $iso_code,
+            ));
         }
 
         parent::__construct(array('base_url' => $this->getBaseUrl()));
