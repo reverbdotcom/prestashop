@@ -1,6 +1,5 @@
 <?php
 
-use Reverb\Mapper\Models\AbstractModel;
 /**
  * Model Reverb Sync
  *
@@ -35,8 +34,8 @@ class ReverbSync
         $sql->select('count(*) as totals');
 
         $sql->from('product', 'p');
+        $sql->innerJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
         $sql->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`');
-        $sql->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
         $sql->where('ra.`reverb_enabled` = 1');
 
         //=========================================
@@ -66,14 +65,14 @@ class ReverbSync
         $sql->select('p.id_product as id_product,  ' .
             'p.reference as reference,' .
             'rs.status as status,' .
-            'rs.reverb_ref as reverb_ref,' .
+            'rs.reverb_id as reverb_id,' .
             'rs.details as details,' .
-            'rs.url_reverb as url_reverb, ' .
+            'rs.reverb_slug as reverb_slug, ' .
             'rs.date as last_sync');
 
         $sql->from('product', 'p');
+        $sql->innerJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
         $sql->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`');
-        $sql->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
         $sql->where('ra.`reverb_enabled` = 1');
 
         //=========================================
@@ -106,7 +105,10 @@ class ReverbSync
     }
 
     /**
-     *  Generate WHERE Clause with actives filters
+     * Generate WHERE Clause with actives filters
+     * @param $list_field
+     * @param $sql
+     * @return mixed
      */
     protected function processFilter($list_field, $sql)
     {
@@ -137,17 +139,23 @@ class ReverbSync
     }
 
     /**
-     * @param $response
+     * @param $idProduct
+     * @param $status
+     * @param $details
+     * @param $reverbId
+     * @param $reverbSlug
+     * @return array
      */
-    public function insertOrUpdateSyncStatus($idProduct,$status,$details,$reverb,$url) {
+    public function insertOrUpdateSyncStatus($idProduct,$status,$details,$reverbId,$reverbSlug) {
         $idSyncStatus = $this->getSyncStatusId($idProduct);
 
         if ($idSyncStatus) {
-            $this->updateSyncStatus($idProduct,$status,$details,$reverb,$url);
+            $this->updateSyncStatus($idProduct,$status,$details,$reverbId,$reverbSlug);
         }else{
-            $this->insertSyncStatus($idProduct,$status,$details,$reverb,$url);
+            $this->insertSyncStatus($idProduct,$status,$details,$reverbId,$reverbSlug);
         }
 
+        return $this->getSyncStatus($idProduct);
     }
 
     /**
@@ -156,17 +164,19 @@ class ReverbSync
      * @param $idProduct
      * @param $status
      * @param $details
-     * @param $reverb
-     * @param $url
+     * @param $reverbId
+     * @param $reverbSlug
      */
-    private function updateSyncStatus($idProduct,$status,$details,$reverb,$url) {
-            $exec = Db::getInstance()->update(
+    private function updateSyncStatus($idProduct,$status,$details,$reverbId,$reverbSlug) {
+        $res = Db::getInstance()->update(
             'reverb_sync',
-            array('date' => (new \DateTime())->format('Y-m-d H:i:s'),
-                  'status' => $status,
-                  'details' => $details,
-                  'reverb_ref' => $reverb,
-                  'url_reverb' => $url),
+            array(
+                'date' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'status' => $status,
+                'details' => addslashes($details),
+                'reverb_id' => $reverbId,
+                'reverb_slug' => addslashes($reverbSlug)
+            ),
             'id_product= ' . (int) $idProduct
         );
 
@@ -179,19 +189,22 @@ class ReverbSync
      * @param $idProduct
      * @param $status
      * @param $details
-     * @param $reverb
-     * @param $url
+     * @param $reverbId
+     * @param $reverbSlug
+     * @return integer
      */
-    private function insertSyncStatus($idProduct,$status,$details,$reverb,$url) {
+    private function insertSyncStatus($idProduct,$status,$details,$reverbId,$reverbSlug) {
 
         $exec = Db::getInstance()->insert(
             'reverb_sync',
-            array('date' => (new \DateTime())->format('Y-m-d H:i:s'),
+            array(
+                'date' => (new \DateTime())->format('Y-m-d H:i:s'),
                 'status' => $status,
                 'details' => $details,
-                'reverb_ref' => $reverb,
-                'url_reverb' => $url,
-                'id_product' => (int)  $idProduct)
+                'reverb_id' => $reverbId,
+                'reverb_slug' => $reverbSlug,
+                'id_product' => (int)  $idProduct
+            )
         );
 
         if ($exec) {
@@ -199,6 +212,7 @@ class ReverbSync
         }
 
         $this->module->logs->infoLogs('Insert reverb sync ' . $idProduct . ' with status :' . $status);
+        return $return;
     }
 
     /**
@@ -207,31 +221,25 @@ class ReverbSync
      * @param int idProduct
      * @return int|false
      */
-    public static function getSyncStatusId($idProduct)
+    public function getSyncStatusId($idProduct)
     {
-        $sql = new DbQuery();
-        $sql->select('rs.id_sync')
-            ->from('reverb_sync', 'rs')
-            ->where('rs.`id_product` = ' . $idProduct);
-
-        $result = Db::getInstance()->getValue($sql);
-        return $result;
+        $syncStatus = $this->getSyncStatus($idProduct);
+        return !empty($syncStatus) ? $syncStatus['id_sync'] : false;
     }
 
     /**
      * Return the sync
-     * TODO Factoriser avec la méthode précédente
      * @param int idProduct
-     * @return int|false
+     * @return array
      */
-    public static function getSyncStatus($idProduct)
+    public function getSyncStatus($idProduct)
     {
         $sql = new DbQuery();
         $sql->select('rs.*')
             ->from('reverb_sync', 'rs')
             ->where('rs.`id_product` = ' . $idProduct);
 
-        $result = Db::getInstance()->executeS($sql);
+        $result = Db::getInstance()->getRow($sql);
         return $result;
     }
 }

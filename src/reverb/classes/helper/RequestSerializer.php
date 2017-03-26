@@ -37,7 +37,7 @@ class RequestSerializer
         $params = array();
         
         //prepare an array of scalar properties
-        $this->prepareParams($this->_request,$params);
+        $this->prepareParams($this->_request, $params);
         return $params;
     }
     
@@ -54,20 +54,27 @@ class RequestSerializer
     protected function prepareParams($object,&$params) {
         //Get all readble object properties
         $properties = get_object_vars($object);
-    
+
         /**
          * Else if value of property is scalar we assign it
          */
         foreach ($properties as $p=>$v){
-            if((is_object($v) && $v instanceof AbstractModel) || (is_array($v) && is_object($v[0]) &&
-                    $v[0] instanceof Reverb\Mapper\Models\AbstractModel)){
+            if(
+                (is_object($v) && $v instanceof AbstractModel)
+                || (
+                    is_array($v)
+                    && isset($v[0])
+                    && is_object($v[0])
+                    && $v[0] instanceof Reverb\Mapper\Models\AbstractModel
+                )
+            ) {
 
                 if (is_array($v)) {
                     $params[$p] = array();
                     foreach ($v as $i) {
                         $params[$p] =  $this->prepareParams($i,$params[$p]);
                     }
-                }else{
+                } else {
                     $params[$p] = $this->prepareParams($v,$params[$p]);
                 }
             }

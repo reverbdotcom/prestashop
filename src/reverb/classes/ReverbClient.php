@@ -5,6 +5,7 @@ require_once(dirname(__FILE__) . '/../vendor/autoload.php');
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Message\Request;
 use GuzzleHttp\Message\ResponseInterface;
 
 class ReverbClient extends Client
@@ -130,7 +131,7 @@ class ReverbClient extends Client
      * @param $request
      * @return mixed
      */
-    private function sendResquest($request) {
+    private function sendResquest(Request $request) {
             $this->module->logs->requestLogs('# with body ' . $request->getBody());
             $this->module->logs->requestLogs('# with header Content-Type ' . var_export($this->getHeaders(), true));
 
@@ -145,14 +146,10 @@ class ReverbClient extends Client
      * @param array $params
      * @return mixed
      */
-    public function sendPut($endpoint, $params = array(),$slug)
+    public function sendPut($endpoint, $params = array())
     {
         try {
             $this->module->logs->requestLogs('# PUT ' . $this->getBaseUrl() . $endpoint);
-
-            if ($slug){
-                $endpoint = $endpoint .'/' . $slug;
-            }
 
             $request = $this->createRequest('PUT', $endpoint, array('headers' => $this->getHeaders(),'body' => $params ));
 
