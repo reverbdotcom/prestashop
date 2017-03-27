@@ -37,6 +37,8 @@
 
 	<hr />
 
+    {include file='./alerts.tpl'}
+
 	<div role="tabpanel">
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"

@@ -38,6 +38,10 @@ class Reverb extends Module
     public $prod_url = 'https://reverb.com';
     public $sandbox_url = 'https://sandbox.reverb.com';
 
+    protected $_errors = array();
+    protected $_successes = array();
+    protected $_infos = array();
+
     public function __construct()
     {
         $this->name = 'reverb';
@@ -239,11 +243,16 @@ class Reverb extends Module
             'logs' => $this->getLogFiles(),
             'active_tab' => $this->active_tab,
             'ajax_url' => $this->context->link->getAdminLink('AdminReverbConfiguration'),
-        ));
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
-        if (Tools::isSubmit('submitFilter')) {
+            ));
 
-        }
+        // Set alert messages
+        $this->context->smarty->assign(array(
+            'errors' => $this->_errors,
+            'successes' => $this->_successes,
+            'infos' => $this->_infos,
+        ));
+
+        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
         return $output;
     }
 
@@ -581,6 +590,7 @@ class Reverb extends Module
             }
 
             $this->saveReverbConfiguration();
+            $this->_successes[] = $this->l('Login configuration saved successfully.');
         }
 
         // Settings form
@@ -592,11 +602,25 @@ class Reverb extends Module
             }
 
             $this->saveReverbConfiguration();
+            $this->_successes[] = $this->l('Settings configuration saved successfully.');
         }
 
         // Settings form
         if (Tools::isSubmit('submitFilterps_mapping_category')) {
             $this->active_tab = 'categories';
+        }
+
+        // Bulk sync all
+        if (Tools::isSubmit('submitFilterps_product')) {
+            $products = Tools::getValue('ps_productBox');
+            if (!empty($products)) {
+                foreach ($products as $product) {
+                    $this->reverbSync->setProductToSync($product);
+                }
+                $this->_successes[] = $this->l('The ' . count($products) . ' products will be synced soon');
+            } else {
+                $this->_errors[] = $this->l('Please select at least one product.');
+            }
         }
     }
 
@@ -833,7 +857,7 @@ class Reverb extends Module
         $helper->bulk_actions = array(
             'Syncronize' => array(
                 'text' => $this->l('Syncronize selected products'),
-                'icon' => 'icon-trash',
+                'icon' => 'icon-refresh',
                 'confirm' => $this->l('Are you sure ?')
             )
         );
