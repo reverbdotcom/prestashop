@@ -115,3 +115,7 @@ table.ps_product tr {
 .bootstrap .label-error {
     background-color: #E08F95;
 }
+
+.bootstrap .label-to_sync {
+    background-color: #fbbb22;
+}

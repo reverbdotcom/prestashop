@@ -301,4 +301,21 @@ class ReverbSync
 
         return $result;
     }
+
+    /**
+     * Set a sync status product to 'to_sync'
+     *
+     * @param $idProduct
+     */
+    public function setProductToSync($idProduct) {
+        Db::getInstance()->update(
+            'reverb_sync',
+            array(
+                'status' => \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC,
+            ),
+            'id_product= ' . (int) $idProduct
+        );
+
+        $this->module->logs->infoLogs('Update sync status set ' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . ' for product ' . $idProduct);
+    }
 }
