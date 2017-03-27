@@ -170,6 +170,8 @@ class ReverbSync
             $this->insertSyncStatus($idProduct, $origin, $status, $details, $reverbId, $reverbSlug);
         }
 
+        $this->insertSyncHistory($idProduct, $origin, $status, $details);
+
         return $this->getSyncStatus($idProduct);
     }
 
@@ -378,5 +380,32 @@ class ReverbSync
 
         // else replace by new origin
         return $origin;
+    }
+
+    /**
+     *  Process an insert into table Reverb sync history
+     *
+     * @param integer $idProduct
+     * @param string $origin
+     * @param string $status
+     * @param string $details
+     * @param integer $reverbId
+     * @param string $reverbSlug
+     * @return void
+     */
+    private function insertSyncHistory($idProduct, $origin, $status, $details)
+    {
+        Db::getInstance()->insert(
+            'reverb_sync_history',
+            array(
+                'id_product' => (int)  $idProduct,
+                'date' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'status' => $status,
+                'details' => addslashes($details),
+                'origin' => $origin,
+            )
+        );
+
+        $this->module->logs->infoLogs('Insert reverb sync history ' . $idProduct . ' with status ' . $status . ' and origin ' . $origin);
     }
 }

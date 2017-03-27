@@ -122,9 +122,10 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync_history` (
             `id_sync_history` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
-            `origin` text,
-            `date` datetime,
-            `details` text,
+            `status` text NOT NULL,
+            `origin` text NOT NULL,
+            `date` datetime NOT NULL,
+            `details` text NOT NULL,
             PRIMARY KEY  (`id_sync_history`),
             FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
