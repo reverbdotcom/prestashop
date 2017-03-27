@@ -37,7 +37,7 @@
     {elseif $key == 'url_reverb'}
         <a href="#" title="" data-id="{$tr.$identifier}" class="btn btn-default btn-view-sync"><i class="icon-refresh"></i> Syncronization</a>
         {if $tr.$key}
-            <a href="https://reverb.com/item/{$tr.$key}" title="" target="_blank" class="btn btn-default btn-view-sync"><i class="icon-search-plus"> View</i></a>
+            <a href="{$tr.$key}" title="" target="_blank" class="btn btn-default"><i class="icon-search-plus"> View</i></a>
         {/if}
     {else}
             {$smarty.block.parent}

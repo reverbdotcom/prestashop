@@ -1,5 +1,6 @@
 <?php
 
+use Reverb\Mapper\Models\AbstractModel;
 /**
  * Model Reverb Sync
  *
@@ -10,11 +11,23 @@
  */
 class ReverbSync
 {
+    protected $module;
 
     /**
+     * ReverbSync constructor.
+     * @param Reverb $module_instance
+     */
+    public function __construct(\Reverb $module_instance)
+    {
+        $this->module = $module_instance;
+    }
+
+    /**
+     *  Load Total of products for sync view pagination
+     *
      * @param $list_field
      */
-    public static function getListProductsWithStatusTotals($list_field){
+    public function getListProductsWithStatusTotals($list_field){
         //=========================================
         //          SELECT CLAUSE
         //=========================================
@@ -23,7 +36,8 @@ class ReverbSync
 
         $sql->from('product', 'p');
         $sql->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`');
-        $sql->where('p.`reverb_enabled` = 1');
+        $sql->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
+        $sql->where('ra.`reverb_enabled` = 1');
 
         //=========================================
         //          WHERE CLAUSE
@@ -43,7 +57,7 @@ class ReverbSync
      *
      * @return array|false|mysqli_result|null|PDOStatement|resource
      */
-    public static function getListProductsWithStatus($list_field)
+    public function getListProductsWithStatus($list_field)
     {
         //=========================================
         //          SELECT CLAUSE
@@ -54,18 +68,19 @@ class ReverbSync
             'rs.status as status,' .
             'rs.id_sync as id_sync,' .
             'rs.details as details,' .
-            'rs.url_reverb as url_reverb',
-            'rs.date as date');
+            'rs.url_reverb as url_reverb, ' .
+            'rs.date as last_sync');
 
         $sql->from('product', 'p');
         $sql->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`');
-        $sql->where('p.`reverb_enabled` = 1');
+        $sql->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
+        $sql->where('ra.`reverb_enabled` = 1');
 
         //=========================================
         //          WHERE CLAUSE
         //=========================================
         if (Tools::isSubmit('submitFilter')) {
-            $sql = ReverbSync::processFilter($list_field, $sql);
+            $sql = $this->processFilter($list_field, $sql);
         }
 
         //=========================================
@@ -93,7 +108,7 @@ class ReverbSync
     /**
      *  Generate WHERE Clause with actives filters
      */
-    protected static function processFilter($list_field, $sql)
+    protected function processFilter($list_field, $sql)
     {
         $values = Tools::getAllValues();
 
@@ -119,5 +134,104 @@ class ReverbSync
             };
         }
         return $sql;
+    }
+
+    /**
+     * @param $response
+     */
+    public function insertOrUpdateSyncStatus($idProduct,$status,$details,$reverb,$url) {
+        $idSyncStatus = $this->getSyncStatusId($idProduct);
+
+        if ($idSyncStatus) {
+            $this->updateSyncStatus($idProduct,$status,$details,$reverb,$url);
+        }else{
+            $this->insertSyncStatus($idProduct,$status,$details,$reverb,$url);
+        }
+
+    }
+
+    /**
+     *  Update table Reverb Sync
+     *
+     * @param $idProduct
+     * @param $status
+     * @param $details
+     * @param $reverb
+     * @param $url
+     */
+    private function updateSyncStatus($idProduct,$status,$details,$reverb,$url) {
+            $exec = Db::getInstance()->update(
+            'reverb_sync',
+            array('date' => (new \DateTime())->format('Y-m-d H:i:s'),
+                  'status' => $status,
+                  'details' => $details,
+                  'reverb_ref' => $reverb,
+                  'url_reverb' => $url),
+            'id_product= ' . (int) $idProduct
+        );
+
+        $this->module->logs->infoLogs('Update sync ' . $idProduct . ' with status :' . $status);
+    }
+
+    /**
+     *  Process an insert into table Reverb sync
+     *
+     * @param $idProduct
+     * @param $status
+     * @param $details
+     * @param $reverb
+     * @param $url
+     */
+    private function insertSyncStatus($idProduct,$status,$details,$reverb,$url) {
+
+        $exec = Db::getInstance()->insert(
+            'reverb_sync',
+            array('date' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'status' => $status,
+                'details' => $details,
+                'reverb_ref' => $reverb,
+                'url_reverb' => $url,
+                'id_product' => (int)  $idProduct)
+        );
+
+        if ($exec) {
+            $return = Db::getInstance()->Insert_ID();
+        }
+
+        $this->module->logs->infoLogs('Insert reverb sync ' . $idProduct . ' with status :' . $status);
+    }
+
+    /**
+     * Return the mapping ID from PS category
+     *
+     * @param int idProduct
+     * @return int|false
+     */
+    public static function getSyncStatusId($idProduct)
+    {
+        $sql = new DbQuery();
+        $sql->select('rs.id_sync')
+            ->from('reverb_sync', 'rs')
+            ->where('rs.`id_product` = ' . $idProduct);
+
+        $result = Db::getInstance()->getValue($sql);
+        return $result;
+    }
+
+    /**
+     * Return the sync
+     * TODO Factoriser avec la méthode précédente
+     * @param int idProduct
+     * @return int|false
+     */
+    public static function getSyncStatus($idProduct)
+    {
+        $sql = new DbQuery();
+        $sql->select('rs.*')
+            ->from('reverb_sync', 'rs')
+            ->where('rs.`id_product` = ' . $idProduct);
+
+        $result = Db::getInstance()->executeS($sql);
+        return $result;
     }
 }

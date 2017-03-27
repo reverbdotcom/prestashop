@@ -1,1 +1,3 @@
-{$reverb_form}
+<div class="panel">
+    {$reverb_settings_form}
+</div>

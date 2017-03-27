@@ -25,3 +25,34 @@
 * Don't forget to prefix your containers with your own identifier
 * to avoid any conflicts with others containers.
 */
+.site-header__logo {
+	overflow: hidden;
+    text-indent: 101%;
+    white-space: nowrap;
+    display: block;
+    background: url(/modules/reverb/views/img/reverb-logo.svg) left center no-repeat;
+    background-size: 100% auto;
+    width: 216px;
+    height: 128px;
+}
+
+.moduleconfig-header h2 {
+	color: #d27900;
+}
+
+#categories-mapping .action-result {
+    min-width: 35px;
+}
+#categories-mapping .icon-ok-circle {
+    display: none;
+}
+#categories-mapping .icon-ok-circle:before {
+    color: green;
+}
+
+#categories-mapping .icon-remove-circle {
+    display: none;
+}
+#categories-mapping .icon-remove-circle:before {
+    color: red;
+}

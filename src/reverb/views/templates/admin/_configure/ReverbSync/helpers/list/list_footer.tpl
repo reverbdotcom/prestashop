@@ -30,9 +30,9 @@
                 type: 'POST',
                 url: "index.php",
                 cache: false,
-                data: "ajax=1&tab=AdminModules&configure=reverb&token={getAdminToken tab='AdminModules'}&action=syncronizeProduct&id_product="+ $(this).data('id'),
+                data: "ajax=1&controller=AdminReverbConfiguration&token={getAdminToken tab='AdminReverbConfiguration'}&action=syncronizeProduct&id_product="+ $(this).data('id'),
                 success: function (response) {
-                    alert(response);
+
                 },
                 error: function (response) {
                     showErrorMessage(jQuery.parseJSON(response.responseText).message);
