@@ -1,17 +1,5 @@
 #!/bin/sh -e
 
-echo "\n* Starting internal MySQL server ...";
-
-echo "\n /!\ WARNING : The MySQL server will be shortly removed from this container !"
-echo "\n /!\ An external server will be required."
-service mysql start
-if [ $DB_PASSWD != "" ] && [ ! -f ./config/settings.inc.php  ]; then
-    echo "\n* Grant access to MySQL server ...";
-    mysql -h $DB_SERVER -P $DB_PORT -u $DB_USER -p$DB_PASSWD --execute="GRANT ALL ON *.* to $DB_USER@'localhost' IDENTIFIED BY '$DB_PASSWD'; " 2> /dev/null;
-    mysql -h $DB_SERVER -P $DB_PORT -u $DB_USER -p$DB_PASSWD --execute="GRANT ALL ON *.* to $DB_USER@'%' IDENTIFIED BY '$DB_PASSWD'; " 2> /dev/null;
-    mysql -h $DB_SERVER -P $DB_PORT -u $DB_USER -p$DB_PASSWD --execute="flush privileges; " 2> /dev/null;
-fi
-
 #===================================#
 #       CALL PARENT ENTRYPOINT
 #===================================#

@@ -1,4 +1,4 @@
-FROM prestashop/prestashop:1.6.1.11
+FROM prestashop/prestashop:1.7.0.6
 
 MAINTAINER Johan PROTIN <jprotin@boutiquedubio.fr>
 
@@ -19,4 +19,4 @@ RUN sed -i "/exec apache2-foreground/d" /tmp/docker_run.sh \
     && sed -i "/Almost ! Starting Apache now/d" /tmp/docker_run.sh \
         && chmod 777 -R /tmp
 
-ENTRYPOINT ["/tmp/entrypoint16.sh"]
+ENTRYPOINT ["/tmp/entrypoint.sh"]

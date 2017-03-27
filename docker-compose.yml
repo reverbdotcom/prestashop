@@ -2,42 +2,11 @@ mysql:
   container_name: reverb_mysql
   image: mysql:5.6.23
   env_file:
-    - ./conf/mysql.env
+    - ./conf/env/MYSQL.env
   ports:
     - "3309:3306"
   volumes:
   - ./data/:/var/lib/mysql
-
-web17:
-  container_name: reverb17
-  build: .
-  dockerfile: Dockerfile17
-  ports:
-    - "8017:80"
-  links:
-    - smtp
-    - mysql
-  env_file:
-    - ./conf/env17
-  volumes:
-    - ./web17:/var/www/html/
-    - ./src/reverb:/var/www/html/modules/reverb
-
-web16:
-  container_name: reverb16
-  build: .
-  dockerfile: Dockerfile16
-  ports:
-    - "8016:80"
-  links:
-    - smtp
-    - mysql
-  env_file:
-    - ./conf/env16
-  volumes:
-    - ./web16:/var/www/html/
-    - ./src/reverb:/var/www/html/modules/reverb
-
 smtp:
   image: schickling/mailcatcher
   container_name: smtp-reverb
