@@ -82,35 +82,51 @@ class Reverb extends Module
 
         $sql = array();
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
-            `id_sync` int(11) NOT NULL AUTO_INCREMENT,
+            `id_sync` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
             `reverb_id` varchar(32) ,
             `status` varchar(32) NOT NULL,
             `details` text,
             `reverb_slug` varchar(150) ,
             `date` datetime,
+            `origin` text,
             PRIMARY KEY  (`id_sync`),
-            FOREIGN KEY fk_rever_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
+            FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
+            UNIQUE (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_mapping` (
-            `id_mapping` int(11) NOT NULL AUTO_INCREMENT,
-            `id_category` int(11) NOT NULL,
+            `id_mapping` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_category` int(10) unsigned NOT NULL,
             `reverb_code` varchar(50) NOT NULL,
-            PRIMARY KEY  (`id_mapping`)
+            PRIMARY KEY  (`id_mapping`),
+            FOREIGN KEY fk_reverb_mapping_category(id_category) REFERENCES `'._DB_PREFIX_.'category` (id_category),
+            UNIQUE (id_category)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_attributes` (
-            `id_attribute` int(11) NOT NULL AUTO_INCREMENT,
+            `id_attribute` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_product` int(10) unsigned NOT NULL,
             `reverb_enabled` tinyint(1),
-            `id_product` int(11) NOT NULL ,
             `id_lang` int(11) NOT NULL,
             `sold_as_is` tinyint(1),
             `finish` varchar(50) ,
             `origin_country_code` varchar(50),
             `year` varchar(50),
             `id_condition` varchar(50),
-            PRIMARY KEY  (`id_attribute`)
+            PRIMARY KEY  (`id_attribute`),
+            FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
+            UNIQUE (id_product)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync_history` (
+            `id_sync_history` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_product` int(10) unsigned NOT NULL,
+            `origin` text,
+            `date` datetime,
+            `details` text,
+            PRIMARY KEY  (`id_sync_history`),
+            FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
@@ -142,12 +158,7 @@ class Reverb extends Module
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_mapping`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_attributes`;';
-
-        /**
-         *
-         *     CUSTOMS FIELDS ON PRODUCT TABLE
-         */
-        $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'product` DROP `reverb_enabled`;';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync_history`;';
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -605,7 +616,7 @@ class Reverb extends Module
             $this->_successes[] = $this->l('Settings configuration saved successfully.');
         }
 
-        // Settings form
+        // Categories pagination
         if (Tools::isSubmit('submitFilterps_mapping_category')) {
             $this->active_tab = 'categories';
         }
@@ -615,7 +626,7 @@ class Reverb extends Module
             $products = Tools::getValue('ps_productBox');
             if (!empty($products)) {
                 foreach ($products as $product) {
-                    $this->reverbSync->setProductToSync($product);
+                    $this->reverbSync->setProductToSync($product, ReverbSync::ORIGIN_MANUAL_SYNC_MULTIPLE);
                 }
                 $this->_successes[] = $this->l('The ' . count($products) . ' products will be synced soon');
             } else {

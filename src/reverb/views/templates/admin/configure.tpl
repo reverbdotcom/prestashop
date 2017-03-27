@@ -87,17 +87,23 @@
 				<div role="tabpanel"
 					 class="tab-pane {if ((isset($active_tab) == false) || ($active_tab == 'sync_status'))} active{/if}"
 					 id="sync_status">
-					{include file='./tabs/sync_status.tpl'}
+					{if ($is_logged)}
+						{include file='./tabs/sync_status.tpl'}
+                    {/if}
 				</div>
 				<div role="tabpanel"
 					 class="tab-pane  {if ((isset($active_tab) == true) && ($active_tab == 'categories'))} active{/if}"
 					 id="categories">
-					{include file='./tabs/categories.tpl'}
+                    {if ($is_logged)}
+						{include file='./tabs/categories.tpl'}
+                    {/if}
 				</div>
 				<div role="tabpanel"
 					 class="tab-pane {if ((isset($active_tab) == true) && ($active_tab == 'settings'))} active{/if}"
 					 id="settings">
-					{include file='./tabs/settings.tpl'}
+                    {if ($is_logged)}
+						{include file='./tabs/settings.tpl'}
+                    {/if}
 				</div>
             {/if}
 			<div role="tabpanel" class="tab-pane" id="faq">

@@ -19,7 +19,7 @@ $module->logs->requestLogs('# ' . count($products) . ' product(s) to sync');
 
 foreach ($products as $product) {
     if ($product['reverb_enabled']) {
-        $res = $reverbProduct->syncProduct($product);
+        $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_CRON);
         $module->logs->requestLogs('# ' . json_encode($res));
     } else {
         $module->logs->requestLogs('# Product ' . $product['id_product'] . ' not enabled for reverb sync');

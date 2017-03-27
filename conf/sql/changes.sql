@@ -31,3 +31,14 @@ INSERT INTO ps_reverb_attributes (reverb_enabled,
                                   year,
                                   id_condition
 ) VALUES (1, 114,1,0,'NEW','FR','2016','7c3f45de-2ae0-4c81-8400-fdb6b1d74890');
+
+ALTER TABLE ps_reverb_sync ADD COLUMN `origin` text;
+
+CREATE TABLE IF NOT EXISTS `ps_reverb_sync_history` (
+  `id_sync_history` int(11) NOT NULL AUTO_INCREMENT,
+  `id_product` int(10) unsigned NOT NULL,
+  `origin` text,
+  `date` datetime,
+  `details` text,
+  PRIMARY KEY  (`id_sync_history`)
+) ENGINE='INNODB' DEFAULT CHARSET=utf8;
