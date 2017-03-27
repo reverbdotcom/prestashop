@@ -35,6 +35,13 @@ class Reverb extends Module
         'AdminReverbConfiguration',
     );
 
+    public $prod_url = 'https://reverb.com';
+    public $sandbox_url = 'https://sandbox.reverb.com';
+
+    protected $_errors = array();
+    protected $_successes = array();
+    protected $_infos = array();
+
     public function __construct()
     {
         $this->name = 'reverb';
@@ -75,35 +82,52 @@ class Reverb extends Module
 
         $sql = array();
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
-            `id_sync` int(11) NOT NULL AUTO_INCREMENT,
+            `id_sync` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
-            `reverb_ref` varchar(32) ,
+            `reverb_id` varchar(32) ,
             `status` varchar(32) NOT NULL,
             `details` text,
-            `url_reverb` varchar(150) ,
+            `reverb_slug` varchar(150) ,
             `date` datetime,
+            `origin` text,
             PRIMARY KEY  (`id_sync`),
-            FOREIGN KEY fk_rever_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
+            FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
+            UNIQUE (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_mapping` (
-            `id_mapping` int(11) NOT NULL AUTO_INCREMENT,
-            `id_category` int(11) NOT NULL,
+            `id_mapping` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_category` int(10) unsigned NOT NULL,
             `reverb_code` varchar(50) NOT NULL,
-            PRIMARY KEY  (`id_mapping`)
+            PRIMARY KEY  (`id_mapping`),
+            FOREIGN KEY fk_reverb_mapping_category(id_category) REFERENCES `'._DB_PREFIX_.'category` (id_category),
+            UNIQUE (id_category)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_attributes` (
-            `id_attribute` int(11) NOT NULL AUTO_INCREMENT,
+            `id_attribute` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_product` int(10) unsigned NOT NULL,
             `reverb_enabled` tinyint(1),
-            `id_product` int(11) NOT NULL ,
             `id_lang` int(11) NOT NULL,
             `sold_as_is` tinyint(1),
             `finish` varchar(50) ,
             `origin_country_code` varchar(50),
             `year` varchar(50),
             `id_condition` varchar(50),
-            PRIMARY KEY  (`id_attribute`)
+            PRIMARY KEY  (`id_attribute`),
+            FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
+            UNIQUE (id_product)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync_history` (
+            `id_sync_history` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_product` int(10) unsigned NOT NULL,
+            `status` text NOT NULL,
+            `origin` text NOT NULL,
+            `date` datetime NOT NULL,
+            `details` text NOT NULL,
+            PRIMARY KEY  (`id_sync_history`),
+            FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
@@ -135,12 +159,7 @@ class Reverb extends Module
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_mapping`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_attributes`;';
-
-        /**
-         *
-         *     CUSTOMS FIELDS ON PRODUCT TABLE
-         */
-        $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'product` DROP `reverb_enabled`;';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync_history`;';
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -213,6 +232,8 @@ class Reverb extends Module
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
                 'is_logged' => true,
                 'token' => Tools::getAdminTokenLite('AdminModules'),
+                'reverb_product_preview_url' => $this->getReverbProductPreviewUrl(),
+                'ps_product_preview_base_url' => _PS_BASE_URL_,
             ));
             if (!$this->active_tab) {
                 $this->active_tab = 'sync_status';
@@ -234,11 +255,16 @@ class Reverb extends Module
             'logs' => $this->getLogFiles(),
             'active_tab' => $this->active_tab,
             'ajax_url' => $this->context->link->getAdminLink('AdminReverbConfiguration'),
-        ));
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
-        if (Tools::isSubmit('submitFilter')) {
+            ));
 
-        }
+        // Set alert messages
+        $this->context->smarty->assign(array(
+            'errors' => $this->_errors,
+            'successes' => $this->_successes,
+            'infos' => $this->_infos,
+        ));
+
+        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
         return $output;
     }
 
@@ -576,6 +602,7 @@ class Reverb extends Module
             }
 
             $this->saveReverbConfiguration();
+            $this->_successes[] = $this->l('Login configuration saved successfully.');
         }
 
         // Settings form
@@ -587,11 +614,25 @@ class Reverb extends Module
             }
 
             $this->saveReverbConfiguration();
+            $this->_successes[] = $this->l('Settings configuration saved successfully.');
         }
 
-        // Settings form
+        // Categories pagination
         if (Tools::isSubmit('submitFilterps_mapping_category')) {
             $this->active_tab = 'categories';
+        }
+
+        // Bulk sync all
+        if (Tools::isSubmit('submitFilterps_product')) {
+            $products = Tools::getValue('ps_productBox');
+            if (!empty($products)) {
+                foreach ($products as $product) {
+                    $this->reverbSync->setProductToSync($product, ReverbSync::ORIGIN_MANUAL_SYNC_MULTIPLE);
+                }
+                $this->_successes[] = $this->l('The ' . count($products) . ' products will be synced soon');
+            } else {
+                $this->_errors[] = $this->l('Please select at least one product.');
+            }
         }
     }
 
@@ -744,13 +785,13 @@ class Reverb extends Module
 
         $this->fields_list = array(
             'id_product' => array(
-                'title' => $this->l('Product'),
+                'title' => $this->l('ID'),
                 'width' => 30,
                 'type' => 'int',
                 'filter_key' => 'p.id_product'
             ),
-            'reverb_ref' => array(
-                'title' => $this->l('Reference'),
+            'reverb_id' => array(
+                'title' => $this->l('Reverb ID'),
                 'width' => 70,
                 'type' => 'text',
                 'filter_key' => 'id_sync'
@@ -787,9 +828,8 @@ class Reverb extends Module
                 'type' => 'datetime',
                 'filter_key' => 'date'
             ),
-            'url_reverb' => array(
+            'reverb_slug' => array(
                 'title' => '',
-                'type' => 'text',
                 'filter_key' => 'last_synced',
                 'search' => false,
                 'orderby' => false,
@@ -829,7 +869,7 @@ class Reverb extends Module
         $helper->bulk_actions = array(
             'Syncronize' => array(
                 'text' => $this->l('Syncronize selected products'),
-                'icon' => 'icon-trash',
+                'icon' => 'icon-refresh',
                 'confirm' => $this->l('Are you sure ?')
             )
         );
@@ -899,22 +939,25 @@ class Reverb extends Module
     }
 
     /**
-     *  Proccess ajax call from view
-     *
+     * @return string
      */
-    public function ajaxProcessSyncronizeProduct(){
-        die(json_encode(array(
-            'result' => true,
-        )));
+    public function getReverbUrl()
+    {
+        $url = $this->prod_url;
+
+        if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE]) {
+            $url = $this->sandbox_url;
+        }
+
+        return $url;
     }
 
     /**
-     * Checks if the page has been called from XmlHttpRequest (AJAX)
-     * @return bool
+     * @return string
      */
-    private function isXmlHttpRequest()
+    private function getReverbProductPreviewUrl()
     {
-        return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+        return $this->getReverbUrl(). '/preview/';
     }
 }
 

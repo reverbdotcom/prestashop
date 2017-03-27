@@ -46,7 +46,7 @@
 }
 
 .hide-ps {
-    display: none;
+    display: none !important;
 }
 
 .icon-ok-circle:before {
@@ -110,4 +110,12 @@ table.ps_product tr {
 
 .icon-status.success {
     background-color: #95CC6B;
+}
+
+.bootstrap .label-error {
+    background-color: #E08F95;
+}
+
+.bootstrap .label-to_sync {
+    background-color: #fbbb22;
 }

@@ -5,6 +5,7 @@ require_once(dirname(__FILE__) . '/../vendor/autoload.php');
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Message\Request;
 use GuzzleHttp\Message\ResponseInterface;
 
 class ReverbClient extends Client
@@ -14,9 +15,6 @@ class ReverbClient extends Client
     protected $client;
     protected $headers = array('Accept' => 'application/json', 'Content-Type'=>'application/json','Accept-Version'=> '3.0');
 
-    protected $prod_url = 'https://reverb.com';
-    protected $sandbox_url = 'https://sandbox.reverb.com';
-
     public $reverbConfig;
 
     public function __construct(\Reverb $module_instance)
@@ -25,16 +23,20 @@ class ReverbClient extends Client
 
         $this->context = \Context::getContext();
 
-        $iso_code = \Language::getIsoById($this->context->employee->id_lang);
+        if ($this->context->employee) {
+            $iso_code = \Language::getIsoById($this->context->employee->id_lang);
+        } else {
+            $iso_code = \Language::getIsoById(\Configuration::get('PS_LANG_DEFAULT'));
+        }
 
         // init reverb config
         $this->reverbConfig = $module_instance->reverbConfig;
 
         if (!empty($this->reverbConfig[\Reverb::KEY_API_TOKEN])) {
-            $this->addHeaders([
-                'Authorization'=> 'Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
-                'Accept-Language'=> $iso_code
-            ]);
+            $this->addHeaders(array(
+                'Authorization' => 'Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
+                'Accept-Language' => $iso_code,
+            ));
         }
 
         parent::__construct(array('base_url' => $this->getBaseUrl()));
@@ -70,12 +72,7 @@ class ReverbClient extends Client
 
     public function getBaseUrl()
     {
-        $url = $this->prod_url;
-
-        if ((bool)$this->reverbConfig[\Reverb::KEY_SANDBOX_MODE]) {
-            $url = $this->sandbox_url;
-        }
-
+        $url = $this->module->getReverbUrl();
         return $url . '/api/';
     }
 
@@ -130,7 +127,7 @@ class ReverbClient extends Client
      * @param $request
      * @return mixed
      */
-    private function sendResquest($request) {
+    private function sendResquest(Request $request) {
             $this->module->logs->requestLogs('# with body ' . $request->getBody());
             $this->module->logs->requestLogs('# with header Content-Type ' . var_export($this->getHeaders(), true));
 
@@ -145,14 +142,10 @@ class ReverbClient extends Client
      * @param array $params
      * @return mixed
      */
-    public function sendPut($endpoint, $params = array(),$slug)
+    public function sendPut($endpoint, $params = array())
     {
         try {
             $this->module->logs->requestLogs('# PUT ' . $this->getBaseUrl() . $endpoint);
-
-            if ($slug){
-                $endpoint = $endpoint .'/' . $slug;
-            }
 
             $request = $this->createRequest('PUT', $endpoint, array('headers' => $this->getHeaders(),'body' => $params ));
 

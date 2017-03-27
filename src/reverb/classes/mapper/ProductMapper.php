@@ -30,9 +30,10 @@ class ProductMapper
     /**
      *  Map array prestashop To Reverb's model
      *
-     * @param $product
+     * @param array $product_ps
+     * @param string|false $reverbSlug
      */
-    public function processMapping($product_ps,$synced)
+    public function processMapping($product_ps, $reverbSlug)
     {
         $product = new \ProductReverb();
 
@@ -43,7 +44,7 @@ class ProductMapper
         $product->sku = $product_ps['reference'];
         $product->upc = $product_ps['ean13'];
         $product->publish = false;
-        $product->title = $product_ps['name'];;
+        $product->title = $product_ps['name'];
         $product->categories = $this->mapCategories($product_ps);
         $product->location = $this->mapLocation();
         $product->sold_as_is =  $product_ps['sold_as_is'] ? true : false;
@@ -55,29 +56,30 @@ class ProductMapper
         $product->shipping_profile_id = null;
         $product->tax_exempt = null;
 
-        $product = $this->processMappingAccordingSettings($product,$product_ps,$synced);
+        $product = $this->processMappingAccordingSettings($product,$product_ps, $reverbSlug);
 
         $this->request = $product;
     }
 
     /**
-     * @param $product
-     * @param $synced
+     * @param array $product
+     * @param array $product_ps
+     * @param string|false $reverbSlug
      */
-    private function processMappingAccordingSettings($product,$product_ps,$synced) {
+    private function processMappingAccordingSettings($product,$product_ps, $reverbSlug) {
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION) ){
             $product->description = $product_ps['description'];
         }
 
-        if (!$synced || ($synced && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PRICE)) ) {
+        if (!$reverbSlug || ($reverbSlug && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PRICE)) ) {
             $product->price = $this->mapPrice($product_ps);
         }
 
-        if (!$synced || ($synced && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PHOTOS)) ) {
+        if (!$reverbSlug || ($reverbSlug && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PHOTOS)) ) {
             $product->photos = $this->getImagesUrl($product_ps);
         }
 
-        if (!$synced || ($synced && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_CONDITION)) ) {
+        if (!$reverbSlug || ($reverbSlug && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_CONDITION)) ) {
             $product->condition = $this->mapCondition($product_ps);
         }
 
@@ -164,7 +166,13 @@ class ProductMapper
      */
     protected function mapPrice($product_ps)
     {
-        $price = new Reverb\Mapper\Models\Price($product_ps['price'], $this->context->currency->iso_code);
+        if ($this->context->currency) {
+            $isoCode = $this->context->currency->iso_code;
+        } else {
+            $currency = Currency::getDefaultCurrency();
+            $isoCode = $currency->iso_code;
+        }
+        $price = new Reverb\Mapper\Models\Price($product_ps['price'], $isoCode);
         return $price;
     }
 

@@ -32,36 +32,30 @@ class AdminReverbConfigurationController extends ModuleAdminController
      *
      */
     public function ajaxProcessSyncronizeProduct() {
+        if (!$this->module instanceof Reverb) {
+            die(array('status' => 'error', 'An error occured'));
+        }
+
         $productId = Tools::getValue('id_product');
 
-        if (isset($productId)) {
+        if (isset($productId) && !empty($productId)) {
             $reverbProduct = new \Reverb\ReverbProduct($this->module);
 
-            $sql = new DbQuery();
-            $sql->select('distinct(p.id_product),
-                          p.*,
-                          pl.*,
-                          m.name as manufacturer_name,
-                          ra.*');
+            $product = $this->module->reverbSync->getProductWithStatus($productId);
 
-            $sql->from('product', 'p');
-            $sql->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`');
-            $sql->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`');
-            $sql->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`');
-
-            $sql->where('p.`id_product` = ' . (int) $productId);
-            $sql->where('pl.`id_lang` = '.(int)$this->module->language_id);
-
-            $product = Db::getInstance()->executeS($sql);
-
-            if ($product[0]['reverb_enabled']) {
-                $reverbProduct->syncProduct($product[0]);
-            }else{
-                //TODO Gérer un retour Success/Erreur
+            if (!empty($product)) {
+                if ($product['reverb_enabled']) {
+                    $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_MANUAL_SYNC_SINGLE);
+                    die(json_encode($res));
+                } else {
+                    die(json_encode(array('status' => 'error', 'message' => 'Product ' . $productId . ' not enabled for reverb sync')));
+                }
+            } else {
+                die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $productId . ' and lang ' . $this->module->language_id)));
             }
-        }else{
-            //TODO Gérer un retour Success/Erreur
-            die('An error is occured');
+
+        } else{
+            die(array('status' => 'error', 'An error occured'));
         }
     }
 
