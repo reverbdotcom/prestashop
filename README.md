@@ -8,9 +8,11 @@ Command line :
 
 <code>docker-compose up -d</code>
 
-Open a browse and go to http://localhost:8082/
+Open a browse and go to http://localhost:8016
+Open a browse and go to http://localhost:8017
 
-Access to the Back Office http://localhost:8082/admin-reverb
+Access to the Back Office http://localhost:8016/admin-reverb
+Access to the Back Office http://localhost:8017/admin-reverb
 
 Login / Password : demo@reverb.com / 123456
 

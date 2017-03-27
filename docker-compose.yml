@@ -1,21 +1,8 @@
-web:
-  container_name: reverb
-  build: .
-  ports:
-    - "8082:80"
-  links:
-    - smtp
-    - mysql
-  env_file:
-    - ./conf/env
-  volumes:
-    - ./web:/var/www/html/
-    - ./src/reverb:/var/www/html/modules/reverb
 mysql:
   container_name: reverb_mysql
   image: mysql:5.6.23
   env_file:
-    - ./conf/mysql.env
+    - ./conf/env/MYSQL.env
   ports:
     - "3309:3306"
   volumes:

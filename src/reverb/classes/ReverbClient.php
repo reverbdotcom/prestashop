@@ -1,6 +1,8 @@
 <?php
 namespace Reverb;
 
+require_once(dirname(__FILE__) . '/../vendor/autoload.php');
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Message\ResponseInterface;

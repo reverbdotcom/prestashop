@@ -146,8 +146,8 @@ class Reverb extends Module
             }
         }
 
-        return $this->uninstallAdminTab() && 
-                    parent::uninstall();
+        return $this->uninstallAdminTab() &&
+            parent::uninstall();
 
     }
 
@@ -232,7 +232,7 @@ class Reverb extends Module
             'logs' => $this->getLogFiles(),
             'active_tab' => $this->active_tab,
             'ajax_url' => $this->context->link->getAdminLink('AdminReverbConfiguration'),
-            ));
+        ));
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
         if (Tools::isSubmit('submitFilter')) {
 
@@ -584,8 +584,8 @@ class Reverb extends Module
     }
 
     /**
-    * Add the CSS & JavaScript files you want to be loaded in the BO.
-    */
+     * Add the CSS & JavaScript files you want to be loaded in the BO.
+     */
     public function hookBackOfficeHeader()
     {
         if (Tools::getValue('controller') == 'AdminProducts' || Tools::getValue('configure') == $this->name) {
@@ -607,19 +607,19 @@ class Reverb extends Module
         $id_product = $params['id_product'];
         if (isset($id_product)){
             $result = Db::getInstance()->executeS('SELECT * from `'._DB_PREFIX_.'reverb_attributes` '
-                                                 .' WHERE `id_product` = '.(int)$id_product . ' AND `id_lang` = ' . $this->language_id);
+                .' WHERE `id_product` = '.(int)$id_product . ' AND `id_lang` = ' . $this->language_id);
 
             $reverbConditions = new \Reverb\ReverbConditions($this);
 
             $this->context->smarty->assign(array(
-                'reverb_enabled' => $result[0]['reverb_enabled'],
-                'reverb_finish' => $result[0]['finish'],
-                'reverb_condition' => $result[0]['id_condition'],
-                'reverb_year' => $result[0]['year'],
-                'reverb_sold' => $result[0]['sold_as_is'],
-                'reverb_country' => $result[0]['origin_country_code'],
-                'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
-                'reverb_list_country' => Country::getCountries($this->context->language->id),
+                    'reverb_enabled' => $result[0]['reverb_enabled'],
+                    'reverb_finish' => $result[0]['finish'],
+                    'reverb_condition' => $result[0]['id_condition'],
+                    'reverb_year' => $result[0]['year'],
+                    'reverb_sold' => $result[0]['sold_as_is'],
+                    'reverb_country' => $result[0]['origin_country_code'],
+                    'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
+                    'reverb_list_country' => Country::getCountries($this->context->language->id),
                 )
             );
         }
@@ -680,7 +680,7 @@ class Reverb extends Module
             $idAttribute = $this->getAttributesId($id_product);
             if ($idAttribute) {
                 Db::getInstance()->update('reverb_attributes',$values
-                , 'id_attribute = ' . (int)$idAttribute );
+                    , 'id_attribute = ' . (int)$idAttribute );
             }else{
                 Db::getInstance()->insert('reverb_attributes', array_merge($values,array(
                     'id_lang' => pSql($this->language_id),
@@ -803,10 +803,10 @@ class Reverb extends Module
         $helper->show_toolbar = true;
         $helper->identifier = 'id_product';
 
-/*        $helper->toolbar_btn['new'] =  array(
-            'href' => AdminController::$currentIndex.'&configure='.$this->name.'&add'.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'),
-            'desc' => $this->l('Add new')
-        );*/
+        /*        $helper->toolbar_btn['new'] =  array(
+                    'href' => AdminController::$currentIndex.'&configure='.$this->name.'&add'.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'),
+                    'desc' => $this->l('Add new')
+                );*/
 
         $helper->bulk_actions = array(
             'Syncronize' => array(

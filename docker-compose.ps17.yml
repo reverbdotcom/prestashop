@@ -1,0 +1,15 @@
+web17:
+  container_name: reverb17
+  build: .
+  dockerfile: ./conf/docker/Dockerfile17
+  ports:
+    - "8017:80"
+  links:
+    - smtp
+    - mysql
+  env_file:
+    - ./conf/env/PRESTASHOP.env
+    - ./conf/env/PRESTASHOP-16.env
+  volumes:
+    - ./web/prestahsop17:/var/www/html/
+    - ./src/reverb:/var/www/html/modules/reverb

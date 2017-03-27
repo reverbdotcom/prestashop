@@ -19,13 +19,15 @@ if [ ! -f /var/www/html/console/console.php ];then
     # Installation  Reverb's module
     echo "\n Installation Reverb's module \n";
     php console.php module:install reverb
-
-    # Dump sample datas
-    echo "\n Dump sample datas  \n";
-    if [ $IMPORT_SAMPLE_DATA ];then
-        mysql -h mysql -u $DB_USER -p$DB_PASSWD $DB_NAME < /tmp/sql/reverb_ps_product.sql
-    fi
 fi
+
+echo "Import data = $IMPORT_SAMPLE_DATA"
+
+# Dump sample datas
+#if [ $IMPORT_SAMPLE_DATA ];then
+#    echo "\n Dump sample datas  \n";
+#    mysql -h mysql -u $DB_USER -p$DB_PASSWD $DB_NAME < /tmp/sql/reverb_ps_product.sql
+#fi
 
 if [ $ACTIVE_XDEBUG ];then
     echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/xdebug.ini
