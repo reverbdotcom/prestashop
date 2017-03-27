@@ -45,7 +45,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
             if (!empty($product)) {
                 if ($product['reverb_enabled']) {
-                    $res = $reverbProduct->syncProduct($product);
+                    $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_MANUAL_SYNC_SINGLE);
                     die(json_encode($res));
                 } else {
                     die(json_encode(array('status' => 'error', 'message' => 'Product ' . $productId . ' not enabled for reverb sync')));

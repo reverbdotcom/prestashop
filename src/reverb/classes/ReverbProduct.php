@@ -23,9 +23,10 @@ class ReverbProduct extends ReverbClient
      *  Send a product to reverb (POST or PUT)
      *
      * @param array $product
+     * @param string $origin
      * @return array
      */
-    public function syncProduct($product)
+    public function syncProduct($product, $origin)
     {
         $this->module->logs->requestLogs('##########################');
         $this->module->logs->requestLogs('# BEGIN Request SYNC product');
@@ -48,7 +49,7 @@ class ReverbProduct extends ReverbClient
                 $response = $this->sendPost($endPoint,$request);
             }
 
-            $return = $this->proccessResponse($product, $response);
+            $return = $this->proccessResponse($product, $response, $origin);
 
         } catch (\Exception $e) {
             throw $e;
@@ -80,9 +81,10 @@ class ReverbProduct extends ReverbClient
      *
      * @param array $product
      * @param array $response
+     * @param string $origin
      * @return array
      */
-    private function proccessResponse($product, $response)
+    private function proccessResponse($product, $response, $origin)
     {
         $return = array();
 
@@ -109,7 +111,8 @@ class ReverbProduct extends ReverbClient
             $status,
             $response['message'],
             $reverbId,
-            $reverbSlug
+            $reverbSlug,
+            $origin
         );
 
         $return['last-synced'] = $lastSync['date'];
@@ -140,7 +143,7 @@ class ReverbProduct extends ReverbClient
     private function getReverbProductIdFromResponse($response)
     {
         $id = null;
-        if (array_key_exists('listing',$response) && !empty($response['listing'])) {
+        if (array_key_exists('listing',$response) && !empty($response['listing']['id'])) {
             $id = (int) $response['listing']['id'];
         }
         return $id;

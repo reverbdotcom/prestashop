@@ -166,7 +166,13 @@ class ProductMapper
      */
     protected function mapPrice($product_ps)
     {
-        $price = new Reverb\Mapper\Models\Price($product_ps['price'], $this->context->currency->iso_code);
+        if ($this->context->currency) {
+            $isoCode = $this->context->currency->iso_code;
+        } else {
+            $currency = Currency::getDefaultCurrency();
+            $isoCode = $currency->iso_code;
+        }
+        $price = new Reverb\Mapper\Models\Price($product_ps['price'], $isoCode);
         return $price;
     }
 
