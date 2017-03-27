@@ -25,6 +25,7 @@
 
 {extends file="helpers/list/list_content.tpl"}
 
+
 {block name="open_td"}
     {$smarty.block.parent}
 {/block}
@@ -39,8 +40,12 @@
         {if $tr.$key}
             <a href="{$tr.$key}" title="" target="_blank" class="btn btn-default"><i class="icon-search-plus"> View</i></a>
         {/if}
+    {elseif $key == 'icon'}
+        <div class="icon-status loading-mask" id="icon-{$tr.$identifier}">Synchronisation</div>
+        <div class="icon-status success" id="icon-{$tr.$identifier}-success">Synchronisation success</div>
+        <div class="icon-status error" id="icon-{$tr.$identifier}-error">Synchronisation error</div>
     {else}
-            {$smarty.block.parent}
+        {$smarty.block.parent}
     {/if}
 {/block}
 

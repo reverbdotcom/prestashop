@@ -20,8 +20,10 @@ class Reverb extends Module
     CONST KEY_SETTINGS_PHOTOS = 'settings_photos';
     CONST KEY_SETTINGS_CONDITION = 'settings_condition';
     CONST KEY_SETTINGS_PRICE = 'settings_price';
+    CONST KEY_SETTINGS_PAYPAL = 'settings_paypal';
 
     CONST LIST_ID = 'ps_product';
+    CONST LIST_CATEGORY_ID = 'ps_mapping_category';
 
     protected $config_form = false;
     public $reverbConfig;
@@ -209,7 +211,6 @@ class Reverb extends Module
 
             $this->context->smarty->assign(array(
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
-                'ps_categories' => ReverbMapping::getFormattedPsCategories($this->context->language->id),
                 'is_logged' => true,
                 'token' => Tools::getAdminTokenLite('AdminModules'),
             ));
@@ -229,6 +230,7 @@ class Reverb extends Module
             'reverb_settings_form' => $this->renderSettingsForm(),
             'reverb_config' => $this->reverbConfig,
             'reverb_sync_status' => $this->getViewSyncStatus(),
+            'reverb_mapping_categories' => $this->getViewMappingCategories(),
             'logs' => $this->getLogFiles(),
             'active_tab' => $this->active_tab,
             'ajax_url' => $this->context->link->getAdminLink('AdminReverbConfiguration'),
@@ -421,29 +423,45 @@ class Reverb extends Module
                 'label' => $this->l('Price'),
                 'desc' => $this->l('On first time listing create, we will always sync price. If you set special prices on Reverb, turn off this settings to avoid updating price.'),
             ),
+            array(
+                'name' => self::KEY_SETTINGS_PAYPAL,
+                'label' => $this->l('Paypal email'),
+                'desc' => $this->l('Put your Paypal email'),
+                'type' => 'text'
+            ),
         );
 
         $input = array();
         foreach ($fields as $field) {
-            $input[] = array(
-                'type' => 'switch',
-                'label' => $field['label'],
-                'name' => $field['name'],
-                'is_bool' => true,
-                'desc' => $field['desc'],
-                'values' => array(
-                    array(
-                        'id' => 'active_on',
-                        'value' => true,
-                        'label' => $this->l('Enabled')
+            if (array_key_exists('type',$field) && $field['type'] == 'text'){
+                $input[] = array(
+                    'type' => 'text',
+                    'label' => $field['label'],
+                    'name' => $field['name'],
+                    'desc' => $field['desc'],
+                );
+            }else{
+                $input[] = array(
+                    'type' => 'switch',
+                    'label' => $field['label'],
+                    'name' => $field['name'],
+                    'is_bool' => true,
+                    'desc' => $field['desc'],
+                    'values' => array(
+                        array(
+                            'id' => 'active_on',
+                            'value' => true,
+                            'label' => $this->l('Enabled')
+                        ),
+                        array(
+                            'id' => 'active_off',
+                            'value' => false,
+                            'label' => $this->l('Disabled')
+                        )
                     ),
-                    array(
-                        'id' => 'active_off',
-                        'value' => false,
-                        'label' => $this->l('Disabled')
-                    )
-                ),
-            );
+                );
+            }
+
         }
         return array(
             'form' => array(
@@ -479,6 +497,7 @@ class Reverb extends Module
             self::KEY_SETTINGS_DESCRIPTION => $this->getReverbConfig(self::KEY_SETTINGS_DESCRIPTION),
             self::KEY_SETTINGS_PHOTOS => $this->getReverbConfig(self::KEY_SETTINGS_PHOTOS),
             self::KEY_SETTINGS_PRICE => $this->getReverbConfig(self::KEY_SETTINGS_PRICE),
+            self::KEY_SETTINGS_PAYPAL => $this->getReverbConfig(self::KEY_SETTINGS_PAYPAL),
         );
     }
 
@@ -570,15 +589,8 @@ class Reverb extends Module
             $this->saveReverbConfiguration();
         }
 
-        // Product type mapping form submission (ajax)
-        if (Tools::isSubmit('submitReverbModuleCategoryMapping')) {
-
-            $reverbMapping = new ReverbMapping($this);
-            $psCategoryId = Tools::getValue('ps_category_id');
-            $reverbCode = Tools::getValue('reverb_code');
-            $mappingId = Tools::getValue('mapping_id');
-
-            $newMappingId = $reverbMapping->createOrUpdateMapping($psCategoryId, $reverbCode, $mappingId);
+        // Settings form
+        if (Tools::isSubmit('submitFilterps_mapping_category')) {
             $this->active_tab = 'categories';
         }
     }
@@ -733,12 +745,12 @@ class Reverb extends Module
         $this->fields_list = array(
             'id_product' => array(
                 'title' => $this->l('Product'),
-                'width' => 70,
+                'width' => 30,
                 'type' => 'int',
                 'filter_key' => 'p.id_product'
             ),
-            'id_sync' => array(
-                'title' => $this->l('Variant'),
+            'reverb_ref' => array(
+                'title' => $this->l('Reference'),
                 'width' => 70,
                 'type' => 'text',
                 'filter_key' => 'id_sync'
@@ -751,7 +763,7 @@ class Reverb extends Module
             ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
-                'width' => 100,
+                'width' => 50,
                 'type' => 'select',
                 'search' => true,
                 'orderby' => true,
@@ -777,7 +789,13 @@ class Reverb extends Module
             ),
             'url_reverb' => array(
                 'title' => '',
-                'width' => 230,
+                'type' => 'text',
+                'filter_key' => 'last_synced',
+                'search' => false,
+                'orderby' => false,
+            ),
+            'icon' => array(
+                'title' => '',
                 'type' => 'text',
                 'filter_key' => 'last_synced',
                 'search' => false,
@@ -827,6 +845,70 @@ class Reverb extends Module
     }
 
     /**
+     *   Prepare view mapping categories
+     *
+     * @return HelperList
+     */
+    public function getViewMappingCategories()
+    {
+        //=========================================
+        //         PREPARE VIEW
+        //=========================================
+        $helper = new HelperListReverb();
+
+        $this->fields_list = array(
+            'ps_category' => array(
+                'title' => $this->l('Prestashop Name'),
+                'width' => 70,
+                'search' => false,
+            ),
+            'reverb_category' => array(
+                'title' => $this->l('Reverb Name'),
+                'width' => 70,
+                'search' => false,
+            ),
+        );
+
+        //=========================================
+        //         GET DATAS FOR LIST
+        //=========================================
+        $datas = ReverbMapping::getFormattedPsCategories($this->context->language->id);
+
+        $helper->override_folder = 'ReverbMapping/';
+        $helper->table = self::LIST_CATEGORY_ID;
+        $helper->allow_export = true;
+        $helper->shopLinkType = '';
+        $helper->default_pagination = ReverbMapping::DEFAULT_PAGINATION;
+        $helper->listTotal = ReverbMapping::countPsCategories($this->context->language->id);
+        $helper->module = $this;
+        $helper->no_link = true;
+        $helper->show_filters = false;
+
+        $helper->simple_header = false;
+        $helper->show_toolbar = true;
+        $helper->identifier = 'ps_category';
+
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
+            .'&configure='.$this->name. '&module_name='.$this->name;
+
+        //=========================================
+        //              GENERATE VIEW
+        //=========================================
+        return $helper->generateList($datas, $this->fields_list);
+    }
+
+    /**
+     *  Proccess ajax call from view
+     *
+     */
+    public function ajaxProcessSyncronizeProduct(){
+        die(json_encode(array(
+            'result' => true,
+        )));
+    }
+
+    /**
      * Checks if the page has been called from XmlHttpRequest (AJAX)
      * @return bool
      */
@@ -843,6 +925,7 @@ require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/AbstractModel.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Category.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Price.php');
+require_once(dirname(__FILE__) . '/classes/mapper/models/Seller.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Condition.php');
 require_once(dirname(__FILE__) . '/classes/ReverbLogs.php');
 require_once(dirname(__FILE__) . '/classes/ReverbClient.php');

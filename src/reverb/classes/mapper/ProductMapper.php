@@ -14,14 +14,17 @@ class ProductMapper
 {
     protected $request;
 
+    protected $module;
+
     /**
      * ReverbProduct constructor.
      * @param \Reverb $module_instance
      *
      */
-    public function __construct()
+    public function __construct(\Reverb $module_instance)
     {
         $this->context = \Context::getContext();
+        $this->module = $module_instance;
     }
 
     /**
@@ -29,7 +32,7 @@ class ProductMapper
      *
      * @param $product
      */
-    public function processMapping($product_ps)
+    public function processMapping($product_ps,$synced)
     {
         $product = new \ProductReverb();
 
@@ -37,16 +40,12 @@ class ProductMapper
         $product->model = $product_ps['name'];
         $product->has_inventory = $product_ps['quantity'] > 0 ? true : false;
         $product->inventory = $product_ps['quantity'];
-        $product->description = $product_ps['description'];
         $product->sku = $product_ps['reference'];
         $product->upc = $product_ps['ean13'];
-        $product->photos = $this->getImagesUrl($product_ps);
-        $product->price = $this->mapPrice($product_ps);
         $product->publish = false;
         $product->title = $product_ps['name'];;
         $product->categories = $this->mapCategories($product_ps);
         $product->location = $this->mapLocation();
-        $product->condition = $this->mapCondition($product_ps);
         $product->sold_as_is =  $product_ps['sold_as_is'] ? true : false;
         $product->finish = $product_ps['finish'];
         $product->origin_country_code = $product_ps['origin_country_code'];
@@ -54,10 +53,44 @@ class ProductMapper
         $product->seller_cost = $product_ps['wholesale_price'];
 
         $product->shipping_profile_id = null;
-        $product->seller = null;
         $product->tax_exempt = null;
 
+        $product = $this->processMappingAccordingSettings($product,$product_ps,$synced);
+
         $this->request = $product;
+    }
+
+    /**
+     * @param $product
+     * @param $synced
+     */
+    private function processMappingAccordingSettings($product,$product_ps,$synced) {
+        if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION) ){
+            $product->description = $product_ps['description'];
+        }
+
+        if (!$synced || ($synced && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PRICE)) ) {
+            $product->price = $this->mapPrice($product_ps);
+        }
+
+        if (!$synced || ($synced && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PHOTOS)) ) {
+            $product->photos = $this->getImagesUrl($product_ps);
+        }
+
+        if (!$synced || ($synced && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_CONDITION)) ) {
+            $product->condition = $this->mapCondition($product_ps);
+        }
+
+        if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_AUTO_PUBLISH)) {
+            $product->publish = true;
+        }
+
+        if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PAYPAL)) {
+            $seller = new Reverb\Mapper\Models\Seller($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PAYPAL));
+            $product->seller = $seller;
+        }
+
+        return $product;
     }
 
     /**
@@ -66,11 +99,11 @@ class ProductMapper
      * @param array $product_ps
      * @return array of Reverb\Mapper\Models\Categor
      */
-    protected function mapCondition($product_ps)
+    protected function mapCondition($product)
     {
         $condition = null;
-        if ($product_ps['id_condition']) {
-            $condition = new Reverb\Mapper\Models\Condition($product_ps['id_condition']);
+        if ($product['id_condition']) {
+            $condition = new Reverb\Mapper\Models\Condition($product['id_condition']);
         }
         return $condition;
     }

@@ -16,8 +16,6 @@ class ReverbConditions extends ReverbClient
     CONST REVERB_ROOT_KEY = 'conditions';
     CONST REVERB_DISPLAYNAME= 'display_name';
 
-
-
     /**
      * Return formatted conditions for mapping
      */
