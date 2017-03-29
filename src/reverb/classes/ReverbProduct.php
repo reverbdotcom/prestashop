@@ -70,7 +70,7 @@ class ReverbProduct extends ReverbClient
             // Send POST or PUT
             if ($reverbSlug) {
                 // Product was already sync to Reverb => PUT
-                $this->module->logs->infoLogs('Product ' . $reverbSlug . ' already sync on Reverb => PUT');
+                $this->logInfosMessage('Product ' . $reverbSlug . ' already sync on Reverb => PUT');
                 $this->setEndPoint($this->getEndPoint() . '/' . $reverbSlug);
                 $response = $this->sendPut($request);
 
@@ -84,14 +84,14 @@ class ReverbProduct extends ReverbClient
                     // Product already exists on Reberb => PUT
                     $reverbSlug = $this->getReverbProductSlug($reverbProduct);
 
-                    $this->module->logs->infoLogs('Product ' . $reverbSlug . ' already exists on Reverb => PUT');
+                    $this->logInfosMessage('Product ' . $reverbSlug . ' already exists on Reverb => PUT');
 
                     $this->setEndPoint($this->getEndPoint() . '/' . $reverbSlug);
                     $response = $this->sendPut($request);
 
                 } else {
                     // Product does not exist on Reberb => POST
-                    $this->module->logs->infoLogs('Product ' . $reverbSlug . ' does not exist on Reverb yet => POST');
+                    $this->logInfosMessage('Product ' . $reverbSlug . ' does not exist on Reverb yet => POST');
                     $response = $this->sendPost($request);
                 }
             }
