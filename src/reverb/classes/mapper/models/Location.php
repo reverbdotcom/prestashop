@@ -30,7 +30,7 @@ class Location extends AbstractModel
     /**
      * Category constructor.
      *
-     * @param string uuid
+     * @param string $uuid
      */
     public function __construct($country = null, $region = null, $locality = null)
     {

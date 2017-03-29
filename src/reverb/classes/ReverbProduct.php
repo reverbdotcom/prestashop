@@ -14,10 +14,38 @@ class ReverbProduct extends ReverbClient
 {
 
     CONST REVERB_PRODUCT_ENDPOINT = 'listings';
+    CONST REVERB_ROOT_KEY = 'conditions';
 
     CONST REVERB_CODE_SUCCESS = 'success';
     CONST REVERB_CODE_ERROR = 'error';
     CONST REVERB_CODE_TO_SYNC = 'to_sync';
+
+    public function __construct($module)
+    {
+        parent::__construct($module);
+        $this->setEndPoint(self::REVERB_PRODUCT_ENDPOINT)
+            ->setRootKey(self::REVERB_ROOT_KEY);
+    }
+
+    /**
+     * Get Reverb product by sku
+     * @param $sku
+     * @return array|bool
+     */
+    public function getProduct($sku)
+    {
+        $this->setEndPoint('my/' . self::REVERB_PRODUCT_ENDPOINT);
+        $search = array(
+            'state' => 'all',
+            'sku' => $sku,
+        );
+        $product = $this->sendGet($search);
+
+        if (!empty($product['total']) && $product['total'] == 1) {
+            return $product['listings'][0];
+        }
+        return false;
+    }
 
     /**
      *  Send a product to reverb (POST or PUT)
@@ -28,11 +56,9 @@ class ReverbProduct extends ReverbClient
      */
     public function syncProduct($product, $origin)
     {
-        $this->module->logs->requestLogs('##########################');
-        $this->module->logs->requestLogs('# BEGIN Request SYNC product');
-        $this->module->logs->requestLogs('##########################');
-
-        $endPoint = self::REVERB_PRODUCT_ENDPOINT;
+        $this->logInfosMessage('##########################');
+        $this->logInfosMessage('# BEGIN Request SYNC product ' . $product['reference']);
+        $this->logInfosMessage('##########################');
 
         try {
             // Call Reverb API and process request
@@ -43,22 +69,42 @@ class ReverbProduct extends ReverbClient
 
             // Send POST or PUT
             if ($reverbSlug) {
-                $endPoint .= '/' . $reverbSlug;
-                $response = $this->sendPut($endPoint, $request);
+                // Product was already sync to Reverb => PUT
+                $this->module->logs->infoLogs('Product ' . $reverbSlug . ' already sync on Reverb => PUT');
+                $this->setEndPoint($this->getEndPoint() . '/' . $reverbSlug);
+                $response = $this->sendPut($request);
+
             } else {
-                $response = $this->sendPost($endPoint,$request);
+
+                // Checks if product already exists on Reberb
+                $reverbProduct = $this->getProduct($product['reference']);
+                $this->setEndPoint(self::REVERB_PRODUCT_ENDPOINT);
+
+                if (!empty($reverbProduct)) {
+                    // Product already exists on Reberb => PUT
+                    $reverbSlug = $this->getReverbProductSlug($reverbProduct);
+
+                    $this->module->logs->infoLogs('Product ' . $reverbSlug . ' already exists on Reverb => PUT');
+
+                    $this->setEndPoint($this->getEndPoint() . '/' . $reverbSlug);
+                    $response = $this->sendPut($request);
+
+                } else {
+                    // Product does not exist on Reberb => POST
+                    $this->module->logs->infoLogs('Product ' . $reverbSlug . ' does not exist on Reverb yet => POST');
+                    $response = $this->sendPost($request);
+                }
             }
 
             $return = $this->proccessResponse($product, $response, $origin);
 
         } catch (\Exception $e) {
-            throw $e;
             $return = $this->proccessTechnicalError($e);
         }
 
-        $this->module->logs->requestLogs('##########################');
-        $this->module->logs->requestLogs('# END Request SYNC product');
-        $this->module->logs->requestLogs('##########################');
+        $this->logInfosMessage('##########################');
+        $this->logInfosMessage('# END Request SYNC product');
+        $this->logInfosMessage('##########################');
 
         return $return;
     }
@@ -129,7 +175,21 @@ class ReverbProduct extends ReverbClient
     {
         $slug = null;
         if (array_key_exists('listing',$response) && !empty($response['listing'])) {
-            $url = $response['listing']['_links']['update']['href'];
+            return $this->getReverbProductSlug($response['listing']);
+        }
+        return $slug;
+    }
+
+    /**
+     * Find the reverb slug from product
+     * @param array $product
+     * @return string
+     */
+    private function getReverbProductSlug($product)
+    {
+        $slug = null;
+        if (array_key_exists('_links',$product) && !empty($product['_links'])) {
+            $url = $product['_links']['update']['href'];
             $slug = substr($url, strrpos($url, '/') + 1);
         }
         return $slug;

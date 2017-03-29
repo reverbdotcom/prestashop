@@ -5,7 +5,7 @@ require_once(dirname(__FILE__) . '/../vendor/autoload.php');
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Message\Request;
+use GuzzleHttp\Message\RequestInterface;
 use GuzzleHttp\Message\ResponseInterface;
 
 class ReverbClient extends Client
@@ -14,6 +14,8 @@ class ReverbClient extends Client
     protected $module = false;
     protected $client;
     protected $headers = array('Accept' => 'application/json', 'Content-Type'=>'application/json','Accept-Version'=> '3.0');
+    protected $endPoint = '';
+    protected $rootKey = '';
 
     public $reverbConfig;
 
@@ -40,6 +42,42 @@ class ReverbClient extends Client
         }
 
         parent::__construct(array('base_url' => $this->getBaseUrl()));
+    }
+
+    /**
+     * @return string
+     */
+    public function getEndPoint()
+    {
+        return $this->endPoint;
+    }
+
+    /**
+     * @param $endPoint
+     * @return $this
+     */
+    public function setEndPoint($endPoint)
+    {
+        $this->endPoint = $endPoint;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRootKey()
+    {
+        return $this->rootKey;
+    }
+
+    /**
+     * @param $rootKey
+     * @return $this
+     */
+    public function setRootKey($rootKey)
+    {
+        $this->rootKey = $rootKey;
+        return $this;
     }
 
     /**
@@ -77,82 +115,107 @@ class ReverbClient extends Client
     }
 
     /**
+     * Get all object for an endpoint or one by uuid
+     *
+     * @param null $uuid
+     * @return mixed|string
+     */
+    public function getListFromEndpoint($uuid = null)
+    {
+        $key = $this->getRootKey();
+
+        if ($uuid) {
+            $this->setEndPoint($this->getEndPoint() . '/' . $uuid);
+        }
+
+        $list = $this->sendGet();
+
+        if (!$uuid && !isset($list[$key])) {
+            return $this->convertException(new \Exception($this->getEndPoint() . ' not found'));
+        }
+
+        return $uuid ? $list : $list[$key];
+    }
+
+    /**
+     * Return formatted list from endpoint for mapping
+     *
+     * @param $display_name
+     * @return array
+     */
+    public function getFormattedList($display_name)
+    {
+        $list = $this->getListFromEndpoint();
+
+        $formattedList = array();
+
+        foreach ($list as $object) {
+            $formattedList[$object['uuid']] = $object[$display_name];
+        }
+
+        return $formattedList;
+    }
+
+    /**
      * Send a GET request
-     * @param string $endpoint
+     * @param array $params
      * @return mixed
      */
-    public function sendGet($endpoint)
+    public function sendGet($params = array())
     {
-        try {
-            $this->module->logs->requestLogs('# GET ' . $this->getBaseUrl() . $endpoint);
-            $this->module->logs->requestLogs(var_export($this->getHeaders(), true));
-
-            $response = $this->get(
-                $endpoint,
-                array('headers' => $this->getHeaders())
-            );
-
-            return $this->convertResponse($response);
-
-        } catch (\Exception $e)
-        {
-            return $this->convertException($e);
-        }
+        return $this->sendResquest('GET', $params);
     }
 
     /**
      * Send a POST request
-     * @param string $endpoint
      * @param array $params
      * @return mixed
      */
-    public function sendPost($endpoint, $params = array())
+    public function sendPost($params = array())
     {
-        try {
-            $this->module->logs->requestLogs('# POST ' . $this->getBaseUrl() . $endpoint);
+        return $this->sendResquest('POST', $params);
+    }
 
-            $request = $this->createRequest('POST', $endpoint, array('headers' => $this->getHeaders(),'body' => $params ));
-
-            return $this->sendResquest($request);
-
-        } catch (\Exception $e)
-        {
-            return $this->convertException($e);
-        }
+    /**
+     * Send a PUT request
+     * @param array $params
+     * @return mixed
+     */
+    public function sendPut($params = array())
+    {
+        return $this->sendResquest('PUT', $params);
     }
 
     /**
      *  Send POST or PUT
      *
-     * @param $request
+     * @param string $method
+     * @param array $params
      * @return mixed
      */
-    private function sendResquest(Request $request) {
-            $this->module->logs->requestLogs('# with body ' . $request->getBody());
-            $this->module->logs->requestLogs('# with header Content-Type ' . var_export($this->getHeaders(), true));
+    private function sendResquest($method, $params = array())
+    {
+        try {
+            $this->logRequestMessage('# ' . $method . ' ' . $this->getBaseUrl() . $this->getEndPoint());
+
+            $options = array('headers' => $this->getHeaders());
+            if (!empty($params)) {
+                if ($method == 'GET') {
+                    $options['query'] = $params;
+                } else {
+                    $options['body'] = $params;
+                }
+            }
+
+            $request = $this->createRequest($method, $this->getEndPoint(), $options);
+
+            $this->logRequest($request);
 
             $response = $this->send($request);
 
             return $this->convertResponse($response);
-    }
 
-    /**
-     * Send a PUT request
-     * @param string $endpoint
-     * @param array $params
-     * @return mixed
-     */
-    public function sendPut($endpoint, $params = array())
-    {
-        try {
-            $this->module->logs->requestLogs('# PUT ' . $this->getBaseUrl() . $endpoint);
-
-            $request = $this->createRequest('PUT', $endpoint, array('headers' => $this->getHeaders(),'body' => $params ));
-
-            return $this->sendResquest($request);
-
-        } catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             return $this->convertException($e);
         }
     }
@@ -164,13 +227,14 @@ class ReverbClient extends Client
      */
     protected function convertResponse(ResponseInterface $response)
     {
-        $this->module->logs->requestLogs('# response class : ' . get_class($response));
         $content = $response->getBody()->getContents();
         if (! $array = json_decode($content, true)) {
-            $this->module->logs->requestLogs(var_export($content, true));
+            $this->logRequestMessage(var_export($content, true));
             $this->convertException(new \Exception('Api response is not a json'));
         }
-        $this->module->logs->requestLogs(var_export($array, true));
+        $this->logRequestMessage('### RESPONSE ###');
+        $this->logRequestMessage(var_export($array, true));
+        $this->logRequestMessage('################');
         return $array;
     }
 
@@ -190,5 +254,45 @@ class ReverbClient extends Client
         }
 
         return $e->getMessage();
+    }
+
+    /**
+     * Log a request
+     * @param RequestInterface $request
+     */
+    protected function logRequest(RequestInterface $request)
+    {
+        $body = $request->getBody();
+        if (!empty($body)) {
+            $this->logRequestMessage('# with body ' . $body);
+        }
+
+        $query = $request->getQuery();
+        if (!empty($query)) {
+            $this->logRequestMessage('# with query ' . var_export($query, true));
+        }
+
+        $headers = $request->getHeaders();
+        if (!empty($headers)) {
+            $this->logRequestMessage('# with headers ' . var_export($headers, true));
+        }
+    }
+
+    /**
+     * Log a message in the good request file
+     * @param string $msg
+     */
+    protected function logRequestMessage($msg)
+    {
+        $this->module->logs->requestLogs($msg, $this->getEndPoint());
+    }
+
+    /**
+     * Log a message in the infos file
+     * @param string $msg
+     */
+    protected function logInfosMessage($msg)
+    {
+        $this->module->logs->infoLogs($msg);
     }
 }

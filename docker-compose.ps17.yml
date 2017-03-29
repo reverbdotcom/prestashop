@@ -11,5 +11,5 @@ web17:
     - ./conf/env/PRESTASHOP.env
     - ./conf/env/PRESTASHOP-16.env
   volumes:
-    - ./web/prestahsop17:/var/www/html/
+    - ./web/prestashop17:/var/www/html/
     - ./src/reverb:/var/www/html/modules/reverb

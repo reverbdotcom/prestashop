@@ -14,59 +14,53 @@ class ReverLogs
     }
 
     /**
-     *
-     * LOG Errors
-     *
+     * Log Errors
+     * @param $msg
      */
     public function errorLogsReverb($msg)
     {
-        $this->writeLogs(0, $msg);
+        $this->writeLogs('error', $msg);
     }
 
     /**
-     *
-     * LOG APP
-     *
+     * Log info
+     * @param $msg
      */
     public function infoLogs($msg)
     {
-        $this->writeLogs(1, $msg);
+        $this->writeLogs('infos', $msg);
     }
 
-    public function callbackLogs($msg)
+    /**
+     * Log API call
+     * @param $msg
+     * @param $endpoint
+     */
+    public function requestLogs($msg, $endpoint)
     {
-        $this->writeLogs(2, $msg);
+        $file = $this->getLogsFileByApiEndPoint($endpoint);
+        $this->writeLogs($file, $msg);
     }
 
-    public function requestLogs($msg)
-    {
-        $this->writeLogs(3, $msg);
-    }
-
-    private function writeLogs($code, $msg)
+    private function writeLogs($file, $msg)
     {
         if ($this->enable) {
-            switch ($code) {
-                case 0:
-                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-error-logs.txt', 'a+');
-                    break;
-                case 1:
-                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-infos-logs.txt', 'a+');
-                    break;
-                case 2:
-                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-callback.txt', 'a+');
-                    break;
-                case 3:
-                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-request.txt', 'a+');
-                    break;
-                default:
-                    $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-infos-logs.txt', 'a+');
-                    break;
-            }
+            $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-' . $file . '-logs.txt', 'a+');
             fseek($fp, SEEK_END);
             fputs($fp, '## ' . date('Y-m-d H:i:s') . ' ##' . PHP_EOL);
             fputs($fp, $msg . PHP_EOL);
             fclose($fp);
         }
+    }
+
+    private function getLogsFileByApiEndPoint($endPoint)
+    {
+        if (strstr($endPoint, ReverbCategories::REVERB_CATEGORIES_ENDPOINT)) {
+            return 'categories';
+        }
+        if (strstr($endPoint, ReverbProduct::REVERB_PRODUCT_ENDPOINT)) {
+            return 'listings';
+        }
+        return 'infos';
     }
 }
