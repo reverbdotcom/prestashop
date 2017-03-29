@@ -14,10 +14,18 @@ class ReverbProduct extends ReverbClient
 {
 
     CONST REVERB_PRODUCT_ENDPOINT = 'listings';
+    CONST REVERB_ROOT_KEY = 'conditions';
 
     CONST REVERB_CODE_SUCCESS = 'success';
     CONST REVERB_CODE_ERROR = 'error';
     CONST REVERB_CODE_TO_SYNC = 'to_sync';
+
+    public function __construct($module)
+    {
+        parent::__construct($module);
+        $this->setEndPoint(self::REVERB_CONDITIONS_ENDPOINT)
+            ->setRootKey(self::REVERB_ROOT_KEY);
+    }
 
     /**
      *  Send a product to reverb (POST or PUT)
@@ -28,11 +36,9 @@ class ReverbProduct extends ReverbClient
      */
     public function syncProduct($product, $origin)
     {
-        $this->module->logs->requestLogs('##########################');
-        $this->module->logs->requestLogs('# BEGIN Request SYNC product');
-        $this->module->logs->requestLogs('##########################');
-
-        $endPoint = self::REVERB_PRODUCT_ENDPOINT;
+        $this->logMessage('##########################');
+        $this->logMessage('# BEGIN Request SYNC product');
+        $this->logMessage('##########################');
 
         try {
             // Call Reverb API and process request
@@ -43,10 +49,10 @@ class ReverbProduct extends ReverbClient
 
             // Send POST or PUT
             if ($reverbSlug) {
-                $endPoint .= '/' . $reverbSlug;
-                $response = $this->sendPut($endPoint, $request);
+                $this->setEndPoint($this->getEndPoint() . '/' . $reverbSlug);
+                $response = $this->sendPut($request);
             } else {
-                $response = $this->sendPost($endPoint,$request);
+                $response = $this->sendPost($request);
             }
 
             $return = $this->proccessResponse($product, $response, $origin);
@@ -56,9 +62,9 @@ class ReverbProduct extends ReverbClient
             $return = $this->proccessTechnicalError($e);
         }
 
-        $this->module->logs->requestLogs('##########################');
-        $this->module->logs->requestLogs('# END Request SYNC product');
-        $this->module->logs->requestLogs('##########################');
+        $this->logMessage('##########################');
+        $this->logMessage('# END Request SYNC product');
+        $this->logMessage('##########################');
 
         return $return;
     }

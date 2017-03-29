@@ -7,6 +7,13 @@ class ReverbCategories extends ReverbClient
     CONST REVERB_CATEGORIES_ENDPOINT = 'categories';
     CONST REVERB_ROOT_KEY = 'categories';
 
+    public function __construct($module)
+    {
+        parent::__construct($module);
+        $this->setEndPoint(self::REVERB_CATEGORIES_ENDPOINT)
+            ->setRootKey(self::REVERB_ROOT_KEY);
+    }
+
     /**
      * Get all categories or one by uuid
      *
@@ -15,9 +22,7 @@ class ReverbCategories extends ReverbClient
      */
     public function getCategories($uuid = null)
     {
-        $reverbUtils = new \Reverb\ReverbUtils($this->module);
-
-        return $reverbUtils->getListFromEndpoint(self::REVERB_CATEGORIES_ENDPOINT,self::REVERB_ROOT_KEY,$uuid);
+        return $this->getListFromEndpoint($uuid);
     }
 
     /**

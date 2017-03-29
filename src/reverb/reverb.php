@@ -975,7 +975,6 @@ require_once(dirname(__FILE__) . '/classes/ReverbClient.php');
 require_once(dirname(__FILE__) . '/classes/ReverbAuth.php');
 require_once(dirname(__FILE__) . '/classes/ReverbCategories.php');
 require_once(dirname(__FILE__) . '/classes/ReverbConditions.php');
-require_once(dirname(__FILE__) . '/classes/ReverbUtils.php');
 require_once(dirname(__FILE__) . '/classes/ReverbProduct.php');
 require_once(dirname(__FILE__) . '/classes/mapper/ProductMapper.php');
 require_once(dirname(__FILE__) . '/classes/helper/RequestSerializer.php');

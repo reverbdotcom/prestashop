@@ -43,11 +43,15 @@ if [ "$1" = 'restart' ];then
     docker-compose up -d
 fi
 
-if [ "$1" = 'exec' ];then
+if [ "$1" = 'up' ] && [ "$2" != '' ];then
+    docker-compose -f docker-compose.yml -f docker-compose.ps"$2".yml up  -d
+fi
+
+if [ "$1" = 'exec' ] && [ "$2" != '' ];then
     docker exec -it reverb"$2" bash
 fi
 
-if [ "$1" = 'log' ];then
+if [ "$1" = 'log' ] && [ "$2" != '' ];then
     docker logs -f reverb"$2"
 fi
 
