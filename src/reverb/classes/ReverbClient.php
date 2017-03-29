@@ -5,6 +5,7 @@ require_once(dirname(__FILE__) . '/../vendor/autoload.php');
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Message\RequestInterface;
 use GuzzleHttp\Message\ResponseInterface;
 
 class ReverbClient extends Client
@@ -157,11 +158,12 @@ class ReverbClient extends Client
 
     /**
      * Send a GET request
+     * @param array $params
      * @return mixed
      */
-    public function sendGet()
+    public function sendGet($params = array())
     {
-        return $this->sendResquest('GET');
+        return $this->sendResquest('GET', $params);
     }
 
     /**
@@ -187,31 +189,33 @@ class ReverbClient extends Client
     /**
      *  Send POST or PUT
      *
-     * @param $method
+     * @param string $method
+     * @param array $params
      * @return mixed
      */
     private function sendResquest($method, $params = array())
     {
         try {
-            $this->logMessage('# ' . $method . ' ' . $this->getBaseUrl() . $this->getEndPoint());
+            $this->logRequestMessage('# ' . $method . ' ' . $this->getBaseUrl() . $this->getEndPoint());
 
             $options = array('headers' => $this->getHeaders());
             if (!empty($params)) {
-                $options['body'] = $params;
+                if ($method == 'GET') {
+                    $options['query'] = $params;
+                } else {
+                    $options['body'] = $params;
+                }
             }
 
             $request = $this->createRequest($method, $this->getEndPoint(), $options);
 
-            $this->logMessage('# with body ' . $request->getBody());
-            $this->logMessage('# with query ' . $request->getQuery());
-            $this->logMessage('# with header Content-Type ' . var_export($this->getHeaders(), true));
+            $this->logRequest($request);
 
             $response = $this->send($request);
 
             return $this->convertResponse($response);
 
-        } catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             return $this->convertException($e);
         }
     }
@@ -225,10 +229,12 @@ class ReverbClient extends Client
     {
         $content = $response->getBody()->getContents();
         if (! $array = json_decode($content, true)) {
-            $this->logMessage(var_export($content, true));
+            $this->logRequestMessage(var_export($content, true));
             $this->convertException(new \Exception('Api response is not a json'));
         }
-        $this->logMessage(var_export($array, true));
+        $this->logRequestMessage('### RESPONSE ###');
+        $this->logRequestMessage(var_export($array, true));
+        $this->logRequestMessage('################');
         return $array;
     }
 
@@ -251,11 +257,42 @@ class ReverbClient extends Client
     }
 
     /**
-     * Log a message in the good file
+     * Log a request
+     * @param RequestInterface $request
+     */
+    protected function logRequest(RequestInterface $request)
+    {
+        $body = $request->getBody();
+        if (!empty($body)) {
+            $this->logRequestMessage('# with body ' . $body);
+        }
+
+        $query = $request->getQuery();
+        if (!empty($query)) {
+            $this->logRequestMessage('# with query ' . var_export($query, true));
+        }
+
+        $headers = $request->getHeaders();
+        if (!empty($headers)) {
+            $this->logRequestMessage('# with headers ' . var_export($headers, true));
+        }
+    }
+
+    /**
+     * Log a message in the good request file
      * @param string $msg
      */
-    protected function logMessage($msg)
+    protected function logRequestMessage($msg)
     {
         $this->module->logs->requestLogs($msg, $this->getEndPoint());
+    }
+
+    /**
+     * Log a message in the infos file
+     * @param string $msg
+     */
+    protected function logInfosMessage($msg)
+    {
+        $this->module->logs->infoLogs($msg);
     }
 }

@@ -61,6 +61,7 @@ class ReverbSync
      *
      * Load list of products for sync view
      *
+     * @param $list_field
      * @return array|false|mysqli_result|null|PDOStatement|resource
      */
     public function getListProductsWithStatus($list_field)
@@ -117,7 +118,7 @@ class ReverbSync
      * @param $sql
      * @return mixed
      */
-    protected function processFilter($list_field, $sql)
+    protected function processFilter($list_field, DbQuery $sql)
     {
         $values = Tools::getAllValues();
 
@@ -240,7 +241,7 @@ class ReverbSync
     /**
      * Return the mapping ID from PS category
      *
-     * @param int idProduct
+     * @param int $idProduct
      * @return int|false
      */
     public function getSyncStatusId($idProduct)
@@ -251,7 +252,7 @@ class ReverbSync
 
     /**
      * Return the sync
-     * @param int idProduct
+     * @param int $idProduct
      * @return array
      */
     public function getSyncStatus($idProduct)
@@ -389,8 +390,6 @@ class ReverbSync
      * @param string $origin
      * @param string $status
      * @param string $details
-     * @param integer $reverbId
-     * @param string $reverbSlug
      * @return void
      */
     private function insertSyncHistory($idProduct, $origin, $status, $details)

@@ -18,7 +18,7 @@ class Seller extends AbstractModel
     /**
      * Category constructor.
      *
-     * @param string uuid
+     * @param string $uuid
      */
     public function __construct($paypal_email)
     {

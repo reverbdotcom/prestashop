@@ -17,7 +17,7 @@ class Category extends AbstractModel
     /**
      * Category constructor.
      *
-     * @param string uuid
+     * @param string $uuid
      */
     public function __construct($uuid)
     {

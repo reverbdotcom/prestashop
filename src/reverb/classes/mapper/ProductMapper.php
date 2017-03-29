@@ -1,7 +1,5 @@
 <?php
 
-use Reverb\Mapper\Models\Category;
-
 /**
  * Model Reverb Sync
  *
@@ -62,11 +60,12 @@ class ProductMapper
     }
 
     /**
-     * @param array $product
+     * @param ProductReverb $product
      * @param array $product_ps
      * @param string|false $reverbSlug
+     * @return ProductReverb
      */
-    private function processMappingAccordingSettings($product,$product_ps, $reverbSlug) {
+    private function processMappingAccordingSettings(ProductReverb $product,$product_ps, $reverbSlug) {
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION) ){
             $product->description = $product_ps['description'];
         }
@@ -98,7 +97,7 @@ class ProductMapper
     /**
      *  Map condition for a product
      *
-     * @param array $product_ps
+     * @param array $product
      * @return array of Reverb\Mapper\Models\Categor
      */
     protected function mapCondition($product)
@@ -113,7 +112,6 @@ class ProductMapper
     /**
      *  Map Location with current store information
      *
-     * @param array $product_ps
      * @return Reverb\Mapper\Models\Location
      */
     protected function mapLocation()

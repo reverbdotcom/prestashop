@@ -55,11 +55,12 @@ class ReverLogs
 
     private function getLogsFileByApiEndPoint($endPoint)
     {
-        switch ($endPoint) {
-            case ReverbCategories::REVERB_CATEGORIES_ENDPOINT : return 'categories'; break;
-            case ReverbProduct::REVERB_PRODUCT_ENDPOINT : return 'listings'; break;
-            case ReverbConditions::REVERB_CONDITIONS_ENDPOINT : return 'listings'; break;
-            default: return $endPoint;
+        if (strstr($endPoint, ReverbCategories::REVERB_CATEGORIES_ENDPOINT)) {
+            return 'categories';
         }
+        if (strstr($endPoint, ReverbProduct::REVERB_PRODUCT_ENDPOINT)) {
+            return 'listings';
+        }
+        return 'infos';
     }
 }

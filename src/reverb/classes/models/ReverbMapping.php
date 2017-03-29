@@ -164,6 +164,7 @@ class ReverbMapping
      * Update a mapping
      *
      * @param $mappingId
+     * @param $psCategoryId
      * @param $reverbCode
      * @return bool
      */

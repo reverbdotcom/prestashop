@@ -17,7 +17,7 @@ class Condition extends AbstractModel
     /**
      * Condition constructor.
      *
-     * @param string uuid
+     * @param string $uuid
      */
     public function __construct($uuid)
     {
