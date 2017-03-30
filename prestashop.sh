@@ -15,8 +15,9 @@ if [ "$1" = '' ] || [ "$1" = '--help' ];then
     printf "\n                                                                                  "
     printf "\n      - init      : Build images and run containers (Delete existing volumes)     "
     printf "\n      - restart   : Run all containers if they already exist                      "
+    printf "\n      - up        : Up containters                                                "
     printf "\n      - exec      : Bash prestashop.                                              "
-    printf "\n      - log       : Log prestashop 1.6                                            "
+    printf "\n      - log       : Log prestashop.                                               "
     printf "\n                                                                                  "
 fi
 
