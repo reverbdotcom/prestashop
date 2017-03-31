@@ -118,14 +118,23 @@ class ReverbClient extends Client
      * Get all object for an endpoint or one by uuid
      *
      * @param null $uuid
+     * @param array
      * @return mixed|string
      */
-    public function getListFromEndpoint($uuid = null)
+    public function getListFromEndpoint($uuid = null,$params)
     {
         $key = $this->getRootKey();
 
         if ($uuid) {
             $this->setEndPoint($this->getEndPoint() . '/' . $uuid);
+        }
+
+        if ($params) {
+            $paramsFlat = '';
+            foreach ($params as $name => $value){
+                $paramsFlat .= $name . '=' .  $value;
+            }
+            $this->setEndPoint('?' . $paramsFlat);
         }
 
         $list = $this->sendGet();
