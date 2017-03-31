@@ -16,9 +16,10 @@ class ReverbUtils extends ReverbClient
      * Get all object for an endpoint or one by uuid
      *
      * @param null $uuid
+     * @param string List of params with value
      * @return array
      */
-    public function getListFromEndpoint($endPoint,$key,$uuid = null)
+    public function getListFromEndpoint($endPoint,$key,$uuid = null, $params = null)
     {
         $this->module->logs->requestLogs('##########################');
         $this->module->logs->requestLogs('# BEGIN Request GET ' . $endPoint);
@@ -27,6 +28,14 @@ class ReverbUtils extends ReverbClient
 
         if ($uuid) {
             $endPoint .= '/' . $uuid;
+        }
+
+        if ($params) {
+            $paramsFlat = '';
+            foreach ($params as $name => $value){
+                $paramsFlat .= $name . '=' .  $value;
+            }
+            $endPoint .= '?' . $paramsFlat;
         }
 
         $list = $this->sendGet($endPoint);
