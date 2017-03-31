@@ -40,7 +40,7 @@ fi
 
 if [ "$1" = 'restart' ];then
     docker-compose stop
-    docker-compose up -d
+    docker-compose -f docker-compose.yml -f docker-compose.ps16.yml -f docker-compose.ps17.yml up -d
 fi
 
 if [ "$1" = 'up' ] && [ "$2" != '' ];then

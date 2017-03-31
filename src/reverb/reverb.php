@@ -35,6 +35,8 @@ class Reverb extends Module
         'AdminReverbConfiguration',
     );
 
+    CONST CODE_CRON_ORDERS = 'orders';
+
     public $prod_url = 'https://reverb.com';
     public $sandbox_url = 'https://sandbox.reverb.com';
 
@@ -119,6 +121,17 @@ class Reverb extends Module
             UNIQUE (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_crons` (
+            `id_cron` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `code` varchar(50) NOT NULL,
+            `status` text NOT NULL,
+            `date` datetime NOT NULL,
+            `number_to_sync` int(11),
+            `number_sync` int(11),
+            `details` text,
+            PRIMARY KEY  (`id_cron`)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync_history` (
             `id_sync_history` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
@@ -127,7 +140,7 @@ class Reverb extends Module
             `date` datetime NOT NULL,
             `details` text NOT NULL,
             PRIMARY KEY  (`id_sync_history`),
-            FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
+            FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
@@ -160,6 +173,7 @@ class Reverb extends Module
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_mapping`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_attributes`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync_history`;';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_crons`';
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -959,6 +973,22 @@ class Reverb extends Module
     {
         return $this->getReverbUrl(). '/preview/';
     }
+
+    /**
+     * @return Context
+     */
+    public function getContext(){
+        return $this->context;
+    }
+
+    /**
+     *  Check if Token for API is present and available
+     *
+     * @return boolean
+     */
+    public function isApiTokenAvailable(){
+        return $this->reverbConfig[$this::KEY_API_TOKEN];
+    }
 }
 
 require_once(dirname(__FILE__) . '/controllers/admin/AdminReverbConfigurationController.php');
@@ -976,6 +1006,7 @@ require_once(dirname(__FILE__) . '/classes/ReverbAuth.php');
 require_once(dirname(__FILE__) . '/classes/ReverbCategories.php');
 require_once(dirname(__FILE__) . '/classes/ReverbConditions.php');
 require_once(dirname(__FILE__) . '/classes/ReverbProduct.php');
+require_once(dirname(__FILE__) . '/classes/ReverbOrders.php');
 require_once(dirname(__FILE__) . '/classes/mapper/ProductMapper.php');
 require_once(dirname(__FILE__) . '/classes/helper/RequestSerializer.php');
 
