@@ -9,6 +9,18 @@ require_once dirname(__FILE__) . '/../classes/models/ReverbSync.php';
 require_once dirname(__FILE__) . '/../classes/ReverbProduct.php';
 require_once dirname(__FILE__) . '/../reverb.php';
 
+class BoOrder extends PaymentModule
+{
+    public $active = 1;
+    public $name = 'bo_order';
+
+    public function __construct()
+    {
+        $this->displayName = $this->trans('Back office order', array(), 'Admin.OrdersCustomers.Feature');
+    }
+}
+
+
 /**
  * Engine for process Orders from Reverb
  *
@@ -23,6 +35,8 @@ class OrdersSyncEngine
     const ADDRESS_GENERIC = 'pickup';
 
     protected $module;
+
+    public $helper;
 
     /**
      * OrdersSyncEngine constructor.
@@ -44,6 +58,8 @@ class OrdersSyncEngine
         try {
             // Init configuration for sync orders
             $helper = new \HelperCron($this->module);
+            $this->helper = $helper;
+
             $context = new \ContextCron($this->module);
 
             $idCron = $helper->insertOrUpdateCronStatus(null, CODE_CRON_ORDERS, $helper::CODE_CRON_STATUS_PROGRESS);
@@ -59,8 +75,8 @@ class OrdersSyncEngine
             // Process Order in Prestashop
             foreach ($orders as $order) {
                 if (!$this->checkIfOrderAlreadySync($order)) {
-                    $idOrder = $this->createPrestashopOrder($order, $context ,$idCron);
-                    $this->logInfoCrons('Order ' . $order['order_number'] . ' is now synced with id : '  . $idOrder);
+                    $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
+                    $this->logInfoCrons('Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
                 } else {
                     $this->logInfoCrons('Order ' . $order['order_number'] . ' is already synced.');
                 }
@@ -164,7 +180,7 @@ class OrdersSyncEngine
      * @param ContextCron
      * @return int
      */
-    public function initCustomer($order, $context,$idCron)
+    public function initCustomer($order, $context, $idCron)
     {
         $customer = new Customer();
         $customer->lastname = $order['buyer_last_name'];
@@ -187,16 +203,13 @@ class OrdersSyncEngine
      * @param $context ContextCron
      * @return int|null
      */
-    public function createPrestashopOrder($orderReverb, $context , $idCron)
+    public function createPrestashopOrder($orderReverb, $context, $idCron)
     {
-        /** @var Order $order */
-        $order = new Order();
+        $extra_vars = array();
         $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product']['currency'], $context->getIdShop());
 
         // Create Customer
-        $context = $this->initCustomer($orderReverb, $context,$idCron);
-
-        $orderDetail = new OrderDetail();
+        $context = $this->initCustomer($orderReverb, $context, $idCron);
 
         // Create an Address for Customer
         $id_address = $this->initAddress($orderReverb, $context);
@@ -204,32 +217,52 @@ class OrdersSyncEngine
         // Create Cart with products
         $id_cart = $this->initCart($orderReverb, $context, $id_address, $id_currency);
 
-        $order->id_cart = $id_cart;
-        $order->id_address_delivery = $id_address;
-        $order->id_address_invoice = $id_address;
-        $order->reference = $orderReverb['order_number'];
-        $order->id_carrier = 0;
-        $order->id_customer = $context->getIdCustomer();
-        $order->round_mode = Configuration::get('PS_PRICE_ROUND_MODE');
-        $order->round_type = Configuration::get('PS_ROUND_TYPE');
-        $order->invoice_date = '0000-00-00 00:00:00';
-        $order->delivery_date = '0000-00-00 00:00:00';
-        $order->id_currency = $id_currency;
-        $order->id_shop = $context->getIdShop();
-        $order->id_shop_group = $context->getIdShopGroup();
-        $order->payment = $orderReverb['payment_method'];
-        $order->module = 0;
-        $order->current_state = (int)Configuration::get('PS_OS_PAYMENT');
-        $order->total_paid = $orderReverb['total']['amount'];
-        $order->total_products = $orderReverb['amount_product']['amount'];
-        $order->total_products_wt = $orderReverb['amount_product']['amount'];
-        $order->total_paid_real = $orderReverb['total']['amount'];
-        $order->total_shipping = $orderReverb['shipping']['amount'];
-        $order->conversion_rate = 0;
-        $order->secure_key = 0;
-        $id_order = $order->add();
+        $this->module->getContext()->cart = new Cart((int)$id_cart);
+        $this->module->customer = new Customer($context->getIdCustomer());
+        $this->module->currency = new Currency((int)$this->module->getContext()->cart->id_currency);
+        $this->module->language = new Language((int)$this->module->getContext()->customer->id_lang);
+        $shop = new Shop(0,Shop::getShop($context->getIdShop()));
+        Shop::setContext(Shop::CONTEXT_SHOP, $context->getIdShop());
 
-        return $id_order;
+        $payment_module = new \BoOrder();
+        $payment_module->validateOrder(
+                $this->module->getContext()->cart->id,
+                (int)Configuration::get('PS_OS_PAYMENT'),
+                (float)$orderReverb['total']['amount'],
+                $this->module->displayName,
+                '',
+                $extra_vars,
+                $this->module->getContext()->cart->id_currency,
+                false,
+                0,$shop
+            );
+
+        /*        $order->id_cart = $id_cart;
+                $order->id_address_delivery = $id_address;
+                $order->id_address_invoice = $id_address;
+                $order->reference = $orderReverb['order_number'];
+                $order->id_carrier = 0;
+                $order->id_customer = $context->getIdCustomer();
+                $order->round_mode = Configuration::get('PS_PRICE_ROUND_MODE');
+                $order->round_type = Configuration::get('PS_ROUND_TYPE');
+                $order->invoice_date = '0000-00-00 00:00:00';
+                $order->delivery_date = '0000-00-00 00:00:00';
+                $order->id_currency = $id_currency;
+                $order->id_shop = $context->getIdShop();
+                $order->id_shop_group = $context->getIdShopGroup();
+                $order->payment = $orderReverb['payment_method'];
+                $order->module = 0;
+                $order->current_state = (int)Configuration::get('PS_OS_PAYMENT');
+                $order->total_paid = $orderReverb['total']['amount'];
+                $order->total_products = $orderReverb['amount_product']['amount'];
+                $order->total_products_wt = $orderReverb['amount_product']['amount'];
+                $order->total_paid_real = $orderReverb['total']['amount'];
+                $order->total_shipping = $orderReverb['shipping']['amount'];
+                $order->conversion_rate = 0;
+                $order->secure_key = 0;
+                $id_order = $order->add();*/
+
+        return 1;
     }
 
     /**
@@ -237,6 +270,6 @@ class OrdersSyncEngine
      */
     private function logInfoCrons($message)
     {
-        $this->module->logs->requestLogs($message);
+        $this->module->logs->infoLogs($message);
     }
 }

@@ -19,6 +19,17 @@ class ReverbOrders extends ReverbClient
     CONST REVERB_ROOT_KEY = 'orders';
 
     /**
+     * ReverbOrders constructor.
+     */
+    public function __construct($module)
+    {
+        parent::__construct($module);
+        $this->setEndPoint(self::REVERB_CATEGORIES_ENDPOINT)
+            ->setRootKey(self::REVERB_ROOT_KEY);
+    }
+
+
+    /**
      * Get all orders or one by uuid
      *
      * @param null $uuid
@@ -27,8 +38,6 @@ class ReverbOrders extends ReverbClient
     public function getOrders($date = null)
     {
         $params = null;
-        $reverbUtils = new \Reverb\ReverbUtils($this->module);
-
         if ($date){
             $dateISO8601 = new DateTime($date);
             $params = array(
@@ -36,7 +45,7 @@ class ReverbOrders extends ReverbClient
             );
         }
 
-        return $reverbUtils->getListFromEndpoint(self::REVERB_CATEGORIES_ENDPOINT,self::REVERB_ROOT_KEY,null,$params);
+        return $this->getListFromEndpoint(null,$params);
     }
 
 }

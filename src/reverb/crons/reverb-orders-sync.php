@@ -23,9 +23,9 @@ try {
     $engine = new \OrdersSyncEngine($module);
     //$pstoken = Tools::getAdminTokenLite('AdminModules');
 
-    $module->logs->requestLogs('##########################');
-    $module->logs->requestLogs('# BEGIN ' . CODE_CRON_ORDERS . ' sync CRON');
-    $module->logs->requestLogs('##########################');
+    $module->logs->infoLogs('##########################');
+    $module->logs->infoLogs('# BEGIN ' . CODE_CRON_ORDERS . ' sync CRON');
+    $module->logs->infoLogs('##########################');
 
     //if (!Tools::getValue('token') &&  Tools::getValue('token') == $pstoken) {
         if ($module->isApiTokenAvailable()) {
@@ -42,9 +42,9 @@ try {
         $e->getMessage());
 }
 
-$module->logs->requestLogs('##########################');
-$module->logs->requestLogs('# END ' . CODE_CRON_ORDERS . ' sync CRON');
-$module->logs->requestLogs('##########################');
+$module->logs->infoLogs('##########################');
+$module->logs->infoLogs('# END ' . CODE_CRON_ORDERS . ' sync CRON');
+$module->logs->infoLogs('##########################');
 
 
 

@@ -134,7 +134,7 @@ class ReverbClient extends Client
             foreach ($params as $name => $value){
                 $paramsFlat .= $name . '=' .  $value;
             }
-            $this->setEndPoint('?' . $paramsFlat);
+            $this->setEndPoint($this->getEndPoint() . '?' . $paramsFlat);
         }
 
         $list = $this->sendGet();
