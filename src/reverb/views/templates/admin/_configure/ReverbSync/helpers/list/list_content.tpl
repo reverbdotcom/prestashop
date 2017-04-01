@@ -108,8 +108,8 @@
 			{$smarty.block.parent}
         </span>
     {elseif $key == 'reverb_slug'}
-        <a href="#" title="" data-id="{$tr.$identifier}" class="btn btn-default btn-view-sync"><i class="icon-refresh"></i> Syncronization</a>
-        <a href="{$ps_product_preview_base_url}/index.php?id_product={$tr.id_product}&id_product_attribute=0&controller=product" title="" target="_blank" class="btn btn-default"><i class="icon-search-plus"> Preview</i></a>
+        <a href="#" title="" data-id="{$tr.$identifier}" class="btn btn-default btn-view-sync" title="Syncronization"><i class="icon-refresh"></i></a>
+        <a href="{$ps_product_preview_base_url}/index.php?id_product={$tr.id_product}&id_product_attribute={$tr.id_product_attribute}&controller=product" title="Preview" target="_blank" class="btn btn-default"><i class="icon-search-plus"></i></a>
         <a href="{$reverb_product_preview_url}{if $tr.$key}{$tr.$key}{/if}" title="" target="_blank" class="btn btn-default btn-reverb-preview{if !$tr.$key} hide-ps{/if}"><i class="icon-search-plus"> Preview on Reverb</i></a>
     {elseif $key == 'icon'}
         <div class="icon-status loading-mask" id="icon-{$tr.$identifier}">Synchronisation</div>

@@ -29,9 +29,9 @@ class ProductMapper
      *  Map array prestashop To Reverb's model
      *
      * @param array $product_ps
-     * @param string|false $reverbSlug
+     * @param bool $productExists
      */
-    public function processMapping($product_ps, $reverbSlug)
+    public function processMapping($product_ps, $productExists)
     {
         $product = new \ProductReverb();
 
@@ -54,7 +54,7 @@ class ProductMapper
         $product->shipping_profile_id = null;
         $product->tax_exempt = null;
 
-        $product = $this->processMappingAccordingSettings($product,$product_ps, $reverbSlug);
+        $product = $this->processMappingAccordingSettings($product, $product_ps, $productExists);
 
         $this->request = $product;
     }
@@ -62,23 +62,23 @@ class ProductMapper
     /**
      * @param ProductReverb $product
      * @param array $product_ps
-     * @param string|false $reverbSlug
+     * @param string|false $productExists
      * @return ProductReverb
      */
-    private function processMappingAccordingSettings(ProductReverb $product,$product_ps, $reverbSlug) {
+    private function processMappingAccordingSettings(ProductReverb $product,$product_ps, $productExists) {
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION) ){
             $product->description = $product_ps['description'];
         }
 
-        if (!$reverbSlug || ($reverbSlug && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PRICE)) ) {
+        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PRICE)) ) {
             $product->price = $this->mapPrice($product_ps);
         }
 
-        if (!$reverbSlug || ($reverbSlug && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PHOTOS)) ) {
+        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PHOTOS)) ) {
             $product->photos = $this->getImagesUrl($product_ps);
         }
 
-        if (!$reverbSlug || ($reverbSlug && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_CONDITION)) ) {
+        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_CONDITION)) ) {
             $product->condition = $this->mapCondition($product_ps);
         }
 

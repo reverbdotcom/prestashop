@@ -29,34 +29,41 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
     /**
      *  Proccess ajax call from view Sync status
-     *
      */
-    public function ajaxProcessSyncronizeProduct() {
+    public function ajaxProcessSyncronizeProduct()
+    {
         if (!$this->module instanceof Reverb) {
             die(array('status' => 'error', 'An error occured'));
         }
 
-        $productId = Tools::getValue('id_product');
+        $identifier = Tools::getValue('identifier');
 
-        if (isset($productId) && !empty($productId)) {
-            $reverbProduct = new \Reverb\ReverbProduct($this->module);
+        $identifiers = explode('-', $identifier);
+        
+        if (!empty($identifiers) && count($identifiers) == 2) {
+            $id_product = $identifiers[0];
+            $id_product_attribute = $identifiers[1];
 
-            $product = $this->module->reverbSync->getProductWithStatus($productId);
+            if (!empty($id_product) && !empty($id_product_attribute)) {
 
-            if (!empty($product)) {
-                if ($product['reverb_enabled']) {
-                    $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_MANUAL_SYNC_SINGLE);
-                    die(json_encode($res));
+                $reverbProduct = new \Reverb\ReverbProduct($this->module);
+
+                $product = $this->module->reverbSync->getProductWithStatus($id_product, $id_product_attribute);
+
+                if (!empty($product)) {
+                    if ($product['reverb_enabled']) {
+                        $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_MANUAL_SYNC_SINGLE);
+                        die(json_encode($res));
+                    } else {
+                        die(json_encode(array('status' => 'error', 'message' => 'Product ' . $id_product . ' not enabled for reverb sync')));
+                    }
                 } else {
-                    die(json_encode(array('status' => 'error', 'message' => 'Product ' . $productId . ' not enabled for reverb sync')));
+                    die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $id_product . ' and lang ' . $this->module->language_id)));
                 }
-            } else {
-                die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $productId . ' and lang ' . $this->module->language_id)));
-            }
 
-        } else{
-            die(array('status' => 'error', 'An error occured'));
+            }
         }
+        die(array('status' => 'error', 'An error occured'));
     }
 
     protected function sendErrorRequest($response)

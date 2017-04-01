@@ -28,6 +28,36 @@ class ReverbSync
     }
 
     /**
+     * Construct base of query
+     * @param DbQuery $sql
+     * @param array $list_field
+     */
+    private function getListBaseSql(DbQuery $sql, $list_field = array())
+    {
+        $sql->from('reverb_attributes', 'ra')
+            ->innerJoin('product', 'p', 'ra.`id_product` = p.`id_product`')
+            ->innerJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
+            ->leftJoin('product_attribute', 'pa', 'pa.`id_product` = p.`id_product`')
+            ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product` AND (pa.`id_product_attribute` IS NULL OR rs.`id_product_attribute` = pa.`id_product_attribute`)')
+            ->leftJoin('product_attribute_combination', 'pac', 'pac.`id_product_attribute` = pa.`id_product_attribute`')
+            ->leftJoin('attribute', 'a', 'a.`id_attribute` = pac.`id_attribute`')
+            ->leftJoin('attribute_group', 'ag', 'ag.`id_attribute_group` = a.`id_attribute_group`')
+            ->leftJoin('attribute_lang', 'al', 'al.`id_attribute` = a.`id_attribute` AND al.`id_lang` = ' . $this->module->language_id)
+            ->leftJoin('attribute_group_lang', 'agl', 'agl.`id_attribute_group` = ag.`id_attribute_group` AND agl.`id_lang` = ' . $this->module->language_id)
+
+            ->where('ra.`reverb_enabled` = 1')
+            ->where('pl.`id_lang` = '.(int) $this->module->language_id)
+            ->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date, pa.id_product_attribute');
+
+        //=========================================
+        //          WHERE CLAUSE
+        //=========================================
+        if (Tools::isSubmit('submitFilter')) {
+            $this->processFilter($list_field, $sql);
+        }
+    }
+
+    /**
      *  Load Total of products for sync view pagination
      *
      * @param $list_field
@@ -40,17 +70,7 @@ class ReverbSync
         $sql = new DbQuery();
         $sql->select('count(*) as totals');
 
-        $sql->from('product', 'p');
-        $sql->innerJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
-        $sql->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`');
-        $sql->where('ra.`reverb_enabled` = 1');
-
-        //=========================================
-        //          WHERE CLAUSE
-        //=========================================
-        if (Tools::isSubmit('submitFilter')) {
-            $sql = ReverbSync::processFilter($list_field, $sql);
-        }
+        $this->getListBaseSql($sql, $list_field);
 
         $result = Db::getInstance()->executeS($sql);
 
@@ -70,25 +90,19 @@ class ReverbSync
         //          SELECT CLAUSE
         //=========================================
         $sql = new DbQuery();
-        $sql->select('p.id_product as id_product,  ' .
-            'p.reference as reference,' .
+        $sql->select('IF (pa.id_product_attribute IS NULL, CONCAT(p.id_product, \'-\', \'0\'), CONCAT(pa.id_product, \'-\', pa.id_product_attribute)) as identifier,  ' .
+            'p.id_product as id_product,' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
+            'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name,' .
             'rs.status as status,' .
             'rs.reverb_id as reverb_id,' .
             'rs.details as details,' .
             'rs.reverb_slug as reverb_slug, ' .
-            'rs.date as last_sync');
+            'rs.date as last_sync, ' .
+            'pa.id_product_attribute as id_product_attribute'
+        );
 
-        $sql->from('product', 'p');
-        $sql->innerJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`');
-        $sql->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`');
-        $sql->where('ra.`reverb_enabled` = 1');
-
-        //=========================================
-        //          WHERE CLAUSE
-        //=========================================
-        if (Tools::isSubmit('submitFilter')) {
-            $sql = $this->processFilter($list_field, $sql);
-        }
+        $this->getListBaseSql($sql, $list_field);
 
         //=========================================
         //          ORDER CLAUSE
@@ -116,7 +130,7 @@ class ReverbSync
      * Generate WHERE Clause with actives filters
      * @param $list_field
      * @param $sql
-     * @return mixed
+     * @return void
      */
     protected function processFilter($list_field, DbQuery $sql)
     {
@@ -208,6 +222,7 @@ class ReverbSync
      *  Process an insert into table Reverb sync
      *
      * @param integer $idProduct
+     * @param integer $idProductAttribute
      * @param string $origin
      * @param string $status
      * @param string $details
@@ -215,7 +230,7 @@ class ReverbSync
      * @param string $reverbSlug
      * @return integer
      */
-    private function insertSyncStatus($idProduct, $origin, $status = null, $details = null, $reverbId = null, $reverbSlug = null)
+    private function insertSyncStatus($idProduct, $idProductAttribute, $origin, $status = null, $details = null, $reverbId = null, $reverbSlug = null)
     {
         $exec = Db::getInstance()->insert(
             'reverb_sync',
@@ -226,6 +241,7 @@ class ReverbSync
                 'reverb_id' => $reverbId,
                 'reverb_slug' => $reverbSlug,
                 'id_product' => (int)  $idProduct,
+                'id_product_attribute' => (int)  $idProductAttribute,
                 'origin' => $origin,
             )
         );
@@ -234,7 +250,7 @@ class ReverbSync
             $return = Db::getInstance()->Insert_ID();
         }
 
-        $this->module->logs->infoLogs('Insert reverb sync ' . $idProduct . ' with status ' . $status . ' and origin ' . $origin);
+        $this->module->logs->infoLogs('Insert reverb sync for product ' . $idProduct . ' (attribute ' . $idProductAttribute . ') with status ' . $status . ' and origin ' . $origin);
         return $return;
     }
 
@@ -267,29 +283,32 @@ class ReverbSync
     }
 
     /**
-     * @param $productId
+     * @param integer $productId
+     * @param integer $productAttributeId
      * @return array|bool|null|object
      */
-    public function getProductWithStatus($productId)
+    public function getProductWithStatus($productId, $productAttributeId)
     {
         $sql = new DbQuery();
-        $sql->select('distinct(p.id_product),
-                          p.*,
-                          pl.*,
-                          m.name as manufacturer_name,
-                          ra.*,
-                          rs.id_sync, rs.reverb_id, rs.reverb_slug')
+        $sql->select('distinct(p.id_product), ' .
+            'p.*, pl.*, m.name as manufacturer_name, ra.*, ' .
+            'rs.id_sync, rs.reverb_id, rs.reverb_slug, ' .
+            'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
+            'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name'
+        );
 
-            ->from('product', 'p')
+        $this->getListBaseSql($sql);
 
-            ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
-            ->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
-            ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`')
-            ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`')
-
+        $sql->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
             ->where('p.`id_product` = ' . (int) $productId)
-            ->where('pl.`id_lang` = '.(int)$this->module->language_id)
         ;
+
+        if ($productAttributeId == 0) {
+            $sql->where('pa.`id_product_attribute` IS NULL');
+        } else {
+            $sql->where('pa.`id_product_attribute` = ' . (int) $productAttributeId);
+        }
 
         $result = Db::getInstance()->getRow($sql);
 
@@ -298,15 +317,22 @@ class ReverbSync
 
     /**
      * @param $productId
+     * @param $productAttributeId
      * @return array|bool|null|object
      */
-    public function getProductSync($productId)
+    public function getProductSync($productId, $productAttributeId)
     {
         $sql = new DbQuery();
         $sql->select('rs.*')
             ->from('reverb_sync', 'rs')
             ->where('rs.`id_product` = ' . (int) $productId)
         ;
+
+        if ($productAttributeId == 0) {
+            $sql->where('rs.`id_product_attribute` IS NULL');
+        } else {
+            $sql->where('rs.`id_product_attribute` = ' . (int) $productAttributeId);
+        }
 
         $result = Db::getInstance()->getRow($sql);
 
@@ -319,20 +345,17 @@ class ReverbSync
     public function getProductsToSync()
     {
         $sql = new DbQuery();
-        $sql->select('distinct(p.id_product),
-                          p.*,
-                          pl.*,
-                          m.name as manufacturer_name,
-                          ra.*,
-                          rs.id_sync, rs.reverb_id, rs.reverb_slug')
+        $sql->select('distinct(p.id_product), ' .
+            'p.*, pl.*, m.name as manufacturer_name, ra.*, ' .
+            'rs.id_sync, rs.reverb_id, rs.reverb_slug, ' .
+            'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
+            'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name'
+        );
 
-            ->from('product', 'p')
+        $this->getListBaseSql($sql);
 
-            ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
-            ->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
-            ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product` AND ra.`id_lang` = pl.`id_lang`')
-            ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product`')
-
+        $sql->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
             ->where('rs.`status` = \'' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . '\'')
         ;
 
@@ -344,14 +367,15 @@ class ReverbSync
     /**
      * Set a sync status product to 'to_sync'
      *
-     * @param integer $idProduct
+     * @param integer $id_product
+     * @param integer $id_product_attribute
      * @param string $origin
      */
-    public function setProductToSync($idProduct, $origin) {
-        $productSync = $this->getProductSync($idProduct);
+    public function setProductToSync($id_product, $id_product_attribute, $origin) {
+        $productSync = $this->getProductSync($id_product, $id_product_attribute);
 
         if (empty($productSync)) {
-            $this->insertSyncStatus($idProduct, $origin, \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC);
+            $this->insertSyncStatus($id_product, $id_product_attribute, $origin, \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC);
         } else {
             Db::getInstance()->update(
                 'reverb_sync',
@@ -359,12 +383,13 @@ class ReverbSync
                     'status' => \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC,
                     'origin' => $this->getConcatOrigins($productSync, $origin),
                 ),
-                'id_product= ' . (int) $idProduct
+                'id_product = ' . (int) $id_product .
+                ' AND id_product_attribute ' . ($id_product_attribute == 0 ? 'IS NULL' : ' = ' . $id_product_attribute)
             );
 
         }
 
-        $this->module->logs->infoLogs('Update sync status set ' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . ' for product ' . $idProduct . ' from : ' . $origin);
+        $this->module->logs->infoLogs('Update sync status set ' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . ' for product ' . $id_product . ' (attribute ' . $id_product_attribute . ') from : ' . $origin);
     }
 
     /**
