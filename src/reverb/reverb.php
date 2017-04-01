@@ -86,6 +86,7 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
             `id_sync` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
+            `id_product_attribute` int(10) unsigned NOT NULL DEFAULT 0,
             `reverb_id` varchar(32) ,
             `status` varchar(32) NOT NULL,
             `details` text,
@@ -94,7 +95,8 @@ class Reverb extends Module
             `origin` text,
             PRIMARY KEY  (`id_sync`),
             FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
-            UNIQUE (id_product)
+            FOREIGN KEY fk_reverb_sync_product(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute),
+            UNIQUE (id_product, id_product_attribute)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_mapping` (
@@ -638,12 +640,18 @@ class Reverb extends Module
 
         // Bulk sync all
         if (Tools::isSubmit('submitFilterps_product')) {
-            $products = Tools::getValue('ps_productBox');
-            if (!empty($products)) {
-                foreach ($products as $product) {
-                    $this->reverbSync->setProductToSync($product, ReverbSync::ORIGIN_MANUAL_SYNC_MULTIPLE);
+            $identifiers = Tools::getValue('ps_productBox');
+            if (!empty($identifiers)) {
+                foreach ($identifiers as $identifier) {
+                    $ids = explode('-', $identifier);
+
+                    if (!empty($ids) && count($ids) == 2) {
+                        $id_product = $ids[0];
+                        $id_product_attribute = $ids[1];
+                        $this->reverbSync->setProductToSync($id_product, $id_product_attribute, ReverbSync::ORIGIN_MANUAL_SYNC_MULTIPLE);
+                    }
                 }
-                $this->_successes[] = $this->l('The ' . count($products) . ' products will be synced soon');
+                $this->_successes[] = $this->l('The ' . count($identifiers) . ' products will be synced soon');
             } else {
                 $this->_errors[] = $this->l('Please select at least one product.');
             }
@@ -726,7 +734,7 @@ class Reverb extends Module
     public function hookActionProductSave($params) {
         $id_product = Tools::getValue('id_product');
 
-        if (isset($id_product)) {
+        if (isset($id_product) && $id_product) {
             $settingsReverb = Tools::getValue('reverb_enabled');
             $condition =Tools::getValue('reverb_condition');
             $finish =Tools::getValue('reverb_finish');
@@ -816,6 +824,12 @@ class Reverb extends Module
                 'type' => 'text',
                 'filter_key' => 'reference'
             ),
+            'name' => array(
+                'title' => $this->l('Name'),
+                'width' => 140,
+                'type' => 'text',
+                'filter_key' => 'name'
+            ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
                 'width' => 50,
@@ -830,7 +844,7 @@ class Reverb extends Module
             ),
             'details' => array(
                 'title' => $this->l('Sync Detail'),
-                'width' => 300,
+                'width' => 200,
                 'type' => 'text',
                 'search' => 'true',
                 'orderby' => 'true',
@@ -844,7 +858,6 @@ class Reverb extends Module
             ),
             'reverb_slug' => array(
                 'title' => '',
-                'filter_key' => 'last_synced',
                 'search' => false,
                 'orderby' => false,
             ),
@@ -873,7 +886,7 @@ class Reverb extends Module
 
         $helper->simple_header = false;
         $helper->show_toolbar = true;
-        $helper->identifier = 'id_product';
+        $helper->identifier = 'identifier';
 
         /*        $helper->toolbar_btn['new'] =  array(
                     'href' => AdminController::$currentIndex.'&configure='.$this->name.'&add'.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'),

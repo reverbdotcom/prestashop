@@ -29,11 +29,15 @@ class ReverbProduct extends ReverbClient
 
     /**
      * Get Reverb product by sku
-     * @param $sku
+     * @param $product
      * @return array|bool
      */
-    public function getProduct($sku)
+    public function getProduct($product)
     {
+        $sku = $product['reference'];
+        if ($product['id_product_attribute']) {
+             $sku .= '-' . $product['id_product_attribute'];
+        }
         $this->setEndPoint('my/' . self::REVERB_PRODUCT_ENDPOINT);
         $search = array(
             'state' => 'all',
@@ -61,39 +65,30 @@ class ReverbProduct extends ReverbClient
         $this->logInfosMessage('##########################');
 
         try {
-            // Call Reverb API and process request
-            $reverbSlug = isset($product['reverb_slug']) ? $product['reverb_slug'] : false;
+
+            // Checks if product already exists on Reberb
+            $reverbProduct = $this->getProduct($product);
+
+            $productExists = false;
+
+            if (!empty($reverbProduct)) {
+                $productExists = true;
+            }
 
             // Map Product Array To Model To json
-            $request = $this->mapRequestForProduct($product, $reverbSlug);
+            $request = $this->mapRequestForProduct($product, $productExists);
 
-            // Send POST or PUT
-            if ($reverbSlug) {
-                // Product was already sync to Reverb => PUT
-                $this->logInfosMessage('Product ' . $reverbSlug . ' already sync on Reverb => PUT');
-                $this->setEndPoint($this->getEndPoint() . '/' . $reverbSlug);
+            if ($productExists) {
+                // Product already exists on Reberb => PUT
+                $reverbSlug = $this->getReverbProductSlug($reverbProduct);
+                $this->logInfosMessage('Product ' . $reverbSlug . ' already exists on Reverb => PUT');
+                $this->setEndPoint(self::REVERB_PRODUCT_ENDPOINT . '/' . $reverbSlug);
                 $response = $this->sendPut($request);
-
             } else {
-
-                // Checks if product already exists on Reberb
-                $reverbProduct = $this->getProduct($product['reference']);
+                // Product does not exist on Reberb => POST
+                $this->logInfosMessage('Product ' . $product['reference'] . ' does not exist on Reverb yet => POST');
                 $this->setEndPoint(self::REVERB_PRODUCT_ENDPOINT);
-
-                if (!empty($reverbProduct)) {
-                    // Product already exists on Reberb => PUT
-                    $reverbSlug = $this->getReverbProductSlug($reverbProduct);
-
-                    $this->logInfosMessage('Product ' . $reverbSlug . ' already exists on Reverb => PUT');
-
-                    $this->setEndPoint($this->getEndPoint() . '/' . $reverbSlug);
-                    $response = $this->sendPut($request);
-
-                } else {
-                    // Product does not exist on Reberb => POST
-                    $this->logInfosMessage('Product ' . $reverbSlug . ' does not exist on Reverb yet => POST');
-                    $response = $this->sendPost($request);
-                }
+                $response = $this->sendPost($request);
             }
 
             $return = $this->proccessResponse($product, $response, $origin);
@@ -212,15 +207,14 @@ class ReverbProduct extends ReverbClient
     /*
      *  Map prestashop product to Reverb Model
      *  @param array $product
-     *  @param string|false $reverbSlug
+     *  @param bool $productExists
      *  @return json
      */
-    private function mapRequestForProduct($product, $reverbSlug) {
+    private function mapRequestForProduct($product, $productExists) {
         $mapper = new \ProductMapper($this->module);
 
-        $mapper->processMapping($product, $reverbSlug);
+        $mapper->processMapping($product, $productExists);
 
         return $mapper->getObjetForRequest();
-
     }
 }
