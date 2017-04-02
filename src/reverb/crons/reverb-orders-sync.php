@@ -13,8 +13,7 @@ include(dirname(__FILE__) . '/../../../config/config.inc.php');
 include(dirname(__FILE__) . '/../../../init.php');
 
 require_once dirname(__FILE__) . '/../reverb.php';
-//require_once dirname(__FILE__) . '/../classes/crons/OrdersSyncEngine.php';
-require_once dirname(__FILE__) . '/OrdersSyncEngine.php';
+require_once dirname(__FILE__) . '/../classes/crons/OrdersSyncEngine.php';
 
 const CODE_CRON_ORDERS = 'orders';
 
