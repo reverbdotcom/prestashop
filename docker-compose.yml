@@ -1,12 +1,3 @@
-mysql:
-  container_name: reverb_mysql
-  image: mysql:5.6.23
-  env_file:
-    - ./conf/env/MYSQL.env
-  ports:
-    - "3309:3306"
-  volumes:
-  - ./data/:/var/lib/mysql
 smtp:
   image: schickling/mailcatcher
   container_name: smtp-reverb

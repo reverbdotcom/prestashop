@@ -6,10 +6,19 @@ web17:
     - "8017:80"
   links:
     - smtp
-    - mysql
+    - mysql17
   env_file:
     - ./conf/env/PRESTASHOP.env
-    - ./conf/env/PRESTASHOP-16.env
+    - ./conf/env/PRESTASHOP-17.env
   volumes:
     - ./web/prestashop17:/var/www/html/
     - ./src/reverb:/var/www/html/modules/reverb
+mysql17:
+  container_name: reverb_mysql_17
+  image: mysql:5.6.23
+  env_file:
+    - ./conf/env/MYSQL17.env
+  ports:
+    - "3317:3306"
+  volumes:
+  - ./data/:/var/lib/mysql
