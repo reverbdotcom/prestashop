@@ -605,6 +605,43 @@ class Reverb extends Module
     }
 
     /**
+     *   Add Tab in product Page
+     *
+     * @param $params
+     * @return Smarty_Internal_Data|string
+     */
+    public function hookDisplayAdminProductsExtra($params) {
+        //=========================================
+        //     LOADING CONFIGURATION REVERB
+        //=========================================
+        $id_product = $params['id_product'];
+        if (isset($id_product)){
+            $result = Db::getInstance()->executeS('SELECT * from `'._DB_PREFIX_.'reverb_attributes` '
+                .' WHERE `id_product` = '.(int)$id_product . ' AND `id_lang` = ' . $this->language_id);
+
+            $reverbConditions = new \Reverb\ReverbConditions($this);
+
+            $this->context->smarty->assign(array(
+                    'reverb_enabled' => $result[0]['reverb_enabled'],
+                    'reverb_finish' => $result[0]['finish'],
+                    'reverb_condition' => $result[0]['id_condition'],
+                    'reverb_year' => $result[0]['year'],
+                    'reverb_sold' => $result[0]['sold_as_is'],
+                    'reverb_country' => $result[0]['origin_country_code'],
+                    'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
+                    'reverb_list_country' => Country::getCountries($this->context->language->id),
+                )
+            );
+        }
+
+        //=========================================
+        //     PROCESS TEMPLATE
+        //=========================================
+        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/product-tab-content.tpl');
+        return $output;
+    }
+
+    /**
      * Process submitted forms
      */
     protected function postProcess()
@@ -614,11 +651,26 @@ class Reverb extends Module
             $form_values = $this->getConfigLoginFormValues();
 
             foreach (array_keys($form_values) as $key) {
-                $this->reverbConfig[$key] = Tools::getValue($key);
+                $value = Tools::getValue($key);
+                if ($key == self::KEY_API_TOKEN && (array_key_exists($key,$this->reverbConfig) &&
+                            $this->reverbConfig[$key] != $value) || (!array_key_exists($key,$this->reverbConfig))) {
+                    $reverbClient = new \Reverb\ReverbAuth($this,$value);
+                    $shop = $reverbClient->getListFromEndpoint();
+
+                    if (!is_array($shop) || (!array_key_exists('slug',$shop) && empty($shop['slug']))) {
+                        $value = '';
+                        $this->_errors[] = $this->l('API Token is invalid, try again');
+                    }
+                }
+
+                $this->reverbConfig[$key] = trim($value);
             }
 
             $this->saveReverbConfiguration();
-            $this->_successes[] = $this->l('Login configuration saved successfully.');
+
+            if ( empty($this->_errors)) {
+                $this->_successes[] = $this->l('Login configuration saved successfully.');
+            }
         }
 
         // Settings form
@@ -667,43 +719,6 @@ class Reverb extends Module
             $this->context->controller->addJS($this->_path.'views/js/back.js');
             $this->context->controller->addCSS($this->_path.'views/css/back.css');
         }
-    }
-
-    /**
-     *   Add Tab in product Page
-     *
-     * @param $params
-     * @return Smarty_Internal_Data|string
-     */
-    public function hookDisplayAdminProductsExtra($params) {
-        //=========================================
-        //     LOADING CONFIGURATION REVERB
-        //=========================================
-        $id_product = $params['id_product'];
-        if (isset($id_product)){
-            $result = Db::getInstance()->executeS('SELECT * from `'._DB_PREFIX_.'reverb_attributes` '
-                .' WHERE `id_product` = '.(int)$id_product . ' AND `id_lang` = ' . $this->language_id);
-
-            $reverbConditions = new \Reverb\ReverbConditions($this);
-
-            $this->context->smarty->assign(array(
-                    'reverb_enabled' => $result[0]['reverb_enabled'],
-                    'reverb_finish' => $result[0]['finish'],
-                    'reverb_condition' => $result[0]['id_condition'],
-                    'reverb_year' => $result[0]['year'],
-                    'reverb_sold' => $result[0]['sold_as_is'],
-                    'reverb_country' => $result[0]['origin_country_code'],
-                    'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
-                    'reverb_list_country' => Country::getCountries($this->context->language->id),
-                )
-            );
-        }
-
-        //=========================================
-        //     PROCESS TEMPLATE
-        //=========================================
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/product-tab-content.tpl');
-        return $output;
     }
 
     public function hookActionObjectOrderAddAfter()
@@ -972,7 +987,8 @@ class Reverb extends Module
     {
         $url = $this->prod_url;
 
-        if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE]) {
+        if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||
+                !array_key_exists(self::KEY_SANDBOX_MODE,$this->reverbConfig)) {
             $url = $this->sandbox_url;
         }
 
