@@ -5,5 +5,6 @@ test:
   pre:
     - ./prestashop.sh init
   override:
+    - sleep 240
     - curl --retry 10 --retry-delay 20 -v http://localhost:8016
     - curl --retry 10 --retry-delay 20 -v http://localhost:8017
