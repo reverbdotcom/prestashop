@@ -19,7 +19,7 @@ class ReverbClient extends Client
 
     public $reverbConfig;
 
-    public function __construct(\Reverb $module_instance)
+    public function __construct(\Reverb $module_instance, $token = null)
     {
         $this->module = $module_instance;
 
@@ -33,10 +33,15 @@ class ReverbClient extends Client
 
         // init reverb config
         $this->reverbConfig = $module_instance->reverbConfig;
+        $api_key_token = $this->reverbConfig[\Reverb::KEY_API_TOKEN];
 
-        if (!empty($this->reverbConfig[\Reverb::KEY_API_TOKEN])) {
+        if (!empty($token)) {
+            $api_key_token = $token;
+        }
+
+        if (!empty($api_key_token)) {
             $this->addHeaders(array(
-                'Authorization' => 'Bearer ' . $this->reverbConfig[\Reverb::KEY_API_TOKEN],
+                'Authorization' => 'Bearer ' . $api_key_token,
                 'Accept-Language' => $iso_code,
             ));
         }

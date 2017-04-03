@@ -4,7 +4,7 @@ mysql:
   env_file:
     - ./conf/env/MYSQL.env
   ports:
-    - "3309:3306"
+    - "3317:3306"
   volumes:
   - ./data/:/var/lib/mysql
 smtp:

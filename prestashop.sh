@@ -22,34 +22,34 @@ if [ "$1" = '' ] || [ "$1" = '--help' ];then
 fi
 
 if [ "$1" = 'init' ] && [ "$2" = '' ];then
-    docker-compose stop
-    docker-compose rm -fv
+    sudo docker-compose stop
+    sudo docker-compose rm -fv
     sudo rm -Rf data/
     sudo rm -Rf web
-    docker-compose -f docker-compose.yml -f docker-compose.ps16.yml -f docker-compose.ps17.yml build --no-cache
-    docker-compose -f docker-compose.yml -f docker-compose.ps16.yml -f docker-compose.ps17.yml up -d
+    sudo docker-compose -f docker-compose.yml -f docker-compose.ps16.yml -f docker-compose.ps17.yml build --no-cache
+    sudo docker-compose -f docker-compose.yml -f docker-compose.ps16.yml -f docker-compose.ps17.yml up -d
 fi
 
 if [ "$1" = 'init' ] && [ "$2" != '' ];then
-    docker-compose stop
-    docker-compose rm -fv
+    sudo docker-compose stop
+    sudo docker-compose rm -fv
     sudo rm -Rf data/
     sudo rm -Rf web
-    docker-compose -f docker-compose.yml -f  docker-compose.ps"$2".yml build --no-cache
-    docker-compose -f docker-compose.yml -f docker-compose.ps"$2".yml up  -d
+    sudo docker-compose -f docker-compose.yml -f  docker-compose.ps"$2".yml build --no-cache
+    sudo docker-compose -f docker-compose.yml -f docker-compose.ps"$2".yml up  -d
 fi
 
 if [ "$1" = 'restart' ];then
-    docker-compose stop
-    docker-compose -f docker-compose.yml -f docker-compose.ps16.yml -f docker-compose.ps17.yml up -d
+    sudo docker-compose stop
+    sudo docker-compose -f docker-compose.yml -f docker-compose.ps16.yml -f docker-compose.ps17.yml up -d
 fi
 
 if [ "$1" = 'up' ] && [ "$2" != '' ];then
-    docker-compose -f docker-compose.yml -f docker-compose.ps"$2".yml up  -d
+    sudo docker-compose -f docker-compose.yml -f docker-compose.ps"$2".yml up  -d
 fi
 
 if [ "$1" = 'exec' ] && [ "$2" != '' ];then
-    docker exec -it reverb"$2" bash
+    sudo docker exec -it reverb"$2" bash
 fi
 
 if [ "$1" = 'log' ] && [ "$2" != '' ];then

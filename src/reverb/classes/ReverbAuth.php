@@ -4,7 +4,21 @@ namespace Reverb;
 class ReverbAuth extends ReverbClient
 {
 
+    CONST REVERB_AUTH_ENDPOINT = 'my/account';
+    CONST REVERB_ROOT_KEY = 'shop';
+
     private $scope = array('read_listings', 'write_listings');
+
+    /**
+     * ReverbAuth constructor.
+     * @param \Reverb $module
+     */
+    public function __construct($module,$token = null)
+    {
+        parent::__construct($module,$token);
+        $this->setEndPoint(self::REVERB_AUTH_ENDPOINT)
+            ->setRootKey(self::REVERB_ROOT_KEY);
+    }
 
     /**
      * @return null|string

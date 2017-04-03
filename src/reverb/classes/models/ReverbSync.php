@@ -61,6 +61,7 @@ class ReverbSync
      *  Load Total of products for sync view pagination
      *
      * @param $list_field
+     * @return array|null
      */
     public function getListProductsWithStatusTotals($list_field)
     {
@@ -73,7 +74,7 @@ class ReverbSync
         $this->getListBaseSql($sql, $list_field);
 
         $result = Db::getInstance()->getRow($sql);
-
+      
         return $result['totals'];
     }
 
