@@ -95,7 +95,7 @@ class Reverb extends Module
             `origin` text,
             PRIMARY KEY  (`id_sync`),
             FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
-            FOREIGN KEY fk_reverb_sync_product(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute),
+            FOREIGN KEY fk_reverb_sync_product_2(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute),
             UNIQUE (id_product, id_product_attribute)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
@@ -142,7 +142,7 @@ class Reverb extends Module
             `date` datetime NOT NULL,
             `details` text NOT NULL,
             PRIMARY KEY  (`id_sync_history`),
-            FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
+            FOREIGN KEY fk_reverb_sync_history(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
