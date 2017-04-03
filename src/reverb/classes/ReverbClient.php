@@ -123,10 +123,10 @@ class ReverbClient extends Client
      * Get all object for an endpoint or one by uuid
      *
      * @param null $uuid
-     * @param array
+     * @param array $params
      * @return mixed|string
      */
-    public function getListFromEndpoint($uuid = null,$params = null)
+    public function getListFromEndpoint($uuid = null, $params = array())
     {
         $key = $this->getRootKey();
 
@@ -134,7 +134,7 @@ class ReverbClient extends Client
             $this->setEndPoint($this->getEndPoint() . '/' . $uuid);
         }
 
-        if ($params) {
+        if (!empty($params)) {
             $paramsFlat = '';
             foreach ($params as $name => $value){
                 $paramsFlat .= $name . '=' .  $value;

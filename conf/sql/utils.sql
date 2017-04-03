@@ -99,3 +99,14 @@ CREATE TABLE IF NOT EXISTS `ps_reverb_sync` (
     FOREIGN KEY fk_reverb_sync_product(id_product_attribute) REFERENCES `ps_product_attribute` (id_product_attribute),
     UNIQUE (id_product, id_product_attribute)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+
+--Shipping
+
+--Carriers list
+SELECT c.*
+FROM `ps_product_carrier` pc
+INNER JOIN `ps_carrier` c
+  ON (c.`id_reference` = pc.`id_carrier_reference` AND c.`deleted` = 0)
+WHERE pc.`id_product` = 269
+  AND pc.`id_shop` = 1;

@@ -90,9 +90,9 @@ class ReverbMapping
             ->where('c.`id_parent` != 0 AND `id_lang` = '.(int) $languageId)
         ;
 
-        $result = Db::getInstance()->executeS($sql);
+        $result = Db::getInstance()->getRow($sql);
 
-        return $result[0]['totals'];
+        return $result['totals'];
     }
 
     /**

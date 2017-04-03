@@ -55,7 +55,9 @@ class ProductMapper
         $product->year = $product_ps['year'];;
         $product->seller_cost = $product_ps['wholesale_price'];
 
-        $product->shipping_profile_id = null;
+
+        $product = $this->mapShipping($product, $product_ps);
+
         $product->tax_exempt = null;
 
         $product = $this->processMappingAccordingSettings($product, $product_ps, $productExists);
@@ -204,6 +206,31 @@ class ProductMapper
             $urls[] = 'https://www.easyzic.com/common/datas/dossiers/6/6/acoustique-yamaha-c40-1.jpg';
         }
         return $urls;
+    }
+
+    private function mapShipping(ProductReverb $product, $product_ps)
+    {
+        if ($product_ps['id_shipping_profile']) {
+            $product->shipping_profile_id = $product_ps['id_shipping_profile'];
+        } else {
+            $reverbAttribute = new ReverbAttributes($this->module);
+            $shippingMethods = $reverbAttribute->getShippingMethods($product_ps['id_attribute']);
+
+            $rates = array();
+            foreach ($shippingMethods as $shippingMethod) {
+                $rates[] = array(
+                    'rate' => array(
+                        'amount' => $shippingMethod['rate'],
+                        'currency' => $this->module->getContext()->currency->iso_code,
+                    ),
+                    'region_code' => $shippingMethod['region_code']
+                );
+            }
+            $product->shipping = array(
+                'rates' => $rates,
+                'local' => $product_ps['shipping_local'] ? true : false,
+            );
+        }
     }
 }
 
