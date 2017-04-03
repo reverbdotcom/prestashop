@@ -6,19 +6,10 @@ web16:
     - "8016:80"
   links:
     - smtp
-    - mysql16
+    - mysql
   env_file:
     - ./conf/env/PRESTASHOP.env
     - ./conf/env/PRESTASHOP-16.env
   volumes:
     - ./web/prestashop16:/var/www/html/
     - ./src/reverb:/var/www/html/modules/reverb
-mysql16:
-  container_name: reverb_mysql_16
-  image: mysql:5.6.23
-  env_file:
-    - ./conf/env/MYSQL16.env
-  ports:
-    - "3316:3306"
-  volumes:
-  - ./data/:/var/lib/mysql
