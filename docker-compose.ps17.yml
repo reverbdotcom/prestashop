@@ -9,7 +9,7 @@ web17:
     - mysql
   env_file:
     - ./conf/env/PRESTASHOP.env
-    - ./conf/env/PRESTASHOP-16.env
+    - ./conf/env/PRESTASHOP-17.env
   volumes:
     - ./web/prestashop17:/var/www/html/
     - ./src/reverb:/var/www/html/modules/reverb

@@ -72,9 +72,9 @@ class ReverbSync
 
         $this->getListBaseSql($sql, $list_field);
 
-        $result = Db::getInstance()->executeS($sql);
+        $result = Db::getInstance()->getRow($sql);
 
-        return $result[0]['totals'];
+        return $result['totals'];
     }
 
     /**
@@ -207,9 +207,9 @@ class ReverbSync
             array(
                 'date' => (new \DateTime())->format('Y-m-d H:i:s'),
                 'status' => $status,
-                'details' => addslashes($details),
+                'details' => pSQL($details),
                 'reverb_id' => $reverbId,
-                'reverb_slug' => addslashes($reverbSlug),
+                'reverb_slug' => pSQL($reverbSlug),
                 'origin' => $origin,
             ),
             'id_product= ' . (int) $idProduct
@@ -425,7 +425,7 @@ class ReverbSync
                 'id_product' => (int)  $idProduct,
                 'date' => (new \DateTime())->format('Y-m-d H:i:s'),
                 'status' => $status,
-                'details' => addslashes($details),
+                'details' => pSQL($details),
                 'origin' => $origin,
             )
         );

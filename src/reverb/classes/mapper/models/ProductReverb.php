@@ -47,7 +47,7 @@ class ProductReverb
 
     public $shipping_profile_id;
 
-    public $shipping_profile_name;
+    public $shipping;
 
     public $location;
 

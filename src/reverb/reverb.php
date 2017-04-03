@@ -118,9 +118,22 @@ class Reverb extends Module
             `origin_country_code` varchar(50),
             `year` varchar(50),
             `id_condition` varchar(50),
-            PRIMARY KEY  (`id_attribute`),
+            `id_shipping_profile` int(10) unsigned,
+            `shipping_local` tinyint(1),
+            PRIMARY KEY (`id_attribute`),
             FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
+            FOREIGN KEY fk_reverb_attributes_lang(id_lang) REFERENCES `'._DB_PREFIX_.'lang` (id_lang),
             UNIQUE (id_product)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_shipping_methods` (
+            `id_shipping_method` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_attribute` int(10) unsigned NOT NULL,
+            `region_code` varchar(50) NOT NULL,
+            `rate` decimal(20,2) NOT NULL,
+            PRIMARY KEY (`id_shipping_method`),
+            FOREIGN KEY fk_reverb_shipping_methods_attribute(id_attribute) REFERENCES `'._DB_PREFIX_.'reverb_attributes` (id_attribute),
+            UNIQUE (id_attribute, region_code)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_crons` (
@@ -675,28 +688,34 @@ class Reverb extends Module
      * @param $params
      * @return Smarty_Internal_Data|string
      */
-    public function hookDisplayAdminProductsExtra($params) {
+    public function hookDisplayAdminProductsExtra($params)
+    {
         //=========================================
         //     LOADING CONFIGURATION REVERB
         //=========================================
         $id_product = $params['id_product'];
-        if (isset($id_product)){
-            $result = Db::getInstance()->executeS('SELECT * from `'._DB_PREFIX_.'reverb_attributes` '
-                .' WHERE `id_product` = '.(int)$id_product . ' AND `id_lang` = ' . $this->language_id);
-
+        if (isset($id_product)) {
             $reverbConditions = new \Reverb\ReverbConditions($this);
+            $reverbShippingRegions = new \Reverb\ReverbShippingRegions($this);
+            $reverbAttributes = new ReverbAttributes($this);
+
+            $attribute = $reverbAttributes->getAttributes($id_product);
 
             $this->context->smarty->assign(array(
-                    'reverb_enabled' => $result[0]['reverb_enabled'],
-                    'reverb_finish' => $result[0]['finish'],
-                    'reverb_condition' => $result[0]['id_condition'],
-                    'reverb_year' => $result[0]['year'],
-                    'reverb_sold' => $result[0]['sold_as_is'],
-                    'reverb_country' => $result[0]['origin_country_code'],
-                    'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
-                    'reverb_list_country' => Country::getCountries($this->context->language->id),
-                )
-            );
+                'reverb_enabled' => $attribute['reverb_enabled'],
+                'reverb_finish' => $attribute['finish'],
+                'reverb_condition' => $attribute['id_condition'],
+                'reverb_year' => $attribute['year'],
+                'reverb_sold' => $attribute['sold_as_is'],
+                'reverb_country' => $attribute['origin_country_code'],
+                'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
+                'reverb_list_country' => Country::getCountries($this->context->language->id),
+                'reverb_url' => $this->getReverbUrl(),
+                'reverb_regions' => $reverbShippingRegions->getFormattedShippingRegions(),
+                'reverb_shipping_profile' => $attribute['id_shipping_profile'],
+                'reverb_shipping_methods' => $reverbAttributes->getShippingMethods($attribute['id_attribute']),
+                'currency' => $this->getContext()->currency->getSign(),
+            ));
         }
 
         //=========================================
@@ -731,7 +750,8 @@ class Reverb extends Module
      *
      * @param $params
      */
-    public function hookActionProductSave($params) {
+    public function hookActionProductSave($params)
+    {
         $id_product = Tools::getValue('id_product');
 
         if (isset($id_product) && $id_product) {
@@ -741,6 +761,11 @@ class Reverb extends Module
             $year=Tools::getValue('reverb_year');
             $soldAsIs =Tools::getValue('reverb_sold');
             $reverb_country = Tools::getValue('reverb_country');
+            $reverb_shipping = Tools::getValue('reverb_shipping');
+            $reverb_shipping_profile = Tools::getValue('reverb_shipping_profile');
+            $reverb_shipping_methods_region = Tools::getValue('reverb_shipping_methods_region');
+            $reverb_shipping_methods_rate = Tools::getValue('reverb_shipping_methods_rate');
+            $reverb_shipping_local = Tools::getValue('reverb_shipping_local');
 
             //TODO Controle de validité ?
             $values = array(
@@ -751,16 +776,47 @@ class Reverb extends Module
                 'sold_as_is' => pSql($soldAsIs),
                 'origin_country_code' => pSql($reverb_country))
             ;
+            if ($reverb_shipping == 'reverb') {
+                $values['id_shipping_profile'] = pSQL($reverb_shipping_profile);
+                $values['shipping_local'] = 0;
+            } else {
+                $values['id_shipping_profile'] = '';
+                $values['shipping_local'] = $reverb_shipping_local;
+            }
+
+            $this->logs->infoLogs('Save reverb attributes for product ' . $id_product);
+            $this->logs->infoLogs(var_export($values, true));
 
             $idAttribute = $this->getAttributesId($id_product);
+            $db = Db::getInstance();
             if ($idAttribute) {
-                Db::getInstance()->update('reverb_attributes',$values
-                    , 'id_attribute = ' . (int)$idAttribute );
-            }else{
-                Db::getInstance()->insert('reverb_attributes', array_merge($values,array(
+                $db->update('reverb_attributes',
+                    $values,
+                    'id_attribute = ' . (int)$idAttribute
+                );
+            } else {
+                $db->insert('reverb_attributes', array_merge($values,array(
                     'id_lang' => pSql($this->language_id),
                     'id_product' => pSql($id_product),
                 )));
+
+                $idAttribute = (int) $db->Insert_ID();
+            }
+
+            // Remove all shipping methods
+            $db->delete('reverb_shipping_methods', 'id_attribute = ' . $idAttribute);
+
+            // Save new shipping methods
+            if ($reverb_shipping == 'custom') {
+                $this->logs->infoLogs('shipping_regions = ' . var_export($reverb_shipping_methods_region, true));
+                $this->logs->infoLogs('shipping_rates = ' . var_export($reverb_shipping_methods_rate, true));
+                foreach ($reverb_shipping_methods_region as $key => $reverb_shipping_method_region) {
+                    $db->insert('reverb_shipping_methods', array(
+                        'id_attribute' => $idAttribute,
+                        'region_code' => pSql($reverb_shipping_method_region),
+                        'rate' => pSql($reverb_shipping_methods_rate[$key]),
+                    ));
+                }
             }
         }
     }
@@ -1008,6 +1064,8 @@ require_once(dirname(__FILE__) . '/controllers/admin/AdminReverbConfigurationCon
 require_once(dirname(__FILE__) . '/classes/helper/HelperListReverb.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbSync.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
+require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
+require_once(dirname(__FILE__) . '/classes/models/ReverbAttributes.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/AbstractModel.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Category.php');
 require_once(dirname(__FILE__) . '/classes/mapper/models/Price.php');
@@ -1018,6 +1076,7 @@ require_once(dirname(__FILE__) . '/classes/ReverbClient.php');
 require_once(dirname(__FILE__) . '/classes/ReverbAuth.php');
 require_once(dirname(__FILE__) . '/classes/ReverbCategories.php');
 require_once(dirname(__FILE__) . '/classes/ReverbConditions.php');
+require_once(dirname(__FILE__) . '/classes/ReverbShippingRegions.php');
 require_once(dirname(__FILE__) . '/classes/ReverbProduct.php');
 require_once(dirname(__FILE__) . '/classes/ReverbOrders.php');
 require_once(dirname(__FILE__) . '/classes/mapper/ProductMapper.php');
