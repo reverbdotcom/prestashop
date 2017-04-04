@@ -214,7 +214,7 @@ class ReverbSync
                 'reverb_slug' => pSQL($reverbSlug),
                 'origin' => $origin,
             ),
-            'id_product= ' . (int) $idProduct . ' AND id_product_attribute = ' .  $idProductAttribute
+            'id_product= ' . (int) $idProduct . (!empty($idProductAttribute) ? ' AND id_product_attribute = ' .  $idProductAttribute:'')
         );
 
         $this->module->logs->infoLogs('Update sync ' . $idProduct . ' with status :' . $status);
