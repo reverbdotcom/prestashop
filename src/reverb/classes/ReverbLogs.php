@@ -32,6 +32,16 @@ class ReverLogs
     }
 
     /**
+     * Cron log
+     *
+     * @param $msg
+     */
+    public function cronLogs($msg)
+    {
+        $this->writeLogs('cron', $msg);
+    }
+
+    /**
      * Log API call
      * @param $msg
      * @param $endpoint
@@ -47,8 +57,7 @@ class ReverLogs
         if ($this->enable) {
             $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-' . $file . '-logs.txt', 'a+');
             fseek($fp, SEEK_END);
-            fputs($fp, '## ' . date('Y-m-d H:i:s') . ' ##' . PHP_EOL);
-            fputs($fp, $msg . PHP_EOL);
+            fputs($fp, '## ' . date('Y-m-d H:i:s') . ' : ' . $msg . PHP_EOL);
             fclose($fp);
         }
     }

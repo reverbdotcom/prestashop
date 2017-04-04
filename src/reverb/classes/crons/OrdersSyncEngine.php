@@ -9,14 +9,22 @@ require_once dirname(__FILE__) . '/../../classes/models/ReverbSync.php';
 require_once dirname(__FILE__) . '/../../classes/ReverbProduct.php';
 require_once dirname(__FILE__) . '/../../reverb.php';
 
+/**
+ * Class for reverb order
+ *
+ * @package Reverb
+ * @author Johan Protin
+ * @copyright Copyright (c) 2017 - Johan Protin
+ * @license Apache License Version 2.0, January 2004
+ */
 class ReverbPayment extends PaymentModule
 {
     public $active = 1;
-    public $name = 'bo_order';
+    public $name = 'reverb';
 
     public function __construct()
     {
-        $this->displayName = $this->trans('Back office order', array(), 'Admin.OrdersCustomers.Feature');
+        $this->displayName = $this->trans('Reverb order', array(), 'Admin.OrdersCustomers.Feature');
     }
 }
 
@@ -46,14 +54,13 @@ class OrdersSyncEngine
         $this->module = $module;
     }
 
-    //TODO Créer un log cron et non Request
     //TODO Itérer sur les shop
 
     /**
      *  Processing an sync with orders from Reverb
      *
      */
-    public function processSyncOrder()
+    public function processSyncOrder($idCron)
     {
         try {
             // Init configuration for sync orders
@@ -61,8 +68,6 @@ class OrdersSyncEngine
             $this->helper = $helper;
 
             $context = new \ContextCron($this->module);
-
-            $idCron = $helper->insertOrUpdateCronStatus(null, CODE_CRON_ORDERS, $helper::CODE_CRON_STATUS_PROGRESS);
 
             // Call and getting all orders from reverb
             $reverbOrders = new \Reverb\ReverbOrders($this->module);
@@ -84,7 +89,9 @@ class OrdersSyncEngine
 
             $helper->insertOrUpdateCronStatus($idCron, CODE_CRON_ORDERS, $helper::CODE_CRON_STATUS_END);
         } catch (\Exception $e) {
-            $this->module->logs->errorLogsReverb('Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString());
+            $error = 'Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString();
+            $this->logInfoCrons($error);
+            $this->module->logs->errorLogsReverb($error);
             $helper->insertOrUpdateCronStatus($idCron, CODE_CRON_ORDERS, $helper::CODE_CRON_STATUS_ERROR,
                 $e->getMessage());
         }
@@ -92,7 +99,7 @@ class OrdersSyncEngine
 
 
     /**
-     *  Check if order has already
+     *  Check if order has already synced
      *
      * @param $order
      * @return false|null|string
@@ -109,11 +116,29 @@ class OrdersSyncEngine
     }
 
     /**
+     *  Get product attribute
+     *
+     * @param $order
+     * @return false|null|string
+     */
+    public function getProductAttribute($order)
+    {
+        $sql = new DbQuery();
+        $sql->select('pa.id_order')
+            ->from('product_attributes', 'pa')
+            ->where('pa.`reference` = "' . $order['order_number'] . '"');
+
+        $id = Db::getInstance()->getValue($sql);
+        return $id;
+    }
+
+    /**
      *  Create a cart with products
      *
      * @param $id_customer
      * @param $id_shop
      * @param $id_shop_group
+     * @return int id Cart
      */
     public function initCart($order, $context, $id_address, $id_currency)
     {
@@ -130,6 +155,9 @@ class OrdersSyncEngine
 
         // Add product in cart
         $id_product = Product::searchByName($context->getIdLang(), $order['sku']);
+
+        //$ip_product_attribute = $this->getProductAttribute();
+
         $cart->updateQty(1, $id_product, null, false);
 
         return $cart->id;
@@ -249,14 +277,18 @@ class OrdersSyncEngine
         $order->current_state = (int)Configuration::get('PS_OS_PAYMENT');
         $order->update();
 
+        $this->logInfoCrons('Order ' . $order->reference . ' is now synced');
+
         return  $this->currentOrder;
     }
 
     /**
+     *  Log infos
+     *
      * @param $message
      */
     private function logInfoCrons($message)
     {
-        $this->module->logs->infoLogs($message);
+        $this->module->logs->cronLogs($message);
     }
 }

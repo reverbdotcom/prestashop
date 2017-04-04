@@ -617,42 +617,6 @@ class Reverb extends Module
         }
     }
 
-    /**
-     *   Add Tab in product Page
-     *
-     * @param $params
-     * @return Smarty_Internal_Data|string
-     */
-    public function hookDisplayAdminProductsExtra($params) {
-        //=========================================
-        //     LOADING CONFIGURATION REVERB
-        //=========================================
-        $id_product = $params['id_product'];
-        if (isset($id_product)){
-            $result = Db::getInstance()->executeS('SELECT * from `'._DB_PREFIX_.'reverb_attributes` '
-                .' WHERE `id_product` = '.(int)$id_product . ' AND `id_lang` = ' . $this->language_id);
-
-            $reverbConditions = new \Reverb\ReverbConditions($this);
-
-            $this->context->smarty->assign(array(
-                    'reverb_enabled' => $result[0]['reverb_enabled'],
-                    'reverb_finish' => $result[0]['finish'],
-                    'reverb_condition' => $result[0]['id_condition'],
-                    'reverb_year' => $result[0]['year'],
-                    'reverb_sold' => $result[0]['sold_as_is'],
-                    'reverb_country' => $result[0]['origin_country_code'],
-                    'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
-                    'reverb_list_country' => Country::getCountries($this->context->language->id),
-                )
-            );
-        }
-
-        //=========================================
-        //     PROCESS TEMPLATE
-        //=========================================
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/product-tab-content.tpl');
-        return $output;
-    }
 
     /**
      * Process submitted forms
@@ -1109,7 +1073,10 @@ class Reverb extends Module
      * @return boolean
      */
     public function isApiTokenAvailable(){
-        return $this->reverbConfig[$this::KEY_API_TOKEN];
+        if (array_key_exists($this::KEY_API_TOKEN,$this->reverbConfig)){
+            return $this->reverbConfig[$this::KEY_API_TOKEN];
+        }
+            return false;
     }
 }
 
