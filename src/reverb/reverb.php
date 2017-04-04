@@ -150,12 +150,14 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync_history` (
             `id_sync_history` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
+            `id_product_attribute` int(10) unsigned,
             `status` text NOT NULL,
             `origin` text NOT NULL,
             `date` datetime NOT NULL,
             `details` text NOT NULL,
             PRIMARY KEY  (`id_sync_history`),
-            FOREIGN KEY fk_reverb_sync_history(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
+            FOREIGN KEY fk_reverb_sync_history_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
+            FOREIGN KEY fk_reverb_sync_history_product_attribute(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute),
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
@@ -860,6 +862,21 @@ class Reverb extends Module
                         'rate' => pSql($reverb_shipping_methods_rate[$key]),
                     ));
                 }
+            }
+
+            // Update sync status
+            $reverbSync = new ReverbSync($this);
+            $products = $reverbSync->getListProductsWithStatus(array('id_product' => $id_product));
+            foreach ($products as $product) {
+                $reverbSync->insertOrUpdateSyncStatus(
+                    $product['id_product'],
+                    $product['id_product_attribute'],
+                    \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC,
+                    null,
+                    null,
+                    null,
+                    ReverbSync::ORIGIN_PRODUCT_UPDATE
+                );
             }
         }
     }
