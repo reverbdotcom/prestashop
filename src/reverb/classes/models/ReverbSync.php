@@ -234,18 +234,23 @@ class ReverbSync
      */
     private function insertSyncStatus($idProduct, $idProductAttribute, $origin, $status = null, $details = null, $reverbId = null, $reverbSlug = null)
     {
+        $params = array(
+            'date' => (new \DateTime())->format('Y-m-d H:i:s'),
+            'status' => $status,
+            'details' => $details,
+            'reverb_id' => $reverbId,
+            'reverb_slug' => $reverbSlug,
+            'id_product' => (int)  $idProduct,
+            'id_product_attribute' => (int)  $idProductAttribute,
+            'origin' => $origin,
+        );
+
+        if ($idProductAttribute) {
+            $params['id_product_attribute'] = $idProductAttribute;
+        }
+
         $exec = Db::getInstance()->insert(
-            'reverb_sync',
-            array(
-                'date' => (new \DateTime())->format('Y-m-d H:i:s'),
-                'status' => $status,
-                'details' => $details,
-                'reverb_id' => $reverbId,
-                'reverb_slug' => $reverbSlug,
-                'id_product' => (int)  $idProduct,
-                'id_product_attribute' => (int)  $idProductAttribute,
-                'origin' => $origin,
-            )
+            'reverb_sync',$params
         );
 
         if ($exec) {
