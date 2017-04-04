@@ -44,7 +44,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
             $id_product = $identifiers[0];
             $id_product_attribute = $identifiers[1];
 
-            if (!empty($id_product) && !empty($id_product_attribute)) {
+            if (!empty($id_product)) {
 
                 $reverbProduct = new \Reverb\ReverbProduct($this->module);
 

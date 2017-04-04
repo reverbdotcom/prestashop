@@ -214,7 +214,7 @@ class ReverbSync
                 'reverb_slug' => pSQL($reverbSlug),
                 'origin' => $origin,
             ),
-            'id_product= ' . (int) $idProduct . ' AND id_product_attribute=' .  $idProductAttribute
+            'id_product= ' . (int) $idProduct . ' AND id_product_attribute = ' .  $idProductAttribute
         );
 
         $this->module->logs->infoLogs('Update sync ' . $idProduct . ' with status :' . $status);
@@ -234,18 +234,22 @@ class ReverbSync
      */
     private function insertSyncStatus($idProduct, $idProductAttribute, $origin, $status = null, $details = null, $reverbId = null, $reverbSlug = null)
     {
+        $params = array(
+            'date' => (new \DateTime())->format('Y-m-d H:i:s'),
+            'status' => $status,
+            'details' => $details,
+            'reverb_id' => $reverbId,
+            'reverb_slug' => $reverbSlug,
+            'id_product' => (int)  $idProduct,
+            'origin' => $origin,
+        );
+
+        if ($idProductAttribute) {
+            $params['id_product_attribute'] = $idProductAttribute;
+        }
+
         $exec = Db::getInstance()->insert(
-            'reverb_sync',
-            array(
-                'date' => (new \DateTime())->format('Y-m-d H:i:s'),
-                'status' => $status,
-                'details' => $details,
-                'reverb_id' => $reverbId,
-                'reverb_slug' => $reverbSlug,
-                'id_product' => (int)  $idProduct,
-                'id_product_attribute' => (int)  $idProductAttribute,
-                'origin' => $origin,
-            )
+            'reverb_sync',$params
         );
 
         if ($exec) {

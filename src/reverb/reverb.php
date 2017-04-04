@@ -86,7 +86,7 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_sync` (
             `id_sync` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
-            `id_product_attribute` int(10) unsigned NOT NULL DEFAULT 0,
+            `id_product_attribute` int(10) unsigned,
             `reverb_id` varchar(32) ,
             `status` varchar(32) NOT NULL,
             `details` text,
