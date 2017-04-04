@@ -53,14 +53,17 @@ class ReverbAttributes
      */
     public function getShippingMethods($attributeId)
     {
-       $sql = new DbQuery();
-        $sql->select('rsm.*')
-            ->from('reverb_shipping_methods', 'rsm')
-            ->where('rsm.id_attribute = ' . $attributeId)
-        ;
+        if (isset($attributeId) && !empty($attributeId)) {
+            $sql = new DbQuery();
+            $sql->select('rsm.*')
+                ->from('reverb_shipping_methods', 'rsm')
+                ->where('rsm.id_attribute = ' . $attributeId)
+            ;
+            $result = Db::getInstance()->executeS($sql);
 
-        $result = Db::getInstance()->executeS($sql);
-
-        return $result;
+            return $result;
+        } else {
+            return null;
+        }
     }
 }
