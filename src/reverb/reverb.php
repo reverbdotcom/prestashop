@@ -187,6 +187,7 @@ class Reverb extends Module
 
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_mapping`;';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_shipping_methods`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_attributes`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync_history`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_crons`';

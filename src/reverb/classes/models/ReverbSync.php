@@ -170,12 +170,13 @@ class ReverbSync
      * @param string $origin
      * @return array
      */
-    public function insertOrUpdateSyncStatus($idProduct, $status, $details, $reverbId, $reverbSlug, $origin) {
+    public function insertOrUpdateSyncStatus($idProduct,$idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin) {
         $syncStatus = $this->getSyncStatus($idProduct);
 
         if (!empty($syncStatus)) {
             $this->updateSyncStatus(
                 $idProduct,
+                $idProductAttribute,
                 $status,
                 $details,
                 $reverbId,
@@ -183,7 +184,7 @@ class ReverbSync
                 $this->getConcatOrigins($syncStatus, $origin)
             );
         } else {
-            $this->insertSyncStatus($idProduct, $origin, $status, $details, $reverbId, $reverbSlug);
+            $this->insertSyncStatus($idProduct,$idProductAttribute, $origin, $status, $details, $reverbId, $reverbSlug);
         }
 
         $this->insertSyncHistory($idProduct, $origin, $status, $details);
@@ -201,7 +202,7 @@ class ReverbSync
      * @param string $reverbSlug
      * @param string $origin
      */
-    private function updateSyncStatus($idProduct, $status, $details, $reverbId, $reverbSlug, $origin)
+    private function updateSyncStatus($idProduct,$idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin)
     {
         Db::getInstance()->update(
             'reverb_sync',
@@ -213,7 +214,7 @@ class ReverbSync
                 'reverb_slug' => pSQL($reverbSlug),
                 'origin' => $origin,
             ),
-            'id_product= ' . (int) $idProduct
+            'id_product= ' . (int) $idProduct . ' AND id_product_attribute' .  $idProductAttribute
         );
 
         $this->module->logs->infoLogs('Update sync ' . $idProduct . ' with status :' . $status);

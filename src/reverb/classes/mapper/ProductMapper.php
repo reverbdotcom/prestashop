@@ -40,9 +40,6 @@ class ProductMapper
         $product->has_inventory = $product_ps['quantity'] > 0 ? true : false;
         $product->inventory = $product_ps['quantity'];
 
-        $product->has_inventory = true;
-        $product->inventory = 500;
-
         $product->sku = $product_ps['reference'];
         $product->upc = $product_ps['ean13'];
         $product->publish = false;
@@ -231,6 +228,8 @@ class ProductMapper
                 'local' => $product_ps['shipping_local'] ? true : false,
             );
         }
+
+        return $product;
     }
 }
 
