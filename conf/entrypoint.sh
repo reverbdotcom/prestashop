@@ -19,6 +19,13 @@ if [ ! -f /var/www/html/console/console.php ];then
     # Installation  Reverb's module
     echo "\n Installation Reverb's module \n";
     php console.php module:install reverb
+
+    #===================================#
+    #            ADD CRON
+    #===================================#
+    crontab -l | { cat; echo "*/5 * * * *  /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log"; } | crontab -
+    crontab -l | { cat; echo "*/8 * * * *  /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log"; } | crontab -
+    service cron start
 fi
 
 echo "Import data = $IMPORT_SAMPLE_DATA"

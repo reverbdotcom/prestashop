@@ -3,7 +3,7 @@ FROM prestashop/prestashop:1.6.1.11
 MAINTAINER Johan PROTIN <jprotin@boutiquedubio.fr>
 
 RUN apt-get update \
-        && apt-get install -y ssmtp vim git \
+        && apt-get install -y ssmtp vim git cron \
                 && curl -sS https://getcomposer.org/installer | php -- --filename=composer -- --install-dir=/usr/local/bin \
                 && echo "sendmail_path = /usr/sbin/ssmtp -t" > /usr/local/etc/php/conf.d/sendmail.ini \
                 && echo '' && pecl install xdebug \
