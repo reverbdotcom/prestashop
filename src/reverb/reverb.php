@@ -112,9 +112,9 @@ class Reverb extends Module
             `id_attribute` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
             `reverb_enabled` tinyint(1),
-            `id_lang` int(11) NOT NULL,
+            `id_lang` ' . (version_compare(_PS_VERSION_, '1.7', '<') ? 'int(10) unsigned' : 'int(11)') . ' NOT NULL,
             `sold_as_is` tinyint(1),
-            `finish` varchar(50) ,
+            `finish` varchar(50),
             `origin_country_code` varchar(50),
             `year` varchar(50),
             `id_condition` varchar(50),
@@ -279,6 +279,8 @@ class Reverb extends Module
         $this->context->smarty->assign(array(
             'module_dir' => $this->_path,
             'reverb_login_form' => $this->renderLoginForm(),
+            'reverb_url_prod' => $this->prod_url . '/my/api_settings',
+            'reverb_url_sandbox' => $this->sandbox_url . '/my/api_settings',
             'reverb_settings_form' => $this->renderSettingsForm(),
             'reverb_config' => $this->reverbConfig,
             'reverb_sync_status' => $this->getViewSyncStatus(),
@@ -427,7 +429,7 @@ class Reverb extends Module
                     array(
                         'col' => 3,
                         'type' => 'text',
-                        'desc' => $this->l('From https://reverb.com/my/api_settings'),
+                        'desc' => '<a id="reverb-url-help" href="" target="_blank">' . $this->l('From https://reverb.com/my/api_settings') . '</a>',
                         'name' => self::KEY_API_TOKEN,
                         'label' => $this->l('API Token'),
                     ),
@@ -631,8 +633,12 @@ class Reverb extends Module
 
             foreach (array_keys($form_values) as $key) {
                 $value = Tools::getValue($key);
-                if ($key == self::KEY_API_TOKEN && (array_key_exists($key,$this->reverbConfig) &&
-                            $this->reverbConfig[$key] != $value) || (!array_key_exists($key,$this->reverbConfig))) {
+                if (
+                    $key == self::KEY_API_TOKEN
+                    && (
+                        array_key_exists($key,$this->reverbConfig)
+                        && $this->reverbConfig[$key] != $value
+                    ) || !array_key_exists($key, $this->reverbConfig)) {
                     $reverbClient = new \Reverb\ReverbAuth($this,$value);
                     $shop = $reverbClient->getListFromEndpoint();
 

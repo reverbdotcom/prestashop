@@ -202,7 +202,7 @@ class ReverbSync
      * @param string $reverbSlug
      * @param string $origin
      */
-    private function updateSyncStatus($idProduct,$idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin)
+    private function updateSyncStatus($idProduct, $idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin)
     {
         Db::getInstance()->update(
             'reverb_sync',
@@ -214,7 +214,7 @@ class ReverbSync
                 'reverb_slug' => pSQL($reverbSlug),
                 'origin' => $origin,
             ),
-            'id_product= ' . (int) $idProduct . ' AND id_product_attribute = ' .  $idProductAttribute
+            'id_product= ' . (int) $idProduct . (!empty($idProductAttribute) ? ' AND id_product_attribute = ' .  $idProductAttribute : '')
         );
 
         $this->module->logs->infoLogs('Update sync ' . $idProduct . ' with status :' . $status);
