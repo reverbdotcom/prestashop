@@ -241,7 +241,6 @@ class ReverbSync
             'reverb_id' => $reverbId,
             'reverb_slug' => $reverbSlug,
             'id_product' => (int)  $idProduct,
-            'id_product_attribute' => (int)  $idProductAttribute,
             'origin' => $origin,
         );
 
