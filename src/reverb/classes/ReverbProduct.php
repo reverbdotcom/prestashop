@@ -35,9 +35,6 @@ class ReverbProduct extends ReverbClient
     public function getProduct($product)
     {
         $sku = $product['reference'];
-        if ($product['id_product_attribute']) {
-             $sku .= '-' . $product['id_product_attribute'];
-        }
         $this->setEndPoint('my/' . self::REVERB_PRODUCT_ENDPOINT);
         $search = array(
             'state' => 'all',

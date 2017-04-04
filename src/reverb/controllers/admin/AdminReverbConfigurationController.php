@@ -33,7 +33,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
     public function ajaxProcessSyncronizeProduct()
     {
         if (!$this->module instanceof Reverb) {
-            die(array('status' => 'error', 'An error occured'));
+            die(json_encode(array('status' => 'error', 'An error occured')));
         }
 
         $identifier = Tools::getValue('identifier');
@@ -60,10 +60,12 @@ class AdminReverbConfigurationController extends ModuleAdminController
                 } else {
                     die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $id_product . ' and lang ' . $this->module->language_id)));
                 }
-
+            }
+            else {
+                die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $id_product . ' and lang ' . $this->module->language_id)));
             }
         }
-        die(array('status' => 'error', 'An error occured'));
+        die(json_encode(array('status' => 'error', 'An error occured')));
     }
 
     protected function sendErrorRequest($response)
