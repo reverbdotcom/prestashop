@@ -725,10 +725,15 @@ class Reverb extends Module
      */
     public function hookDisplayAdminProductsExtra($params)
     {
+        if (version_compare(_PS_VERSION_, '1.7', '<')) {
+            $id_product = (int)Tools::getValue('id_product');
+        } else {
+            $id_product = $params['id_product'];
+        }
         //=========================================
         //     LOADING CONFIGURATION REVERB
         //=========================================
-        $id_product = $params['id_product'];
+
         if (isset($id_product)) {
             $reverbConditions = new \Reverb\ReverbConditions($this);
             $reverbShippingRegions = new \Reverb\ReverbShippingRegions($this);
@@ -750,7 +755,10 @@ class Reverb extends Module
                 'reverb_shipping_profile' => $attribute['id_shipping_profile'],
                 'reverb_shipping_methods' => $reverbAttributes->getShippingMethods($attribute['id_attribute']),
                 'currency' => $this->getContext()->currency->getSign(),
+                'reverb_show_footer_btn' => version_compare(_PS_VERSION_, '1.7', '<'),
             ));
+        } else {
+            $this->logs->errorLogsReverb('hookDisplayAdminProductsExtra does not found idProduct ! __PS_VERSION__ = ' . _PS_VERSION_);
         }
 
         //=========================================
