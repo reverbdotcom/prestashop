@@ -170,7 +170,8 @@ class ReverbSync
      * @param string $origin
      * @return array
      */
-    public function insertOrUpdateSyncStatus($idProduct,$idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin) {
+    public function insertOrUpdateSyncStatus($idProduct, $idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin)
+    {
         $syncStatus = $this->getSyncStatus($idProduct);
 
         if (!empty($syncStatus)) {
@@ -184,7 +185,15 @@ class ReverbSync
                 $this->getConcatOrigins($syncStatus, $origin)
             );
         } else {
-            $this->insertSyncStatus($idProduct,$idProductAttribute, $origin, $status, $details, $reverbId, $reverbSlug);
+            $this->insertSyncStatus(
+                $idProduct,
+                $idProductAttribute,
+                $origin,
+                $status,
+                $details,
+                $reverbId,
+                $reverbSlug
+            );
         }
 
         $this->insertSyncHistory($idProduct, $origin, $status, $details);
@@ -204,6 +213,13 @@ class ReverbSync
      */
     private function updateSyncStatus($idProduct, $idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin)
     {
+        $this->module->logs->infoLogs('Update sync ' . $idProduct . ' with status :' . $status);
+        $this->module->logs->infoLogs(' # $idProductAttribute = ' . var_export($idProductAttribute, true));
+        $this->module->logs->infoLogs(' # $details = ' . var_export($details, true));
+        $this->module->logs->infoLogs(' # $reverbId = ' . var_export($reverbId, true));
+        $this->module->logs->infoLogs(' # $reverbSlug = ' . var_export($reverbSlug, true));
+        $this->module->logs->infoLogs(' # $origin = ' . var_export($origin, true));
+
         Db::getInstance()->update(
             'reverb_sync',
             array(
@@ -212,12 +228,10 @@ class ReverbSync
                 'details' => pSQL($details),
                 'reverb_id' => $reverbId,
                 'reverb_slug' => pSQL($reverbSlug),
-                'origin' => $origin,
+                'origin' => pSQL($origin),
             ),
             'id_product= ' . (int) $idProduct . (!empty($idProductAttribute) ? ' AND id_product_attribute = ' .  $idProductAttribute : '')
         );
-
-        $this->module->logs->infoLogs('Update sync ' . $idProduct . ' with status :' . $status);
     }
 
     /**
@@ -234,14 +248,20 @@ class ReverbSync
      */
     private function insertSyncStatus($idProduct, $idProductAttribute, $origin, $status = null, $details = null, $reverbId = null, $reverbSlug = null)
     {
+        $this->module->logs->infoLogs('Insert reverb sync for product ' . $idProduct . ' (attribute ' . $idProductAttribute . ') with status ' . $status . ' and origin ' . $origin);
+        $this->module->logs->infoLogs(' # $idProductAttribute = ' . var_export($idProductAttribute, true));
+        $this->module->logs->infoLogs(' # $details = ' . var_export($details, true));
+        $this->module->logs->infoLogs(' # $reverbId = ' . var_export($reverbId, true));
+        $this->module->logs->infoLogs(' # $reverbSlug = ' . var_export($reverbSlug, true));
+
         $params = array(
             'date' => (new \DateTime())->format('Y-m-d H:i:s'),
-            'status' => $status,
-            'details' => $details,
+            'status' => pSQL($status),
+            'details' => pSQL($details),
             'reverb_id' => $reverbId,
             'reverb_slug' => $reverbSlug,
             'id_product' => (int)  $idProduct,
-            'origin' => $origin,
+            'origin' => pSQL($origin),
         );
 
         if ($idProductAttribute) {
@@ -249,14 +269,13 @@ class ReverbSync
         }
 
         $exec = Db::getInstance()->insert(
-            'reverb_sync',$params
+            'reverb_sync', $params
         );
 
         if ($exec) {
             $return = Db::getInstance()->Insert_ID();
         }
 
-        $this->module->logs->infoLogs('Insert reverb sync for product ' . $idProduct . ' (attribute ' . $idProductAttribute . ') with status ' . $status . ' and origin ' . $origin);
         return $return;
     }
 
@@ -432,7 +451,7 @@ class ReverbSync
                 'date' => (new \DateTime())->format('Y-m-d H:i:s'),
                 'status' => $status,
                 'details' => pSQL($details),
-                'origin' => $origin,
+                'origin' => pSQL($origin),
             )
         );
 

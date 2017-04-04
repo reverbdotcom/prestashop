@@ -78,7 +78,8 @@ class ReverbProduct extends ReverbClient
             if ($productExists) {
                 // Product already exists on Reberb => PUT
                 $reverbSlug = $this->getReverbProductSlug($reverbProduct);
-                $this->logInfosMessage('Product ' . $reverbSlug . ' already exists on Reverb => PUT');
+                $this->logInfosMessage('Product ' . $product['reference'] . ' already exists on Reverb => PUT');
+                $this->logInfosMessage('Product slug : ' . $reverbSlug);
                 $this->setEndPoint(self::REVERB_PRODUCT_ENDPOINT . '/' . $reverbSlug);
                 $response = $this->sendPut($request);
             } else {
@@ -107,7 +108,9 @@ class ReverbProduct extends ReverbClient
      * @param \Exception $e
      * @return array
      */
-    private function proccessTechnicalError($e) {
+    private function proccessTechnicalError($e)
+    {
+        $this->module->logs->errorLogsReverb($e->getMessage());
         return array(
             'status' => 'error',
             'message' => $e->getTraceAsString(),
