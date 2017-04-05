@@ -46,7 +46,7 @@
 
             // Update sync status
             var syncStatus = tr.find('.reverb-sync-status span');
-            syncStatus.removeClass('label-success').removeClass('label-error')
+            syncStatus.removeClass('label-success').removeClass('label-error').removeClass('label-to_sync')
                 .addClass('label-' + response.status)
                 .html(response.status);
 

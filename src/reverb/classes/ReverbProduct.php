@@ -146,8 +146,6 @@ class ReverbProduct extends ReverbClient
         $return['reverb-slug'] = $reverbSlug;
         $return['reverb-id'] = $reverbId;
 
-
-
         // Insert or update sync on DB
         $lastSync = $this->module->reverbSync->insertOrUpdateSyncStatus(
             $product['id_product'],
@@ -156,7 +154,8 @@ class ReverbProduct extends ReverbClient
             $response['message'],
             $reverbId,
             $reverbSlug,
-            $origin
+            $origin,
+            true
         );
 
         $return['last-synced'] = $lastSync['date'];

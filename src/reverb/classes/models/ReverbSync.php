@@ -128,6 +128,40 @@ class ReverbSync
     }
 
     /**
+     *
+     * Load list of products for sync view
+     *
+     * @param integer $id_product
+     * @return array|false|mysqli_result|null|PDOStatement|resource
+     */
+    public function getListProductsWithStatusByProductId($id_product)
+    {
+        //=========================================
+        //          SELECT CLAUSE
+        //=========================================
+        $sql = new DbQuery();
+        $sql->select('IF (pa.id_product_attribute IS NULL, CONCAT(p.id_product, \'-\', \'0\'), CONCAT(pa.id_product, \'-\', pa.id_product_attribute)) as identifier,  ' .
+            'p.id_product as id_product,' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
+            'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name,' .
+            'rs.status as status,' .
+            'rs.reverb_id as reverb_id,' .
+            'rs.details as details,' .
+            'rs.reverb_slug as reverb_slug, ' .
+            'rs.date as last_sync, ' .
+            'pa.id_product_attribute as id_product_attribute'
+        );
+
+        $this->getListBaseSql($sql, array());
+
+        $sql->where('p.id_product = ' . (int) $id_product);
+
+        $result = Db::getInstance()->executeS($sql);
+
+        return $result;
+    }
+
+    /**
      * Generate WHERE Clause with actives filters
      * @param $list_field
      * @param $sql
@@ -169,11 +203,22 @@ class ReverbSync
      * @param integer $reverbId
      * @param string $reverbSlug
      * @param string $origin
+     * @param boolean $logHistory
      * @return array
      */
-    public function insertOrUpdateSyncStatus($idProduct, $idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin)
+    public function insertOrUpdateSyncStatus($idProduct, $idProductAttribute, $status, $details, $reverbId, $reverbSlug, $origin, $logHistory = false)
     {
+        $this->module->logs->infoLogs('insertOrUpdateSyncStatus');
+        $this->module->logs->infoLogs(' - $idProduct = ' . $idProduct);
+        $this->module->logs->infoLogs(' - $idProductAttribute = ' . var_export($idProductAttribute, true));
+        $this->module->logs->infoLogs(' - $status = ' . $status);
+        $this->module->logs->infoLogs(' - $details = ' . $details);
+        $this->module->logs->infoLogs(' - $reverbId = ' . $reverbId);
+        $this->module->logs->infoLogs(' - $reverbSlug = ' . $reverbSlug);
+        $this->module->logs->infoLogs(' - $origin = ' . $origin);
         $syncStatus = $this->getSyncStatus($idProduct, $idProductAttribute);
+
+        $this->module->logs->infoLogs(' - $syncStatus = ' . var_export($syncStatus, true));
 
         if (!empty($syncStatus)) {
             $this->updateSyncStatus(
@@ -197,7 +242,12 @@ class ReverbSync
             );
         }
 
-        $this->insertSyncHistory($idProduct, $idProductAttribute, $origin, $status, $details);
+        $this->module->logs->infoLogs(' - insert or update done');
+
+        if ($logHistory) {
+            $this->module->logs->infoLogs(' - Now, insert sync history');
+            $this->insertSyncHistory($idProduct, $idProductAttribute, $origin, $status, $details);
+        }
 
         return $this->getSyncStatus($idProduct, $idProductAttribute);
     }
@@ -269,15 +319,11 @@ class ReverbSync
             $params['id_product_attribute'] = $idProductAttribute;
         }
 
-        $exec = Db::getInstance()->insert(
+        Db::getInstance()->insert(
             'reverb_sync', $params
         );
 
-        if ($exec) {
-            $return = Db::getInstance()->Insert_ID();
-        }
-
-        return $return;
+        $this->module->logs->infoLogs(' reverb_sync inserted !');
     }
 
     /**
@@ -456,6 +502,12 @@ class ReverbSync
      */
     private function insertSyncHistory($idProduct, $idProductAttribute, $origin, $status, $details)
     {
+        $this->module->logs->infoLogs('insertSyncHistory');
+        $this->module->logs->infoLogs(' - $idProduct = ' . $idProduct);
+        $this->module->logs->infoLogs(' - $idProductAttribute = ' . var_export($idProductAttribute, true));
+        $this->module->logs->infoLogs(' - $status = ' . $status);
+        $this->module->logs->infoLogs(' - $details = ' . $details);
+        $this->module->logs->infoLogs(' - $origin = ' . $origin);
 
         $params = array(
             'id_product' => (int)  $idProduct,
@@ -469,11 +521,16 @@ class ReverbSync
             $params['id_product_attribute'] = $idProductAttribute;
         }
 
-        Db::getInstance()->insert(
-            'reverb_sync_history',
-            $params
-        );
+        if (!empty($params['details']) && !empty($params['status']) && !empty($params['origin'])) {
+            Db::getInstance()->insert(
+                'reverb_sync_history',
+                $params
+            );
+            $this->module->logs->infoLogs('Insert reverb sync history done !');
+        } else {
+            $this->module->logs->infoLogs('Insert reverb sync history skip because of null value(s) !');
+        }
 
-        $this->module->logs->infoLogs('Insert reverb sync history ' . $idProduct . ' with status ' . $status . ' and origin ' . $origin);
+
     }
 }

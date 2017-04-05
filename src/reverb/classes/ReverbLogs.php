@@ -1,8 +1,14 @@
 <?php
 namespace Reverb;
 
-class ReverLogs
+class ReverbLogs
 {
+    const LOG_ERROR = 'error';
+    const LOG_INFOS = 'infos';
+    const LOG_LISTINGS = 'listings';
+    const LOG_CATEGORIES = 'categories';
+    const LOG_CRON = 'cron';
+
     public $enable = true;
 
     public function __construct(\Reverb $module_instance)
@@ -19,7 +25,7 @@ class ReverLogs
      */
     public function errorLogsReverb($msg)
     {
-        $this->writeLogs('error', $msg);
+        $this->writeLogs(self::LOG_ERROR, $msg);
     }
 
     /**
@@ -28,7 +34,7 @@ class ReverLogs
      */
     public function infoLogs($msg)
     {
-        $this->writeLogs('infos', $msg);
+        $this->writeLogs(self::LOG_INFOS, $msg);
     }
 
     /**
@@ -38,7 +44,7 @@ class ReverLogs
      */
     public function cronLogs($msg)
     {
-        $this->writeLogs('cron', $msg);
+        $this->writeLogs(self::LOG_CRON, $msg);
     }
 
     /**
@@ -65,11 +71,11 @@ class ReverLogs
     private function getLogsFileByApiEndPoint($endPoint)
     {
         if (strstr($endPoint, ReverbCategories::REVERB_CATEGORIES_ENDPOINT)) {
-            return 'categories';
+            return self::LOG_CATEGORIES;
         }
         if (strstr($endPoint, ReverbProduct::REVERB_PRODUCT_ENDPOINT)) {
-            return 'listings';
+            return self::LOG_LISTINGS;
         }
-        return 'infos';
+        return self::LOG_INFOS;
     }
 }

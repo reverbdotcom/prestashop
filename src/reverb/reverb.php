@@ -60,7 +60,7 @@ class Reverb extends Module
         parent::__construct();
 
         // init log object
-        $this->logs = new \Reverb\ReverLogs($this);
+        $this->logs = new \Reverb\ReverbLogs($this);
 
         $this->reverbSync = new \ReverbSync($this);
 
@@ -313,36 +313,32 @@ class Reverb extends Module
         $dir = _PS_MODULE_DIR_ . '/reverb/logs/';
         $files = scandir($dir, 1);
         // init array files
-        $error_files = [];
-        $info_files = [];
-        $callback_files = [];
-        $request_files = [];
-        $refund_files = [];
+        $error_files = $info_files = $listings_files = $categories_files = $cron_files = array();
         // dispatch files
         foreach ($files as $file) {
-            if (preg_match("/error/i", $file) && count($error_files) < 10) {
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_ERROR . "/i", $file) && count($error_files) < 10) {
                 $error_files[] = $file;
             }
-            if (preg_match("/callback/i", $file) && count($callback_files) < 10) {
-                $callback_files[] = $file;
-            }
-            if (preg_match("/infos/i", $file) && count($info_files) < 10) {
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_INFOS . "/i", $file) && count($info_files) < 10) {
                 $info_files[] = $file;
             }
-            if (preg_match("/request/i", $file) && count($request_files) < 10) {
-                $request_files[] = $file;
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_LISTINGS . "/i", $file) && count($info_files) < 10) {
+                $listings_files[] = $file;
             }
-            if (preg_match("/refund/i", $file) && count($refund_files) < 10) {
-                $refund_files[] = $file;
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_CATEGORIES . "/i", $file) && count($info_files) < 10) {
+                $categories_files[] = $file;
+            }
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_CRON . "/i", $file) && count($info_files) < 10) {
+                $cron_files[] = $file;
             }
         }
-        return [
+        return array(
             'error' => $error_files,
-            'infos' => $info_files,
-            'callback' => $callback_files,
-            'request' => $request_files,
-            'refund' => $refund_files
-        ];
+            'info' => $info_files,
+            'listings' => $listings_files,
+            'categories' => $categories_files,
+            'cron' => $cron_files,
+        );
     }
 
     /**
@@ -501,7 +497,7 @@ class Reverb extends Module
                     'name' => $field['name'],
                     'desc' => $field['desc'],
                 );
-            }else{
+            } else {
                 $input[] = array(
                     'type' => 'switch',
                     'label' => $field['label'],
@@ -791,6 +787,22 @@ class Reverb extends Module
     }
 
     /**
+     *  When a shipping tracker is set to order ( Status Change )
+     *
+     * @param $param
+     */
+    public function hookActionPostUpdateOrderStatus($params)
+    {
+        $order = new Order((int) $params['id_order']);
+        $orderProducts = $order->getCartProducts();
+
+        foreach ($orderProducts as &$orderProduct) {
+            $this->flagSyncProductForReverbToSync($orderProduct['id_product'], ReverbSync::ORIGIN_PRODUCT_UPDATE );
+        }
+    }
+
+
+    /**
      *  Hook for save reverb's configuration on product page
      *
      * @param $params
@@ -865,19 +877,31 @@ class Reverb extends Module
             }
 
             // Update sync status
-            $reverbSync = new ReverbSync($this);
-            $products = $reverbSync->getListProductsWithStatus(array('id_product' => $id_product));
-            foreach ($products as $product) {
-                $reverbSync->insertOrUpdateSyncStatus(
-                    $product['id_product'],
-                    $product['id_product_attribute'],
-                    \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC,
-                    null,
-                    null,
-                    null,
-                    ReverbSync::ORIGIN_PRODUCT_UPDATE
-                );
-            }
+            $this->flagSyncProductForReverbToSync($id_product, ReverbSync::ORIGIN_PRODUCT_UPDATE );
+        }
+    }
+
+    /**
+     *  Set Flag To Sync to Product and IdAttribute
+     *
+     * @param $id_product
+     */
+    public function flagSyncProductForReverbToSync($id_product, $origin) {
+        $this->logs->infoLogs('flagSyncProductForReverbToSync ' . $id_product . ' => origin ' . $origin);
+        $reverbSync = new ReverbSync($this);
+        $products = $reverbSync->getListProductsWithStatusByProductId($id_product);
+        $this->logs->infoLogs('Products to flag:');
+        $this->logs->infoLogs(var_export($products, true));
+        foreach ($products as $product) {
+            $reverbSync->insertOrUpdateSyncStatus(
+                $product['id_product'],
+                $product['id_product_attribute'],
+                \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC,
+                null,
+                null,
+                null,
+                $origin
+            );
         }
     }
 
