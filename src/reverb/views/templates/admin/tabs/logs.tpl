@@ -10,16 +10,16 @@
         </div>
         <div class="col-md-4 col-xs-4">
             <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-info">Request new order Logs</a>
-                {foreach from=$logs['request'] item=select}
+                <a href="#" class="list-group-item list-group-item-info">Info Logs</a>
+                {foreach from=$logs['info'] item=select}
                     <a href="{$module_dir}logs/{$select}" target="_blank" class="list-group-item ">{$select}</a>
                 {/foreach}
             </div>
         </div>
         <div class="col-md-4 col-xs-4">
             <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-info">Callback Logs</a>
-                {foreach from=$logs['callback'] item=select}
+                <a href="#" class="list-group-item list-group-item-info">Cron Logs</a>
+                {foreach from=$logs['cron'] item=select}
                     <a href="{$module_dir}logs/{$select}" target="_blank" class="list-group-item ">{$select}</a>
                 {/foreach}
             </div>
@@ -28,16 +28,16 @@
     <div class="row">
         <div class="col-md-4 col-xs-4">
             <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-warning">Refund Logs</a>
-                {foreach from=$logs['refund'] item=select}
+                <a href="#" class="list-group-item list-group-item-warning">Categories Logs</a>
+                {foreach from=$logs['categories'] item=select}
                     <a href="{$module_dir}logs/{$select}" target="_blank" class="list-group-item ">{$select}</a>
                 {/foreach}
             </div>
         </div>
         <div class="col-md-4 col-xs-4">
             <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-info">General Logs</a>
-                {foreach from=$logs['infos'] item=select}
+                <a href="#" class="list-group-item list-group-item-warning">Listings Logs</a>
+                {foreach from=$logs['listings'] item=select}
                     <a href="{$module_dir}logs/{$select}" target="_blank" class="list-group-item ">{$select}</a>
                 {/foreach}
             </div>

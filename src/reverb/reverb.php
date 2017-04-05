@@ -60,7 +60,7 @@ class Reverb extends Module
         parent::__construct();
 
         // init log object
-        $this->logs = new \Reverb\ReverLogs($this);
+        $this->logs = new \Reverb\ReverbLogs($this);
 
         $this->reverbSync = new \ReverbSync($this);
 
@@ -313,36 +313,32 @@ class Reverb extends Module
         $dir = _PS_MODULE_DIR_ . '/reverb/logs/';
         $files = scandir($dir, 1);
         // init array files
-        $error_files = [];
-        $info_files = [];
-        $callback_files = [];
-        $request_files = [];
-        $refund_files = [];
+        $error_files = $info_files = $listings_files = $categories_files = $cron_files = array();
         // dispatch files
         foreach ($files as $file) {
-            if (preg_match("/error/i", $file) && count($error_files) < 10) {
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_ERROR . "/i", $file) && count($error_files) < 10) {
                 $error_files[] = $file;
             }
-            if (preg_match("/callback/i", $file) && count($callback_files) < 10) {
-                $callback_files[] = $file;
-            }
-            if (preg_match("/infos/i", $file) && count($info_files) < 10) {
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_INFOS . "/i", $file) && count($info_files) < 10) {
                 $info_files[] = $file;
             }
-            if (preg_match("/request/i", $file) && count($request_files) < 10) {
-                $request_files[] = $file;
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_LISTINGS . "/i", $file) && count($info_files) < 10) {
+                $listings_files[] = $file;
             }
-            if (preg_match("/refund/i", $file) && count($refund_files) < 10) {
-                $refund_files[] = $file;
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_CATEGORIES . "/i", $file) && count($info_files) < 10) {
+                $categories_files[] = $file;
+            }
+            if (preg_match("/" . \Reverb\ReverbLogs::LOG_CRON . "/i", $file) && count($info_files) < 10) {
+                $cron_files[] = $file;
             }
         }
-        return [
+        return array(
             'error' => $error_files,
-            'infos' => $info_files,
-            'callback' => $callback_files,
-            'request' => $request_files,
-            'refund' => $refund_files
-        ];
+            'info' => $info_files,
+            'listings' => $listings_files,
+            'categories' => $categories_files,
+            'cron' => $cron_files,
+        );
     }
 
     /**
@@ -501,7 +497,7 @@ class Reverb extends Module
                     'name' => $field['name'],
                     'desc' => $field['desc'],
                 );
-            }else{
+            } else {
                 $input[] = array(
                     'type' => 'switch',
                     'label' => $field['label'],
