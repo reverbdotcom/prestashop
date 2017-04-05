@@ -791,6 +791,22 @@ class Reverb extends Module
     }
 
     /**
+     *  When a shipping tracker is set to order ( Status Change )
+     *
+     * @param $param
+     */
+    public function hookActionPostUpdateOrderStatus($params)
+    {
+        $order = new Order((int) $params['id_order']);
+        $orderProducts = $order->getCartProducts();
+
+        foreach ($orderProducts as &$orderProduct) {
+            $this->flagSyncProductForReverbToSync($orderProduct['id_product'], ReverbSync::ORIGIN_PRODUCT_UPDATE );
+        }
+    }
+
+
+    /**
      *  Hook for save reverb's configuration on product page
      *
      * @param $params
@@ -865,19 +881,28 @@ class Reverb extends Module
             }
 
             // Update sync status
-            $reverbSync = new ReverbSync($this);
-            $products = $reverbSync->getListProductsWithStatus(array('id_product' => $id_product));
-            foreach ($products as $product) {
-                $reverbSync->insertOrUpdateSyncStatus(
-                    $product['id_product'],
-                    $product['id_product_attribute'],
-                    \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC,
-                    null,
-                    null,
-                    null,
-                    ReverbSync::ORIGIN_PRODUCT_UPDATE
-                );
-            }
+            $this->flagSyncProductForReverbToSync($id_product, ReverbSync::ORIGIN_PRODUCT_UPDATE );
+        }
+    }
+
+    /**
+     *  Set Flag To Sync to Product and IdAttribute
+     *
+     * @param $id_product
+     */
+    public function flagSyncProductForReverbToSync($id_product, $origin) {
+        $reverbSync = new ReverbSync($this);
+        $products = $reverbSync->getListProductsWithStatus(array('id_product' => $id_product));
+        foreach ($products as $product) {
+            $reverbSync->insertOrUpdateSyncStatus(
+                $product['id_product'],
+                $product['id_product_attribute'],
+                \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC,
+                null,
+                null,
+                null,
+                $origin
+            );
         }
     }
 
