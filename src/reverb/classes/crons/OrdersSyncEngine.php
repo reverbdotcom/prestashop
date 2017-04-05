@@ -156,7 +156,9 @@ class OrdersSyncEngine
         // Add product in cart
         $id_product = Product::searchByName($context->getIdLang(), $order['sku']);
 
+        // TODO Recupérer l'id Attribute
         //$ip_product_attribute = $this->getProductAttribute();
+        //$cart->updateQty(1, $ip_product_attribute, null, false);
 
         $cart->updateQty(1, $id_product, null, false);
 
