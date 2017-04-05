@@ -269,7 +269,7 @@
                                 <select class="form-control reverb-shipping-region"  name="reverb_shipping_methods_region[]" >
                                     <option value="">{l s='Select a region'}</option>
                                     {foreach from=$reverb_regions item='region' key="code"}
-                                        <option value="{$code}">{$code} - {$region}</option>
+                                        <option value="{$code}">{$region}</option>
                                     {/foreach}
                                 </select>
                             </td>

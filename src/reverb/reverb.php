@@ -891,8 +891,11 @@ class Reverb extends Module
      * @param $id_product
      */
     public function flagSyncProductForReverbToSync($id_product, $origin) {
+        $this->logs->infoLogs('flagSyncProductForReverbToSync ' . $id_product . ' => origin ' . $origin);
         $reverbSync = new ReverbSync($this);
-        $products = $reverbSync->getListProductsWithStatus(array('id_product' => $id_product));
+        $products = $reverbSync->getListProductsWithStatusByProductId($id_product);
+        $this->logs->infoLogs('Products to flag:');
+        $this->logs->infoLogs(var_export($products, true));
         foreach ($products as $product) {
             $reverbSync->insertOrUpdateSyncStatus(
                 $product['id_product'],
