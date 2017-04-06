@@ -844,24 +844,42 @@ class Reverb extends Module
             $this->logs->infoLogs('Save reverb attributes for product ' . $id_product);
             $this->logs->infoLogs(var_export($values, true));
 
-            $idAttribute = $this->getAttributesId($id_product);
-            $db = Db::getInstance();
-            if ($idAttribute) {
-                $db->update('reverb_attributes',
-                    $values,
-                    'id_attribute = ' . (int)$idAttribute
-                );
-            } else {
-                $db->insert('reverb_attributes', array_merge($values,array(
-                    'id_lang' => pSql($this->language_id),
-                    'id_product' => pSql($id_product),
-                )));
+            $this->logs->infoLogs(var_export($reverb_shipping, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_profile, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_methods_region, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_methods_rate, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_local, true));
 
-                $idAttribute = (int) $db->Insert_ID();
+            try {
+                $idAttribute = $this->getAttributesId($id_product);
+                $db = Db::getInstance();
+
+
+                if ($idAttribute) {
+                    $this->logs->infoLogs('### $idAttribute = ' . $idAttribute);
+                    $db->update('reverb_attributes',
+                        $values,
+                        'id_attribute = ' . (int)$idAttribute
+                    );
+                    $this->logs->infoLogs('### fin update');
+                    // Remove all shipping methods
+                    $db->delete('reverb_shipping_methods', 'id_attribute = ' . $idAttribute);
+                    $this->logs->infoLogs('### fin delete');
+                } else {
+                    $this->logs->infoLogs('### debut insert');
+                    $db->insert('reverb_attributes', array_merge($values,array(
+                        'id_lang' => pSql($this->language_id),
+                        'id_product' => pSql($id_product),
+                    )));
+
+                    $this->logs->infoLogs('### get idAttribute');
+                    $idAttribute = (int) $db->Insert_ID();
+                    $this->logs->infoLogs('### fin insert - $idAttribute = ' . $idAttribute);
+                }
+            } catch (Exception $e) {
+                $this->logs->errorLogsReverb($e->getMessage());
             }
-
-            // Remove all shipping methods
-            $db->delete('reverb_shipping_methods', 'id_attribute = ' . $idAttribute);
+            
 
             // Save new shipping methods
             if ($reverb_shipping == 'custom') {
