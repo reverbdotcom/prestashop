@@ -197,7 +197,7 @@ class ProductMapper
         $urls = array();
         $images = Image::getImages((int)$product['id_lang'], (int)$product['id_product']);
         foreach ($images as $image) {
-            $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], 'large');
+            $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], 'large_default');
         }
         if (strstr(getenv('PS_DOMAIN'), 'localhost')) {
             $urls[] = 'https://www.easyzic.com/common/datas/dossiers/6/6/acoustique-yamaha-c40-1.jpg';
