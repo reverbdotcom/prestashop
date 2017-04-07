@@ -140,15 +140,7 @@ class ReverbSync
         //          SELECT CLAUSE
         //=========================================
         $sql = new DbQuery();
-        $sql->select('IF (pa.id_product_attribute IS NULL, CONCAT(p.id_product, \'-\', \'0\'), CONCAT(pa.id_product, \'-\', pa.id_product_attribute)) as identifier,  ' .
-            'p.id_product as id_product,' .
-            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
-            'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name,' .
-            'rs.status as status,' .
-            'rs.reverb_id as reverb_id,' .
-            'rs.details as details,' .
-            'rs.reverb_slug as reverb_slug, ' .
-            'rs.date as last_sync, ' .
+        $sql->select('p.id_product as id_product,' .
             'pa.id_product_attribute as id_product_attribute'
         );
 
@@ -372,6 +364,7 @@ class ReverbSync
         $sql = new DbQuery();
         $sql->select('distinct(p.id_product), ' .
             'p.*, pl.*, m.name as manufacturer_name, ra.*, ' .
+            's.quantity AS quantity_stock, ' .
             'rs.id_sync, rs.reverb_id, rs.reverb_slug, ' .
             'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
             'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
@@ -384,13 +377,41 @@ class ReverbSync
             ->where('p.`id_product` = ' . (int) $productId)
         ;
 
+        $sql->leftJoin('stock_available', 's', 's.`id_product` = p.`id_product`');
+
         if ($productAttributeId) {
             $sql->where('pa.`id_product_attribute` = ' . (int) $productAttributeId);
+            $sql->where('s.`id_product_attribute` = ' . (int) $productAttributeId);
         } else {
             $sql->where('pa.`id_product_attribute` IS NULL');
+            $sql->where('s.`id_product_attribute` = 0');
         }
 
         $result = Db::getInstance()->getRow($sql);
+
+        return $result;
+    }
+
+    /**
+     * @param string $reference
+     * @return array|bool|null|object
+     */
+    public function getProductByReference($reference)
+    {
+        $sql = new DbQuery();
+        $sql->select('distinct(p.id_product), ' .
+            'pa.id_product_attribute, ' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference, ' .
+            'ra.`reverb_enabled`'
+        )
+            ->from('product', 'p')
+            ->leftJoin('product_attribute', 'pa', 'pa.`id_product` = p.`id_product`')
+            ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`')
+
+            ->where('p.`reference` = "' . $reference . '" OR CONCAT(p.reference, \'-\', pa.id_product_attribute) = "' . $reference . '"');
+
+        //$result = Db::getInstance()->getRow($sql);
+        $result = Db::getInstance()->executeS($sql);
 
         return $result;
     }
@@ -427,6 +448,7 @@ class ReverbSync
         $sql = new DbQuery();
         $sql->select('distinct(p.id_product), ' .
             'p.*, pl.*, m.name as manufacturer_name, ra.*, ' .
+            's.quantity AS quantity_stock, ' .
             'rs.id_sync, rs.reverb_id, rs.reverb_slug, ' .
             'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
             'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
@@ -436,7 +458,9 @@ class ReverbSync
         $this->getListBaseSql($sql);
 
         $sql->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
+            ->leftJoin('stock_available', 's', 's.`id_product` = p.`id_product`')
             ->where('rs.`status` = \'' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . '\'')
+            ->where('(pa.`id_product_attribute` IS NULL AND s.`id_product_attribute`) = 0 OR (pa.`id_product_attribute` = s.`id_product_attribute`)')
         ;
 
         $result = Db::getInstance()->executeS($sql);

@@ -756,7 +756,7 @@ class Reverb extends Module
                 'reverb_show_footer_btn' => version_compare(_PS_VERSION_, '1.7', '<'),
             ));
         } else {
-            $this->logs->errorLogsReverb('hookDisplayAdminProductsExtra does not found idProduct ! __PS_VERSION__ = ' . _PS_VERSION_);
+            $this->logs->errorLogs('hookDisplayAdminProductsExtra does not found idProduct ! __PS_VERSION__ = ' . _PS_VERSION_);
         }
 
         //=========================================

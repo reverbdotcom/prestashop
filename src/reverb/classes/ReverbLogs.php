@@ -23,7 +23,7 @@ class ReverbLogs
      * Log Errors
      * @param $msg
      */
-    public function errorLogsReverb($msg)
+    public function errorLogs($msg)
     {
         $this->writeLogs(self::LOG_ERROR, $msg);
     }

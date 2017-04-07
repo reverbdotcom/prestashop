@@ -49,9 +49,10 @@ class OrdersSyncEngine
     /**
      * OrdersSyncEngine constructor.
      */
-    public function __construct($module)
+    public function __construct($module, \HelperCron $helper)
     {
         $this->module = $module;
+        $this->helper = $helper;
     }
 
     //TODO Itérer sur les shop
@@ -63,16 +64,13 @@ class OrdersSyncEngine
     public function processSyncOrder($idCron)
     {
         try {
-            // Init configuration for sync orders
-            $helper = new \HelperCron($this->module);
-            $this->helper = $helper;
-
             $context = new \ContextCron($this->module);
 
             // Call and getting all orders from reverb
             $reverbOrders = new \Reverb\ReverbOrders($this->module);
 
-            $date = $helper->getDateLastCronWithStatus(CODE_CRON_ORDERS, $helper::CODE_CRON_STATUS_END);
+            $date = $this->helper->getDateLastCronWithStatus(CODE_CRON_ORDERS, HelperCron::CODE_CRON_STATUS_END);
+            $this->logInfoCrons('# Last orders sync : ' . var_export($date, true));
             $orders = $reverbOrders->getOrders($date);
 
             $this->logInfoCrons('# ' . count($orders) . ' order(s) to sync');
@@ -80,20 +78,30 @@ class OrdersSyncEngine
             // Process Order in Prestashop
             foreach ($orders as $order) {
                 if (!$this->checkIfOrderAlreadySync($order)) {
-                    $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
-                    $this->logInfoCrons('Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
+                    $this->logInfoCrons('# Order ' . $order['order_number'] . ' is not synced yet.');
+                    try {
+                        $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
+                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
+                    } catch (Exception $e) {
+                        $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+                    }
                 } else {
-                    $this->logInfoCrons('Order ' . $order['order_number'] . ' is already synced.');
+                    $this->logInfoCrons('# Order ' . $order['order_number'] . ' is already synced.');
                 }
             }
 
-            $helper->insertOrUpdateCronStatus($idCron, CODE_CRON_ORDERS, $helper::CODE_CRON_STATUS_END);
+            $this->helper->insertOrUpdateCronStatus($idCron, CODE_CRON_ORDERS, HelperCron::CODE_CRON_STATUS_END);
         } catch (\Exception $e) {
-            $error = 'Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString();
+            $error = '/!\ Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString();
+            $this->logInfoCrons($e->getMessage());
             $this->logInfoCrons($error);
-            $this->module->logs->errorLogsReverb($error);
-            $helper->insertOrUpdateCronStatus($idCron, CODE_CRON_ORDERS, $helper::CODE_CRON_STATUS_ERROR,
-                $e->getMessage());
+            $this->module->logs->errorLogs($error);
+            $this->helper->insertOrUpdateCronStatus(
+                $idCron,
+                CODE_CRON_ORDERS,
+                HelperCron::CODE_CRON_STATUS_ERROR,
+                $e->getMessage()
+            );
         }
     }
 
@@ -106,6 +114,7 @@ class OrdersSyncEngine
      */
     public function checkIfOrderAlreadySync($order)
     {
+        $this->logInfoCrons('# Check if order "' . $order['order_number'] . '" exists on prestashop');
         $sql = new DbQuery();
         $sql->select('o.id_order')
             ->from('orders', 'o')
@@ -140,8 +149,10 @@ class OrdersSyncEngine
      * @param $id_shop_group
      * @return int id Cart
      */
-    public function initCart($order, $context, $id_address, $id_currency)
+    public function initCart($order, ContextCron $context, $id_address, $id_currency)
     {
+        $this->logInfoCrons('# initCart');
+
         $cart = new Cart();
         $carrier = new Carrier();
         $cart->id_shop_group = $context->getIdShop();
@@ -154,13 +165,26 @@ class OrdersSyncEngine
         $cart->add();
 
         // Add product in cart
-        $id_product = Product::searchByName($context->getIdLang(), $order['sku']);
+        $this->logInfoCrons('## Try to find product = ' . $order['sku']);
+        //$id_product = Product::searchByName($context->getIdLang(), $order['sku']);
+        $reverbSync = new ReverbSync($this->module);
+        $product = $reverbSync->getProductByReference($order['sku']);
+        $this->logInfoCrons('## product: ' . var_export($product, true));
+        if (empty($product)) {
+            throw new Exception('Product "' . $order['sku'] .'" not found on Prestashop !');
+        } elseif (count($product) > 1) {
+            throw new Exception('More than one product "' . $order['sku'] .'" found on Prestashop !');
+        }
 
-        // TODO Recupérer l'id Attribute
-        //$ip_product_attribute = $this->getProductAttribute();
-        //$cart->updateQty(1, $ip_product_attribute, null, false);
+        $product = $product[0];
 
-        $cart->updateQty(1, $id_product, null, false);
+        if (!$product['reverb_enabled']) {
+            throw new Exception('Product "' . $order['sku'] .'" is not synced with Reverb !');
+        }
+
+        $cart->updateQty(1, $product['id_product'], $product['id_product_attribute'], false);
+        $this->logInfoCrons('## 12');
+        $this->logInfoCrons('# cart added : ' . $cart->id);
 
         return $cart->id;
     }
@@ -174,15 +198,22 @@ class OrdersSyncEngine
      * @param $id_shop_group
      * @return int idAdress
      */
-    public function initAddress($order, $context)
+    public function initAddress($order, ContextCron $context)
     {
+        $this->logInfoCrons('# initAddress');
+
         $address = new Address();
         $address->id_customer = $context->getIdCustomer();
         $address->firstname = $order['buyer_first_name'];
         $address->lastname = $order['buyer_last_name'];
         $address->alias = $order['buyer_last_name'];
 
-        if (array_key_exists('shipping_address',$order) &&  $order['shipping_address']) {
+        if (
+            $order['shipping_method'] == 'shipped'
+            && array_key_exists('shipping_address',$order)
+            && !empty($order['shipping_address'])
+        ) {
+            $this->logInfoCrons('## Add buyer shipping address :');
             $shipping = $order['shipping_address'];
             $address->address1 = $shipping['street_address'];
             $address->address2 = $shipping['extended_address'];
@@ -191,16 +222,27 @@ class OrdersSyncEngine
             $address->city = $shipping['locality'];
             $address->id_country = Country::getByIso($shipping['country_code']);
         } else {
-            $country = Tools::strtolower(Country::getIsoById(Configuration::get('PS_SHOP_COUNTRY_ID')));
-            $region = Tools::strtolower(State::getNameById(Configuration::get('PS_SHOP_STATE_ID')));
-            $locality = Configuration::get('PS_SHOP_CITY');
-
-            $address->id_state = $region;
-            $address->city = $locality;
+            $this->logInfoCrons('## Local shipping => add seller address');
+            $country = Configuration::get('PS_SHOP_COUNTRY_ID');
+            $this->logInfoCrons('## $country = ' . var_export($country, true));
+            if (!$country) {
+                throw new Exception('Unable to find configuration PS_SHOP_COUNTRY_ID');
+            }
             $address->id_country = $country;
-        }
 
+            $address1 = Configuration::get('PS_SHOP_ADDR1');
+            if (!$address1) {
+                throw new Exception('Unable to find configuration PS_SHOP_ADDR1');
+            }
+            $address->address1 = $address1;
+
+            $address->address2 = Configuration::get('PS_SHOP_ADDR2');
+            $address->city = Configuration::get('PS_SHOP_CITY');
+            $address->id_state = Configuration::get('PS_SHOP_STATE_ID');
+        }
         $address->add();
+        $this->logInfoCrons('## address added = ' . var_export($address->id, true));
+
         return $address->id;
     }
 
@@ -232,6 +274,7 @@ class OrdersSyncEngine
      *
      * @param $order
      * @param $context ContextCron
+     * @param int $idCron
      * @return int|null
      */
     public function createPrestashopOrder($orderReverb, $context, $idCron)
@@ -256,32 +299,38 @@ class OrdersSyncEngine
         Shop::setContext(Shop::CONTEXT_SHOP, $context->getIdShop());
 
         $payment_module = new \ReverbPayment();
+
+        $this->logInfoCrons('# validateOrder');
         $payment_module->validateOrder(
-                $this->module->getContext()->cart->id,
-                (int)Configuration::get('PS_OS_PAYMENT'),
-                (float)$orderReverb['total']['amount'],
-                $this->module->displayName,
-                '',
-                $extra_vars,
-                $this->module->getContext()->cart->id_currency,
-                false,
-            $this->module->customer->secure_key ,$shop
-            );
+            $this->module->getContext()->cart->id,
+            (int)Configuration::get('PS_OS_PAYMENT'),
+            (float)$orderReverb['total']['amount'],
+            $this->module->displayName,
+            '',
+            $extra_vars,
+            //$this->module->getContext()->cart->id_currency,
+            1,
+            false,
+            $this->module->customer->secure_key,
+            $shop
+        );
+
+        $this->logInfoCrons('# validateOrder finish');
 
         $order = new Order((int)$payment_module->currentOrder);
         $order->reference = $orderReverb['order_number'];
-        $order->total_shipping = $orderReverb['shipping']['amount'];
-        $order->total_shipping_tax_excl = $orderReverb['shipping']['amount'];
-        $order->total_shipping_tax_incl = $orderReverb['shipping']['amount'];
+        $order->total_shipping = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
+        $order->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
+        $order->total_shipping_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
         $order->total_paid_real = (float) $orderReverb['total']['amount'];
         $order->total_paid_tax_incl = (float)  $orderReverb['total']['amount'];
         $order->total_paid = (float)  $orderReverb['total']['amount'];
         $order->current_state = (int)Configuration::get('PS_OS_PAYMENT');
         $order->update();
 
-        $this->logInfoCrons('Order ' . $order->reference . ' is now synced');
+        $this->logInfoCrons('Order ' . $order->reference . ' : ' . $order->reference . ' is now synced');
 
-        return  $this->currentOrder;
+        return  $order->id;
     }
 
     /**

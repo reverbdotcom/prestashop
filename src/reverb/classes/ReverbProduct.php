@@ -110,7 +110,7 @@ class ReverbProduct extends ReverbClient
      */
     private function proccessTechnicalError($e)
     {
-        $this->module->logs->errorLogsReverb($e->getMessage());
+        $this->module->logs->errorLogs($e->getMessage());
         return array(
             'status' => 'error',
             'message' => $e->getTraceAsString(),

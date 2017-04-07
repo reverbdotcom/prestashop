@@ -37,8 +37,8 @@ class ProductMapper
 
         $product->make = $product_ps['manufacturer_name'];
         $product->model = $product_ps['name'];
-        $product->has_inventory = $product_ps['quantity'] > 0 ? true : false;
-        $product->inventory = $product_ps['quantity'];
+        $product->has_inventory = $product_ps['quantity_stock'] > 0 ? 1 : false;
+        $product->inventory = $product_ps['quantity_stock'];
 
         $product->sku = $product_ps['reference'];
         $product->upc = $product_ps['ean13'];
@@ -86,7 +86,7 @@ class ProductMapper
         }
 
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_AUTO_PUBLISH)) {
-            $product->publish = true;
+            $product->publish = 1;
         }
 
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PAYPAL)) {
@@ -98,10 +98,10 @@ class ProductMapper
     }
 
     /**
-     *  Map condition for a product
+     * Map condition for a product
      *
      * @param array $product
-     * @return array of Reverb\Mapper\Models\Categor
+     * @return null|\Reverb\Mapper\Models\Condition
      */
     protected function mapCondition($product)
     {
@@ -135,8 +135,7 @@ class ProductMapper
         }
 
         // Instantiate Model Location with extracts informations
-        $location = new Reverb\Mapper\Models\Location($country, $region, $locality);
-        return $location;
+        return new Reverb\Mapper\Models\Location($country, $region, $locality);
     }
 
     /**
@@ -163,7 +162,7 @@ class ProductMapper
      *  Map price for a product
      *
      * @param array $product_ps
-     * @return array of Reverb\Mapper\Models\Price
+     * @return Reverb\Mapper\Models\Price
      */
     protected function mapPrice($product_ps)
     {
@@ -173,8 +172,7 @@ class ProductMapper
             $currency = Currency::getDefaultCurrency();
             $isoCode = $currency->iso_code;
         }
-        $price = new Reverb\Mapper\Models\Price($product_ps['price'], $isoCode);
-        return $price;
+        return new Reverb\Mapper\Models\Price($product_ps['price'], $isoCode);
     }
 
     /*
@@ -195,16 +193,22 @@ class ProductMapper
     private function getImagesUrl($product)
     {
         $urls = array();
-        $images = Image::getImages((int)$product['id_lang'], (int)$product['id_product']);
-        foreach ($images as $image) {
-            $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], 'large_default');
-        }
         if (strstr(getenv('PS_DOMAIN'), 'localhost')) {
             $urls[] = 'https://www.easyzic.com/common/datas/dossiers/6/6/acoustique-yamaha-c40-1.jpg';
+        } else {
+            $images = Image::getImages((int)$product['id_lang'], (int)$product['id_product']);
+            foreach ($images as $image) {
+                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], 'large_default');
+            }
         }
         return $urls;
     }
 
+    /**
+     * @param ProductReverb $product
+     * @param $product_ps
+     * @return ProductReverb
+     */
     private function mapShipping(ProductReverb $product, $product_ps)
     {
         if ($product_ps['id_shipping_profile']) {
@@ -225,7 +229,7 @@ class ProductMapper
             }
             $product->shipping = array(
                 'rates' => $rates,
-                'local' => $product_ps['shipping_local'] ? true : false,
+                'local' => $product_ps['shipping_local'] ? 1 : false,
             );
         }
 

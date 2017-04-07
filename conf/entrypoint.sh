@@ -23,7 +23,7 @@ if [ ! -f /var/www/html/console/console.php ];then
     #===================================#
     #            ADD CRON
     #===================================#
-    crontab -l | { cat; echo "*/5 * * * *  php /var/www/html/modules/reverb/cron.php product > /var/log/cron.log"; } | crontab -
+    crontab -l | { cat; echo "*/5 * * * *  php /var/www/html/modules/reverb/cron.php products > /var/log/cron.log"; } | crontab -
     crontab -l | { cat; echo "*/8 * * * *  php /var/www/html/modules/reverb/cron.php orders > /var/log/cron.log"; } | crontab -
     service cron start
 fi

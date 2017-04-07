@@ -259,11 +259,11 @@ class ReverbClient extends Client
      */
     protected function convertException(\Exception $e)
     {
-        $this->module->logs->errorLogsReverb('# Exception : ' . get_class($e) . ' : ' . $e->getMessage());
+        $this->module->logs->errorLogs('# Exception : ' . get_class($e) . ' : ' . $e->getMessage());
 
         if ($e instanceof ClientException) {
             $message = json_decode($e->getResponse()->getBody()->getContents(), true);
-            $this->module->logs->errorLogsReverb(var_export($message, true));
+            $this->module->logs->errorLogs(var_export($message, true));
             return $message;
         }
 

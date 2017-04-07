@@ -18,22 +18,26 @@ require_once dirname(__FILE__) . '/classes/ReverbProduct.php';
 require_once dirname(__FILE__) . '/reverb.php';
 
 const CODE_CRON_ORDERS = 'orders';
-const CODE_CRON_PRODUCT = 'product';
-
-if (PHP_SAPI === 'cli') {
-    $code_cron = $argv[1];
-}
-else {
-    $code_cron = $_GET['code'];
-}
-
-if (!isset($code_cron) || $code_cron != CODE_CRON_ORDERS && $code_cron != CODE_CRON_PRODUCT) {
-    throw new \Exception('No code cron corresponding. ' . $code_cron);
-}
+const CODE_CRON_PRODUCTS = 'products';
 
 try {
     $module = new \Reverb();
     $helper = new \HelperCron($module);
+
+    if ($argc != 2) {
+        throw new \Exception('Missing parameters (' . $argc . '), usage : cron.php ' . CODE_CRON_ORDERS . '|' . CODE_CRON_PRODUCTS);
+    }
+
+    if (PHP_SAPI === 'cli') {
+        $code_cron = $argv[1];
+    }
+    else {
+        $code_cron = $_GET['code'];
+    }
+
+    if (!isset($code_cron) || $code_cron != CODE_CRON_ORDERS && $code_cron != CODE_CRON_PRODUCTS) {
+        throw new \Exception('No code cron corresponding. ' . $code_cron);
+    }
 
     $module->logs->cronLogs('##########################');
     $module->logs->cronLogs('# BEGIN ' . $code_cron . ' sync CRON');
@@ -45,10 +49,10 @@ try {
         if ($module->isApiTokenAvailable()) {
             switch ($code_cron) {
                 case CODE_CRON_ORDERS:
-                    $engine = new \OrdersSyncEngine($module);
+                    $engine = new \OrdersSyncEngine($module, $helper);
                     $engine->processSyncOrder($idCron);
                     break;
-                case CODE_CRON_PRODUCT:
+                case CODE_CRON_PRODUCTS:
                     $reverbProduct = new \Reverb\ReverbProduct($module);
                     $products = $module->reverbSync->getProductsToSync();
                     $module->logs->cronLogs('# ' . count($products) . ' product(s) to sync');
@@ -68,14 +72,22 @@ try {
     //} else {
     //    throw new \Exception('No secure TOKEN to launch the cron' . CODE_CRON_ORDERS);
     //}
-} catch (\Exception $e) {
-    $error = 'Error in cron ' . $code_cron . ' ' . $e->getMessage();
-    $module->logs->cronLogs($error);
-    $module->logs->errorLogsReverb($error);
-    $helper->insertOrUpdateCronStatus($idCron, $code_cron, $helper::CODE_CRON_STATUS_ERROR,
-        $e->getMessage());
-}
 
-$module->logs->cronLogs('##########################');
-$module->logs->cronLogs('# END ' . $code_cron . ' sync CRON');
-$module->logs->cronLogs('##########################');
+    $module->logs->cronLogs('##########################');
+    $module->logs->cronLogs('# END ' . $code_cron . ' sync CRON SUCCESS');
+    $module->logs->cronLogs('##########################');
+
+} catch (\Exception $e) {
+    $error = 'Error in cron ' . (isset($code_cron) ? $code_cron . ' ' : ' ') . $e->getMessage();
+    $module->logs->cronLogs($error);
+    $module->logs->errorLogs($error);
+
+    if (isset($code_cron) && isset($idCron) && $idCron) {
+        $helper->insertOrUpdateCronStatus($idCron, $code_cron, $helper::CODE_CRON_STATUS_ERROR,
+            $e->getMessage());
+    }
+
+    $module->logs->cronLogs('##########################');
+    $module->logs->cronLogs('# END sync CRON FAILED');
+    $module->logs->cronLogs('##########################');
+}

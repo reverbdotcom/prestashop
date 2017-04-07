@@ -30,15 +30,15 @@ class ReverbOrders extends ReverbClient
 
 
     /**
-     * Get all orders or one by uuid
+     * Get all orders
      *
-     * @param null $uuid
+     * @param null $date
      * @return array
      */
     public function getOrders($date = null)
     {
         $params = null;
-        if ($date){
+        if ($date) {
             $dateISO8601 = new DateTime($date);
             $params = array(
                 'created_start_date' => $dateISO8601->format('Y-m-d\TH:i:s')
