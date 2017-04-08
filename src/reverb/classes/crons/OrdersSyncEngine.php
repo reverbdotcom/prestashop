@@ -281,6 +281,9 @@ class OrdersSyncEngine
     {
         $extra_vars = array();
         $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product']['currency'], $context->getIdShop());
+        if (empty($id_currency)) {
+            throw new Exception('Reverb order is in currency ' . $orderReverb['amount_product']['currency'] . ' wich is not activataed on your shop ' . $context->getIdShop());
+        }
 
         // Create Customer
         $context = $this->initCustomer($orderReverb, $context, $idCron);
@@ -308,8 +311,7 @@ class OrdersSyncEngine
             $this->module->displayName,
             '',
             $extra_vars,
-            //$this->module->getContext()->cart->id_currency,
-            1,
+            $id_currency,
             false,
             $this->module->customer->secure_key,
             $shop
