@@ -72,6 +72,10 @@ class Reverb extends Module
         $this->language_id = $this->context->language->id;
 
         $this->reverbConfig = $this->getReverbConfig();
+
+        $this->_infos[] = $this->l('The following cron Tasks must be configured in your hosting:');
+        $this->_infos[] = '*/5 * * * *  php /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log';
+        $this->_infos[] = '*/8 * * * *  php /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log';
     }
 
     /**
