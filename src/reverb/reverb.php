@@ -72,6 +72,10 @@ class Reverb extends Module
         $this->language_id = $this->context->language->id;
 
         $this->reverbConfig = $this->getReverbConfig();
+
+        $this->_infos[] = $this->l('The following cron Tasks must be configured in your hosting:');
+        $this->_infos[] = '*/5 * * * *  php /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log';
+        $this->_infos[] = '*/8 * * * *  php /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log';
     }
 
     /**
@@ -156,8 +160,8 @@ class Reverb extends Module
             `date` datetime NOT NULL,
             `details` text NOT NULL,
             PRIMARY KEY  (`id_sync_history`),
-            FOREIGN KEY fk_reverb_sync_history_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product)
-            FOREIGN KEY fk_reverb_sync_history_product_attribute(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute),
+            FOREIGN KEY fk_reverb_sync_history_product(id_product) REFERENCES `'._DB_PREFIX_.'product` (id_product),
+            FOREIGN KEY fk_reverb_sync_history_product_attribute(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
@@ -844,24 +848,42 @@ class Reverb extends Module
             $this->logs->infoLogs('Save reverb attributes for product ' . $id_product);
             $this->logs->infoLogs(var_export($values, true));
 
-            $idAttribute = $this->getAttributesId($id_product);
-            $db = Db::getInstance();
-            if ($idAttribute) {
-                $db->update('reverb_attributes',
-                    $values,
-                    'id_attribute = ' . (int)$idAttribute
-                );
-            } else {
-                $db->insert('reverb_attributes', array_merge($values,array(
-                    'id_lang' => pSql($this->language_id),
-                    'id_product' => pSql($id_product),
-                )));
+            $this->logs->infoLogs(var_export($reverb_shipping, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_profile, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_methods_region, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_methods_rate, true));
+            $this->logs->infoLogs(var_export($reverb_shipping_local, true));
 
-                $idAttribute = (int) $db->Insert_ID();
+            try {
+                $idAttribute = $this->getAttributesId($id_product);
+                $db = Db::getInstance();
+
+
+                if ($idAttribute) {
+                    $this->logs->infoLogs('### $idAttribute = ' . $idAttribute);
+                    $db->update('reverb_attributes',
+                        $values,
+                        'id_attribute = ' . (int)$idAttribute
+                    );
+                    $this->logs->infoLogs('### fin update');
+                    // Remove all shipping methods
+                    $db->delete('reverb_shipping_methods', 'id_attribute = ' . $idAttribute);
+                    $this->logs->infoLogs('### fin delete');
+                } else {
+                    $this->logs->infoLogs('### debut insert');
+                    $db->insert('reverb_attributes', array_merge($values,array(
+                        'id_lang' => pSql($this->language_id),
+                        'id_product' => pSql($id_product),
+                    )));
+
+                    $this->logs->infoLogs('### get idAttribute');
+                    $idAttribute = (int) $db->Insert_ID();
+                    $this->logs->infoLogs('### fin insert - $idAttribute = ' . $idAttribute);
+                }
+            } catch (Exception $e) {
+                $this->logs->errorLogsReverb($e->getMessage());
             }
-
-            // Remove all shipping methods
-            $db->delete('reverb_shipping_methods', 'id_attribute = ' . $idAttribute);
+            
 
             // Save new shipping methods
             if ($reverb_shipping == 'custom') {
