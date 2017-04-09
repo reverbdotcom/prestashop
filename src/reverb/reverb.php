@@ -164,6 +164,18 @@ class Reverb extends Module
             FOREIGN KEY fk_reverb_sync_history_product_attribute(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_orders` (
+            `id_reverb_orders` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_order` int(10) unsigned NOT NULL,
+            `reverb_order_number` varchar(32) ,
+            `status` varchar(32) NOT NULL,
+            `details` text,
+            `date` datetime,
+            `shipping_tracker` text,
+            PRIMARY KEY  (`id_reverb_orders`),
+            FOREIGN KEY fk_reverb_orders(id_order) REFERENCES `'._DB_PREFIX_.'orders` (id_order)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -182,7 +194,11 @@ class Reverb extends Module
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
             $this->registerHook('actionObjectProductDeleteAfter') &&
-            $this->registerHook('actionObjectProductUpdateAfter');
+            $this->registerHook('actionObjectProductUpdateAfter') &&
+            $this->registerHook('actionOrderStatusPostUpdate') &&
+            $this->registerHook('actionAdminOrdersTrackingNumberUpdate') &&
+            $this->registerHook('actionOrderEdited')
+            ;
     }
 
     public function uninstall()
@@ -772,22 +788,27 @@ class Reverb extends Module
 
     public function hookActionObjectOrderAddAfter()
     {
+        $this->logs->infoLogs(__METHOD__);
         /* Place your code here. */
     }
 
     public function hookActionObjectProductAddAfter()
     {
+        $this->logs->infoLogs(__METHOD__);
         /* Place your code here. */
     }
 
     public function hookActionObjectProductDeleteAfter()
     {
+        $this->logs->infoLogs(__METHOD__);
         /* Place your code here. */
     }
 
-    public function hookActionObjectShopUpdateAfter()
+
+    public function hookActionAdminOrdersTrackingNumberUpdate()
     {
-        /* Place your code here. */
+        $this->logs->infoLogs(__METHOD__);
+        /* TODO: check if Reverb order and send the tracking number */
     }
 
     /**
@@ -795,8 +816,9 @@ class Reverb extends Module
      *
      * @param $param
      */
-    public function hookActionPostUpdateOrderStatus($params)
+    public function hookActionOrderStatusPostUpdate($params)
     {
+        $this->logs->infoLogs(__METHOD__);
         $order = new Order((int) $params['id_order']);
         $orderProducts = $order->getCartProducts();
 
@@ -952,6 +974,17 @@ class Reverb extends Module
      */
     public function hookActionProductUpdate($params) {
         $id_product = Tools::getValue('id_product');
+
+    }
+
+    /**
+     *  Hook for order update
+     *
+     * @param $params
+     */
+    public function hookActionOrderEdited($params) {
+        $id_order = Tools::getValue('id_order');
+        $this->logs->infoLogs('UPDATE order ' . $id_order);
 
     }
 
