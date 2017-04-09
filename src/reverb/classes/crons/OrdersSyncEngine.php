@@ -24,7 +24,7 @@ class ReverbPayment extends PaymentModule
 
     public function __construct()
     {
-        $this->displayName = $this->trans('Reverb order', array(), 'Admin.OrdersCustomers.Feature');
+        $this->displayName = $this->l('Reverb order', array(), 'Admin.OrdersCustomers.Feature');
     }
 }
 

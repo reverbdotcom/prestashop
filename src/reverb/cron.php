@@ -24,9 +24,9 @@ try {
     $module = new \Reverb();
     $helper = new \HelperCron($module);
 
-    if ($argc != 2) {
-        throw new \Exception('Missing parameters (' . $argc . '), usage : cron.php ' . CODE_CRON_ORDERS . '|' . CODE_CRON_PRODUCTS);
-    }
+    //if ($argc != 2) {
+    //    throw new \Exception('Missing parameters (' . $argc . '), usage : cron.php ' . CODE_CRON_ORDERS . '|' . CODE_CRON_PRODUCTS);
+    //}
 
     if (PHP_SAPI === 'cli') {
         $code_cron = $argv[1];
