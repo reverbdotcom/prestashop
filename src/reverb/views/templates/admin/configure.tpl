@@ -25,7 +25,7 @@
 
 <div class="panel">
 	<div class="row moduleconfig-header">
-		<div class="col-xs-2 text-right">
+		<div class="col-xs-2 text-right" style="min-width:216px;">
 			<h1 class="site-header__logo"></h1>
 		</div>
 		<div class="col-xs-10 text-left">
