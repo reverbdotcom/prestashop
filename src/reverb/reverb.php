@@ -868,7 +868,7 @@ class Reverb extends Module
                     );
                     $this->logs->infoLogs('### fin update');
                     // Remove all shipping methods
-                    $db->delete('reverb_shipping_methods', 'id_attribute = ' . $idAttribute);
+                    $db->delete('reverb_shipping_methods', 'id_attribute = ' . $idAttribute,false);
                     $this->logs->infoLogs('### fin delete');
                 } else {
                     $this->logs->infoLogs('### debut insert');
