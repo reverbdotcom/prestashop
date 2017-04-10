@@ -73,9 +73,9 @@ class Reverb extends Module
 
         $this->reverbConfig = $this->getReverbConfig();
 
-        $this->_infos[] = $this->l('The following cron Tasks must be configured in your hosting:');
-        $this->_infos[] = '*/5 * * * *  php /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log';
-        $this->_infos[] = '*/8 * * * *  php /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log';
+        $this->_infos[] = $this->l('The following cron tasks must be configured in your hosting:');
+        $this->_infos[] = '*/5 * * * *  php /var/www/html/modules/reverb/cron.php products  > /var/log/cron.log';
+        $this->_infos[] = '*/8 * * * *  php /var/www/html/modules/reverb/cron.php orders > /var/log/cron.log';
     }
 
     /**
@@ -636,17 +636,18 @@ class Reverb extends Module
             foreach (array_keys($form_values) as $key) {
                 $value = Tools::getValue($key);
                 if (
-                    $key == self::KEY_API_TOKEN
-                    && (
-                        array_key_exists($key,$this->reverbConfig)
-                        && $this->reverbConfig[$key] != $value
-                    ) || !array_key_exists($key, $this->reverbConfig)) {
+                    $key == self::KEY_API_TOKEN ) {
                     $reverbClient = new \Reverb\ReverbAuth($this,$value);
                     $shop = $reverbClient->getListFromEndpoint();
 
                     if (!is_array($shop) || (!array_key_exists('slug',$shop) && empty($shop['slug']))) {
                         $value = '';
-                        $this->_errors[] = $this->l('API Token is invalid, try again');
+                        $mode = 'PRODUCTION';
+                        if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||
+                            !array_key_exists(self::KEY_SANDBOX_MODE,$this->reverbConfig)) {
+                            $mode = 'SANDBOX';
+                        }
+                        $this->_errors[] = $this->l('API Token is invalid for ' . $mode . ' mode , please try again.');
                     }
                 }
 
@@ -881,7 +882,7 @@ class Reverb extends Module
                     $this->logs->infoLogs('### fin insert - $idAttribute = ' . $idAttribute);
                 }
             } catch (Exception $e) {
-                $this->logs->errorLogsReverb($e->getMessage());
+                $this->logs->errorLogs($e->getMessage());
             }
             
 
