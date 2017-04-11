@@ -168,7 +168,9 @@ class Reverb extends Module
 
         $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_orders` (
             `id_reverb_orders` int(10) unsigned NOT NULL AUTO_INCREMENT,
-            `id_order` int(10) unsigned NOT NULL,
+            `id_order` int(10) unsigned,
+            `id_shop` int(11) unsigned,
+            `id_shop_group` int(11) unsigned,
             `reverb_order_number` varchar(32),
             `status` int(10) unsigned NOT NULL,
             `details` text,
@@ -177,7 +179,6 @@ class Reverb extends Module
             `shipping_tracker` text,
             PRIMARY KEY  (`id_reverb_orders`),
             UNIQUE (reverb_order_number)
-            FOREIGN KEY fk_reverb_orders(id_order) REFERENCES `'._DB_PREFIX_.'orders` (id_order)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
@@ -217,6 +218,7 @@ class Reverb extends Module
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_attributes`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync_history`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_crons`';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_orders`';
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -750,8 +752,10 @@ class Reverb extends Module
     {
         if (version_compare(_PS_VERSION_, '1.7', '<')) {
             $id_product = (int)Tools::getValue('id_product');
+            $template = 'product-tab-content.tpl';
         } else {
             $id_product = $params['id_product'];
+            $template = 'product-tab-content17.tpl';
         }
         //=========================================
         //     LOADING CONFIGURATION REVERB
@@ -778,7 +782,6 @@ class Reverb extends Module
                 'reverb_shipping_profile' => $attribute['id_shipping_profile'],
                 'reverb_shipping_methods' => $reverbAttributes->getShippingMethods($attribute['id_attribute']),
                 'currency' => $this->getContext()->currency->getSign(),
-                'reverb_show_footer_btn' => version_compare(_PS_VERSION_, '1.7', '<'),
             ));
         } else {
             $this->logs->errorLogs('hookDisplayAdminProductsExtra does not found idProduct ! __PS_VERSION__ = ' . _PS_VERSION_);
@@ -787,7 +790,7 @@ class Reverb extends Module
         //=========================================
         //     PROCESS TEMPLATE
         //=========================================
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/product-tab-content.tpl');
+        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/product/' . $template);
         return $output;
     }
 

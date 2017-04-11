@@ -20,6 +20,7 @@ class ReverbOrders extends ReverbClient
     CONST REVERB_MY_SELLING_PICKED_UP = 'my/orders/selling/[ID]/mark_picked_up';
     CONST REVERB_ROOT_KEY = 'orders';
 
+    public static $statusToSync = array('paid', 'shipped', 'picked_up', 'received');
     /**
      * ReverbOrders constructor.
      */

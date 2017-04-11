@@ -13,6 +13,7 @@ class ReverbOrders
     const REVERB_ORDERS_STATUS_ORDER_SAVED = 1;
     const REVERB_ORDERS_STATUS_SHIPPING_SENT = 2;
     const REVERB_ORDERS_STATUS_FINISH = 3;
+    const REVERB_ORDERS_STATUS_ERROR = 4;
     const REVERB_ORDERS_SHIPPING_METHOD_SHIPPED = 'shipped';
     const REVERB_ORDERS_SHIPPING_METHOD_LOCAL = 'local';
 
@@ -70,7 +71,7 @@ class ReverbOrders
      * @param $shippingMethod
      * @param null $shippingTracker
      */
-    public function insert($idOrder, $orderNumber, $status, $details, $shippingMethod, $shippingTracker = null)
+    public function insert($idShop, $idShopGroup, $idOrder, $orderNumber, $status, $details, $shippingMethod, $shippingTracker = null)
     {
         $this->module->logs->infoLogs('insertOrder');
         $this->module->logs->infoLogs(' - $idOrder = ' . $idOrder);
@@ -83,11 +84,20 @@ class ReverbOrders
             'date' => (new \DateTime())->format('Y-m-d H:i:s'),
             'status' => pSQL($status),
             'details' => pSQL($details),
-            'id_order' => (int) $idOrder,
             'reverb_order_number' => pSQL($orderNumber),
             'shipping_method' => $shippingMethod,
             'shipping_tracker' => $shippingTracker,
         );
+
+        if ($idOrder) {
+            $params['id_order'] = (int) $idOrder;
+        }
+        if ($idShop) {
+            $params['id_shop'] = (int) $idShop;
+        }
+        if ($idShopGroup) {
+            $params['id_shop_group'] = (int) $idShop;
+        }
 
         Db::getInstance()->insert(
             'reverb_orders', $params

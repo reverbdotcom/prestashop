@@ -21,16 +21,19 @@
             </label>
             <div class="col-lg-9">
                 <span class="switch prestashop-switch fixed-width-lg">
-                    <input type="radio" name="reverb_enabled" id="reverb_enabled_sync_on" value="1"
-                           {if ($reverb_enabled)}checked="checked"{/if}>
-                    <label for="reverb_enabled_sync_on">Yes</label>
+                    <span class="switch prestashop-switch fixed-width-lg">
+                        <input type="radio" name="reverb_enabled" id="reverb_enabled_sync_on" value="1"
+                               {if ($reverb_enabled)}checked="checked"{/if}>
+                        <label for="reverb_enabled_sync_on">Yes</label>
 
-                    <input type="radio" name="reverb_enabled" id="reverb_enabled_sync_off" value="0"
-                           {if !($reverb_enabled)}checked="checked"{/if}>
-                    <label for="reverb_enabled_sync_off">No</label>
-                    <a class="slide-button btn"></a>
+                        <input type="radio" name="reverb_enabled" id="reverb_enabled_sync_off" value="0"
+                               {if !($reverb_enabled)}checked="checked"{/if}>
+                        <label for="reverb_enabled_sync_off">No</label>
+                        <a class="slide-button btn"></a>
+                    </span>
                 </span>
                 <div class="alert alert-info" role="alert">
+                    <i class="material-icons">help</i>
                     <p class="alert-text">
                         {l s='When you activate the syncronization with reverb the product is sent to  Reverb\'s marketplace.'}
                         <br/>
@@ -51,15 +54,17 @@
                 </span>
             </label>
             <div class="col-lg-9">
-                <span class="switch prestashop-switch">
-                   <select class="form-control reverb-condition" name="reverb_condition">
-                       <option value="" {if ($reverb_condition == '')}selected="selected"{/if}>--</option>
-                       {foreach from=$reverb_list_conditions item=condition key=reverb_key}
-                           {$reverb_key}
-                           <option value="{$reverb_key}"
-                                   {if ($reverb_condition == $reverb_key)}selected="selected"{/if}>{$condition}</option>
-                       {/foreach}
-                    </select>
+                <span class="switch prestashop-switch fixed-width-lg">
+                    <span class="switch prestashop-switch fixed-width-lg">
+                       <select class="form-control reverb-condition" name="reverb_condition">
+                           <option value="" {if ($reverb_condition == '')}selected="selected"{/if}>--</option>
+                           {foreach from=$reverb_list_conditions item=condition key=reverb_key}
+                               {$reverb_key}
+                               <option value="{$reverb_key}"
+                                       {if ($reverb_condition == $reverb_key)}selected="selected"{/if}>{$condition}</option>
+                           {/foreach}
+                        </select>
+                    </span>
                 </span>
             </div>
         </div>
@@ -108,14 +113,16 @@
             </label>
             <div class="col-lg-9">
                 <span class="switch prestashop-switch fixed-width-lg">
-                    <input type="radio" name="reverb_sold" id="reverb_enabled_sold_on" value="1"
-                           {if ($reverb_sold)}checked="checked"{/if}>
-                    <label for="reverb_enabled_sold_on">Yes</label>
+                    <span class="switch prestashop-switch fixed-width-lg">
+                        <input type="radio" name="reverb_sold" id="reverb_enabled_sold_on" value="1"
+                               {if ($reverb_sold)}checked="checked"{/if}>
+                        <label for="reverb_enabled_sold_on">Yes</label>
 
-                    <input type="radio" name="reverb_sold" id="reverb_enabled_sold_off" value="0"
-                           {if !($reverb_sold)}checked="checked"{/if}>
-                    <label for="reverb_enabled_sold_off">No</label>
-                    <a class="slide-button btn"></a>
+                        <input type="radio" name="reverb_sold" id="reverb_enabled_sold_off" value="0"
+                               {if !($reverb_sold)}checked="checked"{/if}>
+                        <label for="reverb_enabled_sold_off">No</label>
+                        <a class="slide-button btn"></a>
+                    </span>
                 </span>
             </div>
         </div>
@@ -131,7 +138,7 @@
                 </span>
             </label>
             <div class="col-lg-9">
-                <span class="switch prestashop-switch">
+                <span class="switch prestashop-switch fixed-width-lg">
                     <select name="reverb_country" id="country_select" class="form-control input-large" >
                         {foreach from=$reverb_list_country item='country'}
                             <option value="{$country.iso_code}" {if ($country.iso_code == $reverb_country)}selected="selected"{/if}>&nbsp;{$country.name|escape}</option>
@@ -152,7 +159,7 @@
                 </span>
             </label>
             <div class="col-lg-9">
-                <span class="switch prestashop-switch">
+                <span class="switch prestashop-switch fixed-width-lg">
                     <select name="reverb_shipping" id="shipping_select" class="form-control input-large" >
                         <option value="reverb" {if ($reverb_shipping_profile != '')}selected="selected"{/if}>
                             {l s='Reverb shipping profile'}
@@ -181,6 +188,7 @@
                        id="reverb-shipping-profile-id"
                        value="{$reverb_shipping_profile}"/>
                 <div class="alert alert-info" role="alert">
+                    <i class="material-icons">help</i>
                     <p class="alert-text">
                         <a target="_blank" href="{$reverb_url}/my/selling/shipping_rates">
                             {l s='See your Reverb shipping profile'}
@@ -250,7 +258,7 @@
                                 </td>
                                 <td>
                                     {if ($key > 0)}
-                                        <button onclick="removeShippingMethod(this);" type="button" class="btn btn-invisible btn-block delete p-l-0 p-r-0 btn-delete-shipping-method"><i class="icon-trash"> {l s='Delete' mod='reverb'}</i></button>
+                                        <button onclick="removeShippingMethod(this);" type="button" class="btn btn-invisible btn-block delete p-l-0 p-r-0 btn-delete-shipping-method"><i class="material-icons">delete</i></button>
                                     {/if}
                                 </td>
                             </tr>
@@ -280,11 +288,15 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-md-3"></div>
-            <div class="col-md-9">
-                <button type="button" class="btn btn-primary-outline sensitive add" id="add-shipping-method"><i class="icon-plus-sign"></i> {l s='Add shipping locations'}</button>
-            </div>
         </div>
+        <div class="col-md-4 pull-right">
+            <button type="button" class="btn btn-primary-outline sensitive add" id="add-shipping-method"><i class="material-icons">add_circle</i> {l s='Add shipping locations'}</button>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <a href="{$link->getAdminLink('AdminProducts')|escape:'html':'UTF-8'}{if isset($smarty.request.page) && $smarty.request.page > 1}&amp;submitFilterproduct={$smarty.request.page|intval}{/if}" class="btn btn-default"><i class="process-icon-cancel"></i> {l s='Cancel'}</a>
+        <button type="submit" name="submitAddproduct" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save'}</button>
+        <button type="submit" name="submitAddproductAndStay" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save and stay'}</button>
     </div>
 </div>
 
@@ -324,7 +336,7 @@
                 var newTr = lastTr.clone();
                 newTr.find('td select.reverb-shipping-region').val('');
                 newTr.find('td input.reverb-shipping-rate').val('');
-                newTr.find('td').last().html('<button onclick="removeShippingMethod(this);" type="button" class="btn btn-invisible btn-block delete p-l-0 p-r-0 btn-delete-shipping-method"><i class="icon-trash">delete</i></button>');
+                newTr.find('td').last().html('<button onclick="removeShippingMethod(this);" type="button" class="btn btn-invisible btn-block delete p-l-0 p-r-0 btn-delete-shipping-method"><i class="material-icons">delete</i></button>');
                 newTr.appendTo('#shipping-methods-table');
             }
             return false;
