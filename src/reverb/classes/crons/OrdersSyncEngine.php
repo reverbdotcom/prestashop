@@ -80,12 +80,43 @@ class OrdersSyncEngine
             foreach ($orders as $order) {
                 if (!$this->checkIfOrderAlreadySync($order)) {
                     $this->logInfoCrons('# Order ' . $order['order_number'] . ' is not synced yet.');
-                    try {
-                        $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
-                        $this->module->reverbOrders->insert($idOrder, $order['order_number'], ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED, 'Reverb order synced', $order['shipping_method']);
-                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
-                    } catch (Exception $e) {
-                        $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+                    if (in_array($order['status'], \Reverb\ReverbOrders::$statusToSync)) {
+                        try {
+                            $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
+                            $this->module->reverbOrders->insert(
+                                $context->getIdShop(),
+                                $context->getIdShopGroup(),
+                                $idOrder,
+                                $order['order_number'],
+                                ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
+                                'Reverb order synced',
+                                $order['shipping_method']
+                            );
+                            $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
+                        } catch (Exception $e) {
+                            $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+                            $this->module->reverbOrders->insert(
+                                $context->getIdShop(),
+                                $context->getIdShopGroup(),
+                                null,
+                                $order['order_number'],
+                                ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                                $e->getMessage(),
+                                $order['shipping_method']
+                            );
+                        }
+                    } else {
+                        $message = 'Order ' . $order['order_number'] . ' status not synced : ' . $order['status'];
+                        $this->logInfoCrons('# ' . $message);
+                        $this->module->reverbOrders->insert(
+                            $context->getIdShop(),
+                            $context->getIdShopGroup(),
+                            null,
+                            $order['order_number'],
+                            ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                            $message,
+                            $order['shipping_method']
+                        );
                     }
                 } else {
                     $this->logInfoCrons('# Order ' . $order['order_number'] . ' is already synced.');
@@ -117,6 +148,7 @@ class OrdersSyncEngine
     public function checkIfOrderAlreadySync($order)
     {
         $this->logInfoCrons('# Check if order "' . $order['order_number'] . '" exists on prestashop');
+        $this->logInfoCrons('# ' . json_encode($order));
         $sql = new DbQuery();
         $sql->select('o.id_order')
             ->from('orders', 'o')
