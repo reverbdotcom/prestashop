@@ -39,11 +39,11 @@ class ReverbOrders
 
     /**
      * Find Reverb orders by criteria
-     * @param array $citeria
+     * @param array $criteria
      * @param boolean $findOne
      * @return array|false|mysqli_result|null|PDOStatement|resource
      */
-    public function getOrders($citeria = array(), $findOne = false)
+    public function getOrders($criteria = array(), $findOne = false)
     {
         //=========================================
         //          SELECT CLAUSE
@@ -52,7 +52,7 @@ class ReverbOrders
         $sql->select('*')
             ->from('reverb_orders', 'ro');
 
-        foreach ($citeria as $field => $value) {
+        foreach ($criteria as $field => $value) {
             $sql->where("ro.`$field` = \"$value\"");
         }
 
