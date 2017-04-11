@@ -218,6 +218,7 @@ class Reverb extends Module
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_attributes`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_sync_history`;';
         $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_crons`';
+        $sql[] = 'DROP TABLE IF EXISTS `'._DB_PREFIX_.'reverb_orders`';
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
