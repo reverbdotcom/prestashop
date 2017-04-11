@@ -14,6 +14,7 @@ include(dirname(__FILE__) . '/../../init.php');
 require_once dirname(__FILE__) . '/classes/crons/OrdersSyncEngine.php';
 require_once dirname(__FILE__) . '/classes/ReverbClient.php';
 require_once dirname(__FILE__) . '/classes/models/ReverbSync.php';
+require_once dirname(__FILE__) . '/classes/models/ReverbOrders.php';
 require_once dirname(__FILE__) . '/classes/ReverbProduct.php';
 require_once dirname(__FILE__) . '/reverb.php';
 

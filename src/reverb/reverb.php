@@ -28,6 +28,7 @@ class Reverb extends Module
     protected $config_form = false;
     public $reverbConfig;
     public $reverbSync;
+    public $reverbOrders;
     public $logs;
     public $active_tab;
     public $language_id;
@@ -63,6 +64,7 @@ class Reverb extends Module
         $this->logs = new \Reverb\ReverbLogs($this);
 
         $this->reverbSync = new \ReverbSync($this);
+        $this->reverbOrders = new \ReverbOrders($this);
 
         $this->displayName = $this->l('Reverb');
         $this->description = $this->l('Reverb is the best place anywhere to sell your guitar, amp, drums, bass, or other music gear.Built for and by musicians, our marketplace offers a broad variety of tools to help buy and sell, and has the lowest transaction fees of any online marketplace.');
@@ -164,6 +166,20 @@ class Reverb extends Module
             FOREIGN KEY fk_reverb_sync_history_product_attribute(id_product_attribute) REFERENCES `'._DB_PREFIX_.'product_attribute` (id_product_attribute)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'reverb_orders` (
+            `id_reverb_orders` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            `id_order` int(10) unsigned NOT NULL,
+            `reverb_order_number` varchar(32),
+            `status` int(10) unsigned NOT NULL,
+            `details` text,
+            `date` datetime,
+            `shipping_method` varchar(32),
+            `shipping_tracker` text,
+            PRIMARY KEY  (`id_reverb_orders`),
+            UNIQUE (reverb_order_number)
+            FOREIGN KEY fk_reverb_orders(id_order) REFERENCES `'._DB_PREFIX_.'orders` (id_order)
+        ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -182,7 +198,11 @@ class Reverb extends Module
             $this->registerHook('actionObjectOrderAddAfter') &&
             $this->registerHook('actionObjectProductAddAfter') &&
             $this->registerHook('actionObjectProductDeleteAfter') &&
-            $this->registerHook('actionObjectProductUpdateAfter');
+            $this->registerHook('actionObjectProductUpdateAfter') &&
+            $this->registerHook('actionOrderStatusPostUpdate') &&
+            $this->registerHook('actionAdminOrdersTrackingNumberUpdate') &&
+            $this->registerHook('actionOrderEdited')
+            ;
     }
 
     public function uninstall()
@@ -773,22 +793,50 @@ class Reverb extends Module
 
     public function hookActionObjectOrderAddAfter()
     {
+        $this->logs->infoLogs(__METHOD__);
         /* Place your code here. */
     }
 
     public function hookActionObjectProductAddAfter()
     {
+        $this->logs->infoLogs(__METHOD__);
         /* Place your code here. */
     }
 
     public function hookActionObjectProductDeleteAfter()
     {
+        $this->logs->infoLogs(__METHOD__);
         /* Place your code here. */
     }
 
-    public function hookActionObjectShopUpdateAfter()
+
+    public function hookActionAdminOrdersTrackingNumberUpdate()
     {
-        /* Place your code here. */
+        $this->logs->infoLogs(__METHOD__);
+        $this->logs->infoLogs(var_export($_POST, true));
+        $id_order = (int)Tools::getValue('id_order');
+
+        if (!empty($id_order)) {
+            $order = new Order($id_order);
+            $reverbOrder = $this->reverbOrders->getOrderByReference($order->reference);
+            if (!empty($reverbOrder)) {
+                $this->logs->infoLogs(' - Order ' . $id_order . ' : ' . $order->reference . ' comes from Reverb !');
+
+                $trackingNumber = Tools::getValue('shipping_tracking_number');
+                if (!empty($trackingNumber)) {
+                    $this->reverbOrders->update($id_order, array(
+                        'shipping_tracker' => $trackingNumber,
+                        'status' => Reverb,Orders::REVERB_ORDERS_STATUS_SHIPPING_SENT
+                    ));
+                    $reverbOrders = new \Reverb\ReverbOrders($this);
+
+                    $carrier = new Carrier((int)Tools::getValue('shipping_carrier'), $this->language_id);
+                    $provider = $carrier->name;
+                    $reverbOrders->setOrderShip($reverbOrder['reverb_order_number'], $provider, $trackingNumber);
+
+                }
+            }
+        }
     }
 
     /**
@@ -796,13 +844,45 @@ class Reverb extends Module
      *
      * @param $param
      */
-    public function hookActionPostUpdateOrderStatus($params)
+    public function hookActionOrderStatusPostUpdate($params)
     {
-        $order = new Order((int) $params['id_order']);
+        $this->logs->infoLogs(__METHOD__);
+        $id_order = (int)Tools::getValue('id_order');
+        $order = new Order((int) $id_order);
         $orderProducts = $order->getCartProducts();
 
         foreach ($orderProducts as &$orderProduct) {
             $this->flagSyncProductForReverbToSync($orderProduct['id_product'], ReverbSync::ORIGIN_PRODUCT_UPDATE );
+        }
+
+        $id_order_state = (int)Tools::getValue('id_order_state');
+        if (!empty($order) && !empty($id_order_state)) {
+
+            $orderState = new OrderState($id_order_state, $this->language_id);
+            $this->logs->infoLogs(' - Order state = ' . $orderState->name . ' delivery = ' . $orderState->delivery);
+            if ($orderState->delivery) {
+                $reverbOrder = $this->reverbOrders->getOrderByReference($order->reference);
+                if (!empty($reverbOrder) && $reverbOrder['status'] == ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED) {
+                    $this->logs->infoLogs(' - Order ' . $id_order . ' : ' . $order->reference . ' comes from Reverb and not sent yet !');
+
+                    if ($reverbOrder['shipping_method'] == ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL) {
+                        $this->logs->infoLogs(' - Reverb order shipping method set to local');
+                        $reverbOrders = new \Reverb\ReverbOrders($this);
+                        $reverbOrders->setOrderPickedUp($reverbOrder['reverb_order_number']);
+
+                        $this->logs->infoLogs(' - Update reverb_orders');
+                        $this->reverbOrders->update($id_order, array(
+                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT
+                        ));
+                    } else {
+                        $this->logs->infoLogs(' - Order shipping method is not local (shipping_method=' . $reverbOrder['shipping_method'] . ')');
+                    }
+                } else {
+                    $this->logs->infoLogs(' - Order shipping status already sent to reverb (status=' . $reverbOrder['status'] . ')');
+                }
+            } else {
+                $this->logs->infoLogs(' - Order state not delivery');
+            }
         }
     }
 
@@ -954,6 +1034,16 @@ class Reverb extends Module
     public function hookActionProductUpdate($params) {
         $id_product = Tools::getValue('id_product');
 
+    }
+
+    /**
+     *  Hook for order update
+     *
+     * @param $params
+     */
+    public function hookActionOrderEdited($params) {
+        $id_order = Tools::getValue('id_order');
+        $this->logs->infoLogs('UPDATE order ' . $id_order);
     }
 
     /**
@@ -1174,6 +1264,7 @@ class Reverb extends Module
 require_once(dirname(__FILE__) . '/controllers/admin/AdminReverbConfigurationController.php');
 require_once(dirname(__FILE__) . '/classes/helper/HelperListReverb.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbSync.php');
+require_once(dirname(__FILE__) . '/classes/models/ReverbOrders.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbMapping.php');
 require_once(dirname(__FILE__) . '/classes/models/ReverbAttributes.php');

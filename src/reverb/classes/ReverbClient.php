@@ -182,10 +182,10 @@ class ReverbClient extends Client
 
     /**
      * Send a POST request
-     * @param array $params
+     * @param array|json $params
      * @return mixed
      */
-    public function sendPost($params = array())
+    public function sendPost($params)
     {
         return $this->sendResquest('POST', $params);
     }
@@ -204,10 +204,10 @@ class ReverbClient extends Client
      *  Send POST or PUT
      *
      * @param string $method
-     * @param array $params
+     * @param array|json $params
      * @return mixed
      */
-    private function sendResquest($method, $params = array())
+    private function sendResquest($method, $params)
     {
         try {
             $this->logRequestMessage('# ' . $method . ' ' . $this->getBaseUrl() . $this->getEndPoint());

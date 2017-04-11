@@ -42,6 +42,7 @@ class OrdersSyncEngine
     const EMAIL_GENERIC_CUSTOMER = 'prestashop@reverb.com';
     const ADDRESS_GENERIC = 'pickup';
 
+    /** @var  Reverb */
     protected $module;
 
     public $helper;
@@ -81,6 +82,7 @@ class OrdersSyncEngine
                     $this->logInfoCrons('# Order ' . $order['order_number'] . ' is not synced yet.');
                     try {
                         $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
+                        $this->module->reverbOrders->insert($idOrder, $order['order_number'], ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED, 'Reverb order synced', $order['shipping_method']);
                         $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
                     } catch (Exception $e) {
                         $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
@@ -154,7 +156,6 @@ class OrdersSyncEngine
         $this->logInfoCrons('# initCart');
 
         $cart = new Cart();
-        $carrier = new Carrier();
         $cart->id_shop_group = $context->getIdShop();
         $cart->id_shop = $context->getIdShopGroup();
         $cart->id_customer = $context->getIdCustomer();
