@@ -33,7 +33,7 @@ class ReverbClient extends Client
 
         // init reverb config
         $this->reverbConfig = $module_instance->reverbConfig;
-        $api_key_token = $this->reverbConfig[\Reverb::KEY_API_TOKEN];
+        $api_key_token = $module_instance->isApiTokenAvailable();
 
         if (!empty($token)) {
             $api_key_token = $token;
@@ -124,9 +124,10 @@ class ReverbClient extends Client
      *
      * @param null $uuid
      * @param array $params
+     * @param boolean $params
      * @return mixed|string
      */
-    public function getListFromEndpoint($uuid = null, $params = array())
+    public function getListFromEndpoint($uuid = null, $params = array() , $validkey = true)
     {
         $key = $this->getRootKey();
 
@@ -144,11 +145,14 @@ class ReverbClient extends Client
 
         $list = $this->sendGet();
 
-        if (!$uuid && !isset($list[$key])) {
-            return $this->convertException(new \Exception($this->getEndPoint() . ' not found'));
+        if ($validkey) {
+            if (!$uuid && !isset($list[$key])) {
+                return $this->convertException(new \Exception($this->getEndPoint() . ' not found'));
+            }
+            return $uuid ? $list : $list[$key];
+        } else {
+            return $list;
         }
-
-        return $uuid ? $list : $list[$key];
     }
 
     /**
@@ -211,7 +215,6 @@ class ReverbClient extends Client
     {
         try {
             $this->logRequestMessage('# ' . $method . ' ' . $this->getBaseUrl() . $this->getEndPoint());
-
             $options = array('headers' => $this->getHeaders());
             if (!empty($params)) {
                 if ($method == 'GET') {

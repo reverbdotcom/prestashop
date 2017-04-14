@@ -1,22 +1,27 @@
 {$reverb_login_form}
 
 <script type="text/javascript">
-    function changeReverbUrl(id)
-    {
-        if (id == 'sandbox_mode_off') {
-            $('#reverb-url-help')
-                .attr('href', '{$reverb_url_prod}')
-                .html('{$reverb_url_prod}');
-        } else {
-            $('#reverb-url-help')
-                .attr('href', '{$reverb_url_sandbox}')
-                .html('{$reverb_url_sandbox}');
+    function changeReverbUrl(field) {
+        $('#token_production').parent().parent().hide();
+        $('#token_sandbox').parent().parent().hide();
+        if ($(field).attr('id') == 'sandbox_mode_off') {
+            if (!$(field).val()) {
+                $('#token_production').parent().parent().show();
+            }else{
+                $('#token_sandbox').parent().parent().show();
+            }
+        }else{
+            if ($(field).val()) {
+                $('#token_sandbox').parent().parent().show();
+            }else{
+                $('#token_production').parent().parent().show();
+            }
         }
     }
 
     $('input[name="sandbox_mode"]').change(function () {
-        changeReverbUrl($(this).attr('id'))
+        changeReverbUrl(this)
     });
 
-    changeReverbUrl($('input[name="sandbox_mode"]').attr('id'));
+    changeReverbUrl($('input[id="sandbox_mode_off"]'));
 </script>
