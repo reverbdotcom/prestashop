@@ -10,10 +10,11 @@
  */
 class ReverbOrders
 {
-    const REVERB_ORDERS_STATUS_ORDER_SAVED = 1;
-    const REVERB_ORDERS_STATUS_SHIPPING_SENT = 2;
-    const REVERB_ORDERS_STATUS_FINISH = 3;
-    const REVERB_ORDERS_STATUS_ERROR = 4;
+    const REVERB_ORDERS_STATUS_ORDER_SAVED = 'saved';
+    const REVERB_ORDERS_STATUS_PAID = 'paid';
+    const REVERB_ORDERS_STATUS_SHIPPING_SENT = 'shipping-sent';
+    const REVERB_ORDERS_STATUS_IGNORED = 'ignored';
+    const REVERB_ORDERS_STATUS_ERROR = 'error';
     const REVERB_ORDERS_SHIPPING_METHOD_SHIPPED = 'shipped';
     const REVERB_ORDERS_SHIPPING_METHOD_LOCAL = 'local';
 
@@ -109,17 +110,17 @@ class ReverbOrders
     /**
      *  Update table Reverb Orders
      *
-     * @param integer $idOrder
+     * @param integer $id_reverb_orders
      * @param array $params
      */
-    public function update($idOrder, $params)
+    public function update($id_reverb_orders, $params)
     {
-        $this->module->logs->infoLogs('Update order = ' . $idOrder . ' with params :' . var_export($params, true));
+        $this->module->logs->infoLogs('Update reverb_orders = ' . $id_reverb_orders . ' with params :' . var_export($params, true));
 
         Db::getInstance()->update(
             'reverb_orders',
             $params,
-            'id_order= ' . (int) $idOrder
+            'id_reverb_orders= ' . (int) $id_reverb_orders
         );
     }
 }
