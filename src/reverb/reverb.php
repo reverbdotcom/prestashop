@@ -11,6 +11,7 @@ class Reverb extends Module
     CONST KEY_APP_CLIENT_ID = 'app_client_id';
     CONST KEY_APP_REDIRECT_URI = 'app_redirect_api';
     CONST KEY_API_TOKEN = 'api_token';
+    CONST KEY_API_TOKEN_SANDBOX = 'api_token_sandbox';
     CONST KEY_RANDOM_STATE = 'random_state';
     CONST KEY_DEBUG_MODE = 'debug_mode';
     CONST KEY_SETTINGS_AUTO_SYNC = 'settings_auto_sync';
@@ -178,7 +179,7 @@ class Reverb extends Module
             `shipping_method` varchar(32),
             `shipping_tracker` text,
             PRIMARY KEY  (`id_reverb_orders`),
-            UNIQUE (reverb_order_number)
+            UNIQUE (reverb_order_number),
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
@@ -284,7 +285,7 @@ class Reverb extends Module
             ));
         }
 
-        if (!empty($this->reverbConfig[self::KEY_API_TOKEN])) {
+        if ($this->isApiTokenAvailable()) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
 
             $this->context->smarty->assign(array(
@@ -451,10 +452,19 @@ class Reverb extends Module
                         ),
                     ),
                     array(
+                        'id' => 'token_production',
                         'col' => 3,
                         'type' => 'text',
                         'desc' => '<a id="reverb-url-help" href="" target="_blank">' . $this->l('From https://reverb.com/my/api_settings') . '</a>',
                         'name' => self::KEY_API_TOKEN,
+                        'label' => $this->l('API Token'),
+                    ),
+                    array(
+                        'id' => 'token_sandbox',
+                        'col' => 3,
+                        'type' => 'text',
+                        'desc' => '<a id="reverb-url-help" href="" target="_blank">' . $this->l('From https://sandbox.reverb.com/my/api_settings') . '</a>',
+                        'name' => self::KEY_API_TOKEN_SANDBOX,
                         'label' => $this->l('API Token'),
                     ),
                 ),
@@ -564,6 +574,7 @@ class Reverb extends Module
         return array(
             self::KEY_SANDBOX_MODE => $this->getReverbConfig(self::KEY_SANDBOX_MODE),
             self::KEY_API_TOKEN => $this->getReverbConfig(self::KEY_API_TOKEN),
+            self::KEY_API_TOKEN_SANDBOX => $this->getReverbConfig(self::KEY_API_TOKEN_SANDBOX),
         );
     }
 
@@ -657,26 +668,29 @@ class Reverb extends Module
 
             foreach (array_keys($form_values) as $key) {
                 $value = Tools::getValue($key);
-                if (
-                    $key == self::KEY_API_TOKEN ) {
+                if (!empty($value) && (!$this->reverbConfig[self::KEY_SANDBOX_MODE] && $key == self::KEY_API_TOKEN ||
+                            ( $this->reverbConfig[self::    KEY_SANDBOX_MODE] && $key == self::KEY_API_TOKEN_SANDBOX )) ) {
                     $reverbClient = new \Reverb\ReverbAuth($this,$value);
-                    $shop = $reverbClient->getListFromEndpoint();
+                    $shop = $reverbClient->getListFromEndpoint(null,null,false);
+                    $mode = 'PRODUCTION';
+                    if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||
+                        !array_key_exists(self::KEY_SANDBOX_MODE,$this->reverbConfig)) {
+                        $mode = 'SANDBOX';
+                    }
 
-                    if (!is_array($shop) || (!array_key_exists('slug',$shop) && empty($shop['slug']))) {
+                    if (!is_array($shop) || (!array_key_exists('shop',$shop) && empty($shop['shop']))) {
                         $value = '';
-                        $mode = 'PRODUCTION';
-                        if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||
-                            !array_key_exists(self::KEY_SANDBOX_MODE,$this->reverbConfig)) {
-                            $mode = 'SANDBOX';
-                        }
                         $this->_errors[] = $this->l('API Token is invalid for ' . $mode . ' mode , please try again.');
+                    } else if ( is_array($shop) && !array_key_exists('shop',$shop) && empty($shop['shop']) ) {
+                        $value = '';
+                        $this->_errors[] = $this->l('API Token is valide for ' . $mode . ' mode , but you have to configured a shop in reverb.');
                     }
                 }
 
                 $this->reverbConfig[$key] = trim($value);
+                $this->saveReverbConfiguration();
             }
 
-            $this->saveReverbConfiguration();
 
             if ( empty($this->_errors)) {
                 $this->_successes[] = $this->l('Login configuration saved successfully.');
@@ -1257,10 +1271,16 @@ class Reverb extends Module
      * @return boolean
      */
     public function isApiTokenAvailable(){
-        if (array_key_exists($this::KEY_API_TOKEN,$this->reverbConfig)){
-            return $this->reverbConfig[$this::KEY_API_TOKEN];
+        if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||
+            !array_key_exists(self::KEY_SANDBOX_MODE,$this->reverbConfig)) {
+            if (array_key_exists($this::KEY_API_TOKEN_SANDBOX,$this->reverbConfig)){
+                return $this->reverbConfig[$this::KEY_API_TOKEN_SANDBOX];
+            }
+        } else {
+            if (array_key_exists($this::KEY_API_TOKEN,$this->reverbConfig)){
+                return $this->reverbConfig[$this::KEY_API_TOKEN];
+            }
         }
-            return false;
     }
 }
 
