@@ -114,7 +114,7 @@ class OrdersSyncEngine
                         $message = 'Order ' . $order['order_number'] . ' status not synced : ' . $order['status'];
                         $nbOrdersIgnored++;
                         $this->logInfoCrons('# ' . $message);
-                        $this->module->reverbOrders->insert(
+                        /*$this->module->reverbOrders->insert(
                             $context->getIdShop(),
                             $context->getIdShopGroup(),
                             null,
@@ -122,7 +122,7 @@ class OrdersSyncEngine
                             ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                             $message,
                             $order['shipping_method']
-                        );
+                        );*/
                     }
                 } else {
                     $this->logInfoCrons('# Order ' . $order['order_number'] . ' is already synced.');
