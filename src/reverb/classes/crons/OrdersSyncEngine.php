@@ -56,8 +56,6 @@ class OrdersSyncEngine
         $this->helper = $helper;
     }
 
-    //TODO Itérer sur les shop
-
     /**
      *  Processing an sync with orders from Reverb
      *
@@ -80,41 +78,37 @@ class OrdersSyncEngine
 
             // Process Order in Prestashop
             foreach ($orders as $order) {
-                if (!$this->checkIfOrderAlreadySync($order)) {
-                    $this->logInfoCrons('# Order ' . $order['order_number'] . ' is not synced yet.');
-                    if (in_array($order['status'], \Reverb\ReverbOrders::$statusToSync)) {
-                        try {
-                            $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
-                            $this->module->reverbOrders->insert(
-                                $context->getIdShop(),
-                                $context->getIdShopGroup(),
-                                $idOrder,
-                                $order['order_number'],
-                                ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
-                                'Reverb order synced',
-                                $order['shipping_method']
-                            );
-                            $nbOrdersSynced++;
-                            $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
-                        } catch (Exception $e) {
-                            $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
-                            $this->logInfoCrons($e->getTraceAsString());
-                            $nbOrdersError++;
-                            $this->module->reverbOrders->insert(
-                                $context->getIdShop(),
-                                $context->getIdShopGroup(),
-                                null,
-                                $order['order_number'],
-                                ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                                $e->getMessage(),
-                                $order['shipping_method']
-                            );
+                try {
+                    $reverbOrder = $this->checkIfOrderAlreadySync($order);
+                    if (empty($reverbOrder)) {
+                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is not synced yet.');
+                    } else {
+                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is already synced : ' . Tools::jsonEncode($reverbOrder));
+                        if ($reverbOrder['id_order']) {
+                            $this->logInfoCrons('# Prestashop order already saved : ' . $reverbOrder['id_order']);
+                            throw new Exception('Prestashop order already saved : ' . $reverbOrder['id_order']);
                         }
+                    }
+
+                    if (in_array($order['status'], \Reverb\ReverbOrders::$statusToSync)) {
+
+                        $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
+                        $this->module->reverbOrders->insert(
+                            $context->getIdShop(),
+                            $context->getIdShopGroup(),
+                            $idOrder,
+                            $order['order_number'],
+                            ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
+                            'Reverb order synced',
+                            $order['shipping_method']
+                        );
+                        $nbOrdersSynced++;
+                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
                     } else {
                         $message = 'Order ' . $order['order_number'] . ' status not synced : ' . $order['status'];
                         $nbOrdersIgnored++;
                         $this->logInfoCrons('# ' . $message);
-                        /*$this->module->reverbOrders->insert(
+                        $this->module->reverbOrders->insert(
                             $context->getIdShop(),
                             $context->getIdShopGroup(),
                             null,
@@ -122,10 +116,21 @@ class OrdersSyncEngine
                             ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                             $message,
                             $order['shipping_method']
-                        );*/
+                        );
                     }
-                } else {
-                    $this->logInfoCrons('# Order ' . $order['order_number'] . ' is already synced.');
+                } catch (Exception $e) {
+                    $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+                    $this->logInfoCrons($e->getTraceAsString());
+                    $nbOrdersError++;
+                    $this->module->reverbOrders->insert(
+                        $context->getIdShop(),
+                        $context->getIdShopGroup(),
+                        null,
+                        $order['order_number'],
+                        ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                        $e->getMessage(),
+                        $order['shipping_method']
+                    );
                 }
             }
 
@@ -135,7 +140,9 @@ class OrdersSyncEngine
                 HelperCron::CODE_CRON_STATUS_END,
                 "$nbOrdersSynced/$nbOrdersTotal order(s) synced, $nbOrdersError error(s), $nbOrdersIgnored ignored",
                 $nbOrdersTotal,
-                $nbOrdersSynced);
+                $nbOrdersSynced
+            );
+
         } catch (\Exception $e) {
             $error = '/!\ Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString();
             $this->logInfoCrons($e->getMessage());
@@ -162,12 +169,11 @@ class OrdersSyncEngine
         $this->logInfoCrons('# Check if order "' . $order['order_number'] . '" exists on prestashop');
         $this->logInfoCrons('# ' . json_encode($order));
         $sql = new DbQuery();
-        $sql->select('o.reverb_order_number')
+        $sql->select('o.*')
             ->from('reverb_orders', 'o')
             ->where('o.`reverb_order_number` = "' . $order['order_number'] . '"');
 
-        $id = Db::getInstance()->getValue($sql);
-        return $id;
+        return Db::getInstance()->getRow($sql);
     }
 
     /**
@@ -190,12 +196,13 @@ class OrdersSyncEngine
     /**
      *  Create a cart with products
      *
-     * @param $id_customer
-     * @param $id_shop
-     * @param $id_shop_group
+     * @param $context
+     * @param $id_address
+     * @param $id_currency
+     * @param $product
      * @return int id Cart
      */
-    public function initCart($order, ContextCron $context, $id_address, $id_currency)
+    public function initCart(ContextCron $context, $id_address, $id_currency, $product)
     {
         $this->logInfoCrons('# initCart');
 
@@ -210,29 +217,6 @@ class OrdersSyncEngine
         $cart->add();
 
         // Add product in cart
-        $this->logInfoCrons('## Try to find product = ' . $order['sku']);
-        $reverbSync = new ReverbSync($this->module);
-        $product = $reverbSync->getProductByReference($order['sku']);
-        $this->logInfoCrons('## product: ' . var_export($product, true));
-        if (empty($product)) {
-            throw new Exception('Product "' . $order['sku'] .'" not found on Prestashop !');
-        } elseif (count($product) > 1) {
-            throw new Exception('More than one product "' . $order['sku'] .'" found on Prestashop !');
-        }
-
-        $product = $product[0];
-
-        if (!$product['reverb_enabled']) {
-            throw new Exception('Product "' . $order['sku'] .'" is not synced with Reverb !');
-        }
-
-        // Check inventory
-        $productFull = $reverbSync->getProductWithStatus($product['id_product'], $product['id_product_attribute']);
-        $this->logInfoCrons('## product inventory = ' . $productFull['quantity_stock']);
-        if ($productFull['quantity_stock'] < 1) {
-            throw new Exception('Product "' . $order['sku'] .'" has no more inventory on Prestashop !');
-        }
-
         $cart->updateQty(1, $product['id_product'], $product['id_product_attribute'], false);
         $this->logInfoCrons('## cart added : ' . $cart->id);
 
@@ -332,7 +316,7 @@ class OrdersSyncEngine
         $extra_vars = array('reverb_order_number' => Tools::safeOutput($orderReverb['order_number']));
         $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product']['currency'], $context->getIdShop());
         if (empty($id_currency)) {
-            throw new Exception('Reverb order is in currency ' . $orderReverb['amount_product']['currency'] . ' wich is not activataed on your shop ' . $context->getIdShop());
+            throw new Exception('Reverb order is in currency ' . $orderReverb['amount_product']['currency'] . ' wich is not activated on your shop ' . $context->getIdShop());
         }
 
         // Create Customer
@@ -342,7 +326,18 @@ class OrdersSyncEngine
         $id_address = $this->initAddress($orderReverb, $context);
 
         // Create Cart with products
-        $id_cart = $this->initCart($orderReverb, $context, $id_address, $id_currency);
+        $this->logInfoCrons('## Try to find product = ' . $orderReverb['sku']);
+        $reverbSync = new ReverbSync($this->module);
+        $product = $reverbSync->getProductByReference($orderReverb['sku']);
+        $this->logInfoCrons('## product: ' . var_export($product, true));
+        if (empty($product)) {
+            throw new Exception('Product "' . $orderReverb['sku'] .'" not found on Prestashop !');
+        } elseif (count($product) > 1) {
+            throw new Exception('More than one product "' . $orderReverb['sku'] .'" found on Prestashop !');
+        }
+
+        $product = $product[0];
+        $id_cart = $this->initCart($context, $id_address, $id_currency, $product);
 
         $this->module->getContext()->cart = new Cart((int)$id_cart);
         $this->module->customer = new Customer($context->getIdCustomer());
@@ -355,21 +350,43 @@ class OrdersSyncEngine
 
         $payment_method = $this->module->displayName;
 
-        $message = Tools::jsonEncode([
+        $messages = array();
+        $message = array(
             "Environment" => $this->module->getReverbConfig(Reverb::KEY_SANDBOX_MODE) ? 'SANDBOX' : 'PRODUCTION',
             "Payment method" => Tools::safeOutput($payment_method),
             "Reverb order number" => Tools::safeOutput($orderReverb['order_number']),
-        ]);
+        );
+
+        // Check if product is synced with Reverb
+        if (!$product['reverb_enabled']) {
+            $messages[] = 'Warning ! This product is not synced to Reverb !';
+            $this->logInfoCrons('Product "' . $orderReverb['sku'] .'" is not synced to Reverb !');
+        }
+
+        // Check inventory
+        $productFull = $reverbSync->getProductWithStatus($product['id_product'], $product['id_product_attribute']);
+        $this->logInfoCrons('## product inventory = ' . $productFull['quantity_stock']);
+        if ($productFull['quantity_stock'] < 1) {
+            $id_order_state = Configuration::get('PS_OS_OUTOFSTOCK_PAID');
+            $this->logInfoCrons('## Product "' . $orderReverb['sku'] .'" has no more inventory on Prestashop !');
+            $messages[] = 'Warning ! This product is out of stock !';
+        } else {
+            $id_order_state = Configuration::get('PS_OS_PAYMENT');
+        }
+
+        if (!empty($messages)) {
+            $message['message'] = implode('<br />', $messages);
+        }
 
         // Validate order with amount paid without shipping cost
         $this->logInfoCrons('# validateOrder');
         $amount_without_shipping = (float)$orderReverb['amount_product']['amount'];
         $payment_module->validateOrder(
             $this->module->getContext()->cart->id,
-            (int)Configuration::get('PS_OS_PAYMENT'),
+            (int)$id_order_state,
             $amount_without_shipping,
             $payment_method,
-            $message,
+            Tools::jsonEncode($message),
             $extra_vars,
             $id_currency,
             false,

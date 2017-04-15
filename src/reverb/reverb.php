@@ -173,13 +173,12 @@ class Reverb extends Module
             `id_shop` int(11) unsigned,
             `id_shop_group` int(11) unsigned,
             `reverb_order_number` varchar(32),
-            `status` int(10) unsigned NOT NULL,
+            `status` varchar(32) NOT NULL,
             `details` text,
             `date` datetime,
             `shipping_method` varchar(32),
             `shipping_tracker` text,
-            PRIMARY KEY  (`id_reverb_orders`),
-            UNIQUE (reverb_order_number),
+            PRIMARY KEY  (`id_reverb_orders`)
         ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
 
 
