@@ -5,13 +5,13 @@
         $('#token_production').parent().parent().hide();
         $('#token_sandbox').parent().parent().hide();
         if ($(field).attr('id') == 'sandbox_mode_off') {
-            if (!$(field).val()) {
+            if (!$(field).val() || $(field).val() == '') {
                 $('#token_production').parent().parent().show();
             }else{
                 $('#token_sandbox').parent().parent().show();
             }
         }else{
-            if ($(field).val()) {
+              if ($(field).val() || $(field).val() != '') {
                 $('#token_sandbox').parent().parent().show();
             }else{
                 $('#token_production').parent().parent().show();
