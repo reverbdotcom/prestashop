@@ -1272,12 +1272,12 @@ class Reverb extends Module
     public function isApiTokenAvailable(){
         if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||
             !array_key_exists(self::KEY_SANDBOX_MODE,$this->reverbConfig)) {
-            if (array_key_exists($this::KEY_API_TOKEN_SANDBOX,$this->reverbConfig)){
-                return $this->reverbConfig[$this::KEY_API_TOKEN_SANDBOX];
+            if (array_key_exists(self::KEY_API_TOKEN_SANDBOX,$this->reverbConfig)){
+                return $this->reverbConfig[self::KEY_API_TOKEN_SANDBOX];
             }
         } else {
-            if (array_key_exists($this::KEY_API_TOKEN,$this->reverbConfig)){
-                return $this->reverbConfig[$this::KEY_API_TOKEN];
+            if (array_key_exists(self::KEY_API_TOKEN,$this->reverbConfig)){
+                return $this->reverbConfig[self::KEY_API_TOKEN];
             }
         }
     }
