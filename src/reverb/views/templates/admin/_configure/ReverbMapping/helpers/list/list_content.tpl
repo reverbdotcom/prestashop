@@ -1,3 +1,11 @@
+{**
+*
+*
+* @author Johan Protin
+* @copyright Copyright (c) 2017 - Johan Protin
+* @license Apache License Version 2.0, January 2004
+* @package Reverb
+*}
 {extends file="helpers/list/list_content.tpl"}
 
 {block name="open_td"}

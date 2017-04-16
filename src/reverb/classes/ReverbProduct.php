@@ -1,24 +1,24 @@
 <?php
+/**
+ *
+ *
+ *
+ * @author Johan Protin
+ * @copyright Copyright (c) 2017 - Johan Protin
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
+ */
 
 namespace Reverb;
 
-/**
- * Client Product
- *
- * @package Reverb
- * @author Johan Protin
- * @copyright Copyright (c) 2017 - Johan Protin
- * @license
- */
 class ReverbProduct extends ReverbClient
 {
+    const REVERB_PRODUCT_ENDPOINT = 'listings';
+    const REVERB_ROOT_KEY = 'conditions';
 
-    CONST REVERB_PRODUCT_ENDPOINT = 'listings';
-    CONST REVERB_ROOT_KEY = 'conditions';
-
-    CONST REVERB_CODE_SUCCESS = 'success';
-    CONST REVERB_CODE_ERROR = 'error';
-    CONST REVERB_CODE_TO_SYNC = 'to_sync';
+    const REVERB_CODE_SUCCESS = 'success';
+    const REVERB_CODE_ERROR = 'error';
+    const REVERB_CODE_TO_SYNC = 'to_sync';
 
     public function __construct($module)
     {
@@ -62,7 +62,6 @@ class ReverbProduct extends ReverbClient
         $this->logInfosMessage('##########################');
 
         try {
-
             // Checks if product already exists on Reberb
             $reverbProduct = $this->getProduct($product);
 
@@ -91,13 +90,12 @@ class ReverbProduct extends ReverbClient
 
             $return = $this->proccessResponse($product, $response, $origin);
 
+            $this->logInfosMessage('##########################');
+            $this->logInfosMessage('# END Request SYNC product');
+            $this->logInfosMessage('##########################');
         } catch (\Exception $e) {
-            $return = $this->proccessTechnicalError($e);
+            return $this->proccessTechnicalError($e);
         }
-
-        $this->logInfosMessage('##########################');
-        $this->logInfosMessage('# END Request SYNC product');
-        $this->logInfosMessage('##########################');
 
         return $return;
     }
@@ -134,7 +132,7 @@ class ReverbProduct extends ReverbClient
         $reverbId = $this->getReverbProductIdFromResponse($response);
 
         // Check sync status
-        if(count($response['errors']) == 0) {
+        if (count($response['errors']) == 0) {
             $status = self::REVERB_CODE_SUCCESS;
         } else {
             $status = self::REVERB_CODE_ERROR;
@@ -171,7 +169,7 @@ class ReverbProduct extends ReverbClient
     private function getReverbProductSlugFromResponse($response)
     {
         $slug = null;
-        if (array_key_exists('listing',$response) && !empty($response['listing'])) {
+        if (array_key_exists('listing', $response) && !empty($response['listing'])) {
             return $this->getReverbProductSlug($response['listing']);
         }
         return $slug;
@@ -185,9 +183,9 @@ class ReverbProduct extends ReverbClient
     private function getReverbProductSlug($product)
     {
         $slug = null;
-        if (array_key_exists('_links',$product) && !empty($product['_links'])) {
+        if (array_key_exists('_links', $product) && !empty($product['_links'])) {
             $url = $product['_links']['update']['href'];
-            $slug = substr($url, strrpos($url, '/') + 1);
+            $slug = \Tools::substr($url, strrpos($url, '/') + 1);
         }
         return $slug;
     }
@@ -200,8 +198,8 @@ class ReverbProduct extends ReverbClient
     private function getReverbProductIdFromResponse($response)
     {
         $id = null;
-        if (array_key_exists('listing',$response) && !empty($response['listing']['id'])) {
-            $id = (int) $response['listing']['id'];
+        if (array_key_exists('listing', $response) && !empty($response['listing']['id'])) {
+            $id = (int)$response['listing']['id'];
         }
         return $id;
     }
@@ -212,7 +210,8 @@ class ReverbProduct extends ReverbClient
      *  @param bool $productExists
      *  @return json
      */
-    private function mapRequestForProduct($product, $productExists) {
+    private function mapRequestForProduct($product, $productExists)
+    {
         $mapper = new \ProductMapper($this->module);
 
         $mapper->processMapping($product, $productExists);

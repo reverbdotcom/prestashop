@@ -1,4 +1,14 @@
 <?php
+/**
+ *
+ *
+ *
+ * @author Johan Protin
+ * @copyright Copyright (c) 2017 - Johan Protin
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
+ */
+
 namespace Reverb;
 
 require_once(dirname(__FILE__) . '/../vendor/autoload.php');
@@ -13,7 +23,11 @@ class ReverbClient extends Client
     protected $context = false;
     protected $module = false;
     protected $client;
-    protected $headers = array('Accept' => 'application/json', 'Content-Type'=>'application/json','Accept-Version'=> '3.0');
+    protected $headers = array(
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+        'Accept-Version' => '3.0'
+    );
     protected $endPoint = '';
     protected $rootKey = '';
 
@@ -127,7 +141,7 @@ class ReverbClient extends Client
      * @param boolean $params
      * @return mixed|string
      */
-    public function getListFromEndpoint($uuid = null, $params = array() , $validkey = true)
+    public function getListFromEndpoint($uuid = null, $params = array(), $validKey = true)
     {
         $key = $this->getRootKey();
 
@@ -137,15 +151,15 @@ class ReverbClient extends Client
 
         if (!empty($params)) {
             $paramsFlat = '';
-            foreach ($params as $name => $value){
-                $paramsFlat .= $name . '=' .  $value;
+            foreach ($params as $name => $value) {
+                $paramsFlat .= $name . '=' . $value;
             }
             $this->setEndPoint($this->getEndPoint() . '?' . $paramsFlat);
         }
 
         $list = $this->sendGet();
 
-        if ($validkey) {
+        if ($validKey) {
             if (!$uuid && !isset($list[$key])) {
                 return $this->convertException(new \Exception($this->getEndPoint() . ' not found'));
             }
@@ -231,7 +245,6 @@ class ReverbClient extends Client
             $response = $this->send($request);
 
             return $this->convertResponse($response);
-
         } catch (\Exception $e) {
             return $this->convertException($e);
         }
@@ -245,7 +258,7 @@ class ReverbClient extends Client
     protected function convertResponse(ResponseInterface $response)
     {
         $content = $response->getBody()->getContents();
-        if (! $array = json_decode($content, true)) {
+        if (!$array = json_decode($content, true)) {
             $this->logRequestMessage(var_export($content, true));
             $this->convertException(new \Exception('Api response is not a json'));
         }

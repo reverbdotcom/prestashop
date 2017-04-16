@@ -1,4 +1,12 @@
 <?php
+/**
+ * Module Reverb
+ *
+ * @author Johan Protin
+ * @copyright Copyright (c) 2017 - Johan Protin
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
+ */
 
 class AdminReverbConfigurationController extends ModuleAdminController
 {
@@ -39,13 +47,12 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $identifier = Tools::getValue('identifier');
 
         $identifiers = explode('-', $identifier);
-        
+
         if (!empty($identifiers) && count($identifiers) == 2) {
             $id_product = $identifiers[0];
             $id_product_attribute = $identifiers[1];
 
             if (!empty($id_product)) {
-
                 $reverbProduct = new \Reverb\ReverbProduct($this->module);
 
                 $product = $this->module->reverbSync->getProductWithStatus($id_product, $id_product_attribute);
@@ -55,14 +62,22 @@ class AdminReverbConfigurationController extends ModuleAdminController
                         $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_MANUAL_SYNC_SINGLE);
                         die(json_encode($res));
                     } else {
-                        die(json_encode(array('status' => 'error', 'message' => 'Product ' . $id_product . ' not enabled for reverb sync')));
+                        die(json_encode(array(
+                            'status' => 'error',
+                            'message' => 'Product ' . $id_product . ' not enabled for reverb sync'
+                        )));
                     }
                 } else {
-                    die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $id_product . ' and lang ' . $this->module->language_id)));
+                    die(json_encode(array(
+                        'status' => 'error',
+                        'message' => 'No product found for ID ' . $id_product . ' and lang ' . $this->module->language_id
+                    )));
                 }
-            }
-            else {
-                die(json_encode(array('status' => 'error', 'message' => 'No product found for ID ' . $id_product . ' and lang ' . $this->module->language_id)));
+            } else {
+                die(json_encode(array(
+                    'status' => 'error',
+                    'message' => 'No product found for ID ' . $id_product . ' and lang ' . $this->module->language_id
+                )));
             }
         }
         die(json_encode(array('status' => 'error', 'An error occured')));

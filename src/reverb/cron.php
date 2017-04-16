@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Context for cron
+ * Cron
  *
  * @package Reverb
  * @author Johan Protin
@@ -31,9 +30,8 @@ try {
 
     if (PHP_SAPI === 'cli') {
         $code_cron = $argv[1];
-    }
-    else {
-        $code_cron = $_GET['code'];
+    } else {
+        $code_cron = Tools::getValue('code');
     }
 
     if (!isset($code_cron) || $code_cron != CODE_CRON_ORDERS && $code_cron != CODE_CRON_PRODUCTS) {
@@ -47,29 +45,29 @@ try {
 
     //$pstoken = Tools::getAdminTokenLite('AdminModules');
     //if (!Tools::getValue('token') && Tools::getValue('token') == $pstoken) {
-        if ($module->isApiTokenAvailable()) {
-            switch ($code_cron) {
-                case CODE_CRON_ORDERS:
-                    $engine = new \OrdersSyncEngine($module, $helper);
-                    $engine->processSyncOrder($idCron);
-                    break;
-                case CODE_CRON_PRODUCTS:
-                    $reverbProduct = new \Reverb\ReverbProduct($module);
-                    $products = $module->reverbSync->getProductsToSync();
-                    $module->logs->cronLogs('# ' . count($products) . ' product(s) to sync');
-                    foreach ($products as $product) {
-                        if ($product['reverb_enabled']) {
-                            $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_CRON);
-                            $module->logs->cronLogs('# ' . json_encode($res));
-                        } else {
-                            $module->logs->cronLogs('# Product ' . $product['id_product'] . ' not enabled for reverb sync');
-                        }
+    if ($module->isApiTokenAvailable()) {
+        switch ($code_cron) {
+            case CODE_CRON_ORDERS:
+                $engine = new \OrdersSyncEngine($module, $helper);
+                $engine->processSyncOrder($idCron);
+                break;
+            case CODE_CRON_PRODUCTS:
+                $reverbProduct = new \Reverb\ReverbProduct($module);
+                $products = $module->reverbSync->getProductsToSync();
+                $module->logs->cronLogs('# ' . count($products) . ' product(s) to sync');
+                foreach ($products as $product) {
+                    if ($product['reverb_enabled']) {
+                        $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_CRON);
+                        $module->logs->cronLogs('# ' . json_encode($res));
+                    } else {
+                        $module->logs->cronLogs('# Product ' . $product['id_product'] . ' not enabled for reverb sync');
                     }
-                    break;
-            }
-        } else {
-            throw new \Exception('No valid API token is defined for the shop');
+                }
+                break;
         }
+    } else {
+        throw new \Exception('No valid API token is defined for the shop');
+    }
     //} else {
     //    throw new \Exception('No secure TOKEN to launch the cron' . CODE_CRON_ORDERS);
     //}
@@ -77,15 +75,13 @@ try {
     $module->logs->cronLogs('##########################');
     $module->logs->cronLogs('# END ' . $code_cron . ' sync CRON SUCCESS');
     $module->logs->cronLogs('##########################');
-
 } catch (\Exception $e) {
     $error = 'Error in cron ' . (isset($code_cron) ? $code_cron . ' ' : ' ') . $e->getMessage();
     $module->logs->cronLogs($error);
     $module->logs->errorLogs($error);
 
     if (isset($code_cron) && isset($idCron) && $idCron) {
-        $helper->insertOrUpdateCronStatus($idCron, $code_cron, $helper::CODE_CRON_STATUS_ERROR,
-            $e->getMessage());
+        $helper->insertOrUpdateCronStatus($idCron, $code_cron, $helper::CODE_CRON_STATUS_ERROR, $e->getMessage());
     }
 
     $module->logs->cronLogs('##########################');

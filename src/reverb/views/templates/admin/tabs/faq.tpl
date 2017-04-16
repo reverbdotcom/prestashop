@@ -1,3 +1,11 @@
+{**
+*
+*
+* @author Johan Protin
+* @copyright Copyright (c) 2017 - Johan Protin
+* @license Apache License Version 2.0, January 2004
+* @package Reverb
+*}
 <div class="panel">
 	<div class="row">
         <div class="col-md-12 col-xs-12">
@@ -11,7 +19,7 @@
 				        </dt>
 				        <dd id="faq1" class="panel-collapse collapse">
 				            <p>
-				            	{l s="Reverb is the largest and fastest growing community of musicians on the web. It's a one-stop resource that helps musicians learn about, compare, and find the gear that's right for them at a fair price, and a simple platform for private sellers and dealers to sell gear fast.Reverb is the journey and the destination." mod='reverb'}				                
+				            	{l s='Reverb is the largest and fastest growing community of musicians on the web. It's a one-stop resource that helps musicians learn about, compare, and find the gear that's right for them at a fair price, and a simple platform for private sellers and dealers to sell gear fast.Reverb is the journey and the destination.' mod='reverb'}
 				            </p>
 				        </dd>
 
@@ -57,7 +65,7 @@
 							<p>{l s='In the Reverb module configuration in PrestaShop, you need to go to Sync Status tab. You can filter your search results and you can see the status of sync (Success, error, to_sync) with a message. 3 actions are availables: Sync a product Manuelly, a PrestaShop product link and a Reverb product link.' mod='reverb'}</p>
 				        </dd>
 				        <dt data-toggle="collapse" data-parent="#faq_q_a" href="#faq5" aria-expanded="true" aria-controls="faq5">
-				        	<i class="icon icon-question-circle"></i>  {l s="And what if I've met the sync doesn't work?" mod='reverb'}
+				        	<i class="icon icon-question-circle"></i>  {l s='And what if I've met the sync doesn't work?' mod='reverb'}
 				        </dt>
 				        <dd id="faq5" class="panel-collapse collapse">
 				            <p>
