@@ -1,5 +1,4 @@
 <?php
-
 /**
  *  Map product reverb and prestashop
  *
@@ -8,6 +7,7 @@
  * @license Apache License Version 2.0, January 2004
  * @package Reverb
  */
+
 class ProductMapper
 {
     protected $request;
@@ -49,7 +49,7 @@ class ProductMapper
         $product->sold_as_is = $product_ps['sold_as_is'] ? true : false;
         $product->finish = $product_ps['finish'];
         $product->origin_country_code = $product_ps['origin_country_code'];
-        $product->year = $product_ps['year'];;
+        $product->year = $product_ps['year'];
         $product->seller_cost = $product_ps['wholesale_price'];
 
 
@@ -199,8 +199,7 @@ class ProductMapper
         } else {
             $images = Image::getImages((int)$product['id_lang'], (int)$product['id_product']);
             foreach ($images as $image) {
-                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'],
-                    ImageType::getFormattedName('large'));
+                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], ImageType::getFormattedName('large'));
             }
         }
         return $urls;

@@ -1,13 +1,13 @@
 <?php
-
 /**
- *  Helper for conr
+ *  Helper for cron
  *
  * @author Johan Protin
  * @copyright Copyright (c) 2017 - Johan Protin
  * @license Apache License Version 2.0, January 2004
  * @package Reverb
  */
+
 class HelperCron
 {
     const CODE_CRON_STATUS_PROGRESS = 'process';
@@ -63,7 +63,8 @@ class HelperCron
                 $status,
                 $details,
                 $nbToSync,
-                $nbSync);
+                $nbSync
+            );
         }
 
         return $id ? $id : true;

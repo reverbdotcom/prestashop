@@ -100,8 +100,11 @@ class ReverbMapping
         if (!isset($category['id_parent']) || !isset($indexedCategories[$category['id_parent']])) {
             return $category['name'];
         }
-        return self::getPsFullName($indexedCategories[$category['id_parent']],
-                $indexedCategories) . ' / ' . $category['name'];
+        return self::getPsFullName(
+            $indexedCategories[$category['id_parent']],
+            $indexedCategories
+        )
+            . ' / ' . $category['name'];
     }
 
     /**
@@ -174,8 +177,9 @@ class ReverbMapping
             $return = $mappingId;
         }
 
-        $this->module->logs->infoLogs('Update mapping ' . $mappingId . ' for category ' . $psCategoryId . ' => ' . $reverbCode . ' : ' . var_export($return,
-                true));
+        $this->module->logs->infoLogs(
+            'Update mapping ' . $mappingId . ' for category ' . $psCategoryId . ' => ' . $reverbCode . ' : ' . var_export($return, true)
+        );
 
         return $return;
     }
@@ -195,13 +199,15 @@ class ReverbMapping
             'reverb_mapping',
             array(
                 'id_category' => $psCategoryId,
-                'reverb_code' => $reverbCode,
-            ));
+                'reverb_code' => $reverbCode,)
+        );
+
         if ($exec) {
             $return = Db::getInstance()->Insert_ID();
         }
-        $this->module->logs->infoLogs('Insert mapping for category ' . $psCategoryId . ' => ' . $reverbCode . ' : result = ' . var_export($return,
-                true));
+        $this->module->logs->infoLogs(
+            'Insert mapping for category ' . $psCategoryId . ' => ' . $reverbCode . ' : result = ' . var_export($return, true)
+        );
 
         return $return;
     }

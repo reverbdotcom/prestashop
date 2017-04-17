@@ -1,5 +1,4 @@
 <?php
-
 /**
  *  Mapping Order
  *
@@ -8,6 +7,7 @@
  * @license Apache License Version 2.0, January 2004
  * @package Reverb
  */
+
 class ReverbOrders
 {
     const REVERB_ORDERS_STATUS_ORDER_SAVED = 'saved';
@@ -110,7 +110,7 @@ class ReverbOrders
 
         Db::getInstance()->insert(
             'reverb_orders',
-             $params
+            $params
         );
 
         $this->module->logs->infoLogs(' reverb_orders inserted !');
@@ -124,12 +124,11 @@ class ReverbOrders
      */
     public function update($id_reverb_orders, $params)
     {
-        $this->module->logs->infoLogs('Update reverb_orders = ' .
-            $id_reverb_orders . ' with params :' . var_export($params, true));
+        $this->module->logs->infoLogs('Update reverb_orders = ' . $id_reverb_orders . ' with params :' . var_export($params, true));
 
         Db::getInstance()->update(
             'reverb_orders',
-             $params,
+            $params,
             'id_reverb_orders= ' . (int)$id_reverb_orders
         );
     }

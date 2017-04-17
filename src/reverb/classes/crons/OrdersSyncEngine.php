@@ -228,11 +228,8 @@ class OrdersSyncEngine
         $address->lastname = $order['buyer_last_name'];
         $address->alias = $order['buyer_last_name'];
 
-        if (
-            $order['shipping_method'] == 'shipped'
-            && array_key_exists('shipping_address', $order)
-            && !empty($order['shipping_address'])
-        ) {
+        if ($order['shipping_method'] == 'shipped'  && array_key_exists('shipping_address', $order)
+            && !empty($order['shipping_address'])) {
             $this->logInfoCrons('## Add buyer shipping address :');
             $shipping = $order['shipping_address'];
             $address->address1 = $shipping['street_address'];
@@ -386,10 +383,8 @@ class OrdersSyncEngine
         $this->logInfoCrons('# Update order');
         $order = new Order((int)$payment_module->currentOrder);
         $order->total_shipping = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
-        $order->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''),
-            $orderReverb['shipping']['amount']);
-        $order->total_shipping_tax_incl = str_replace(array(',', ' '), array('.', ''),
-            $orderReverb['shipping']['amount']);
+        $order->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
+        $order->total_shipping_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
         $order->total_paid_real = (float)$orderReverb['total']['amount'];
         $order->total_paid_tax_incl = (float)$orderReverb['total']['amount'];
         $order->total_paid = (float)$orderReverb['total']['amount'];
@@ -401,14 +396,10 @@ class OrdersSyncEngine
         /** @var OrderInvoice[] $orderInvoices */
         $orderInvoices = $order->getInvoicesCollection();
         foreach ($orderInvoices as $orderInvoice) {
-            $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''),
-                $orderReverb['shipping']['amount']);
-            $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''),
-                $orderReverb['shipping']['amount']);
-            $orderInvoice->total_paid_tax_incl = str_replace(array(',', ' '), array('.', ''),
-                $orderReverb['total']['amount']);
-            $orderInvoice->total_paid_tax_excl = str_replace(array(',', ' '), array('.', ''),
-                $orderReverb['total']['amount']);
+            $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
+            $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
+            $orderInvoice->total_paid_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['total']['amount']);
+            $orderInvoice->total_paid_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['total']['amount']);
             $orderInvoice->update();
         }
 

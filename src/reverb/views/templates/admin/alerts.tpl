@@ -1,3 +1,11 @@
+{**
+*
+*
+* @author Johan Protin
+* @copyright Copyright (c) 2017 - Johan Protin
+* @license Apache License Version 2.0, January 2004
+* @package Reverb
+*}
 {if (isset($errors)) && (count($errors) > 0)}
     <div class="alert alert-danger">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>

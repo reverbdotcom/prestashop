@@ -7,6 +7,7 @@
  * @license Apache License Version 2.0, January 2004
  * @package Reverb
  */
+
 use Reverb\Mapper\Models\AbstractModel;
 
 class RequestSerializer
@@ -70,15 +71,13 @@ class RequestSerializer
          * Else if value of property is scalar we assign it
          */
         foreach ($properties as $p => $v) {
-            if (
-                (is_object($v) && $v instanceof AbstractModel)
+            if ((is_object($v) && $v instanceof AbstractModel)
                 || (
                     is_array($v)
                     && isset($v[0])
                     && is_object($v[0])
                     && $v[0] instanceof Reverb\Mapper\Models\AbstractModel
-                )
-            ) {
+                )) {
                 if (is_array($v)) {
                     $params[$p] = array();
                     foreach ($v as $i) {

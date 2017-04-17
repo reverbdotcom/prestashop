@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Payment for order
  *
@@ -8,6 +7,7 @@
  * @license Apache License Version 2.0, January 2004
  * @package Reverb
  */
+
 class ReverbPayment extends PaymentModule
 {
     public $active = 1;

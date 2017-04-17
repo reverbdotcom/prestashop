@@ -607,8 +607,7 @@ class Reverb extends Module
             );
 
             // the config is stacked in JSON
-            if (!Configuration::updateValue(
-                self::KEY_REVERB_CONFIG, Tools::jsonEncode($this->reverbConfig), false, $id_shop_group, $id_shop)
+            if (!Configuration::updateValue(self::KEY_REVERB_CONFIG, Tools::jsonEncode($this->reverbConfig), false, $id_shop_group, $id_shop)
             ) {
                 throw new Exception($this->l('Config save failed, try again.'));
             }
@@ -646,8 +645,7 @@ class Reverb extends Module
         $id_shop = (int)$this->context->shop->id;
         $id_shop_group = (int)Shop::getContextShopGroupID();
 
-        if (!Configuration::updateValue(self::KEY_REVERB_CONFIG, Tools::jsonEncode($this->reverbConfig), false,
-            $id_shop_group, $id_shop)
+        if (!Configuration::updateValue(self::KEY_REVERB_CONFIG, Tools::jsonEncode($this->reverbConfig), false, $id_shop_group, $id_shop)
         ) {
             throw new Exception($this->l('Update failed, try again.'));
         }
@@ -723,8 +721,7 @@ class Reverb extends Module
                     if (!empty($ids) && count($ids) == 2) {
                         $id_product = $ids[0];
                         $id_product_attribute = $ids[1];
-                        $this->reverbSync->setProductToSync($id_product, $id_product_attribute,
-                            ReverbSync::ORIGIN_MANUAL_SYNC_MULTIPLE);
+                        $this->reverbSync->setProductToSync($id_product, $id_product_attribute, ReverbSync::ORIGIN_MANUAL_SYNC_MULTIPLE);
                     }
                 }
                 $this->_successes[] = $this->l('The ' . count($identifiers) . ' products will be synced soon');
@@ -958,7 +955,8 @@ class Reverb extends Module
 
                 if ($idAttribute) {
                     $this->logs->infoLogs('### $idAttribute = ' . $idAttribute);
-                    $db->update('reverb_attributes',
+                    $db->update(
+                        'reverb_attributes',
                         $values,
                         'id_attribute = ' . (int)$idAttribute
                     );
