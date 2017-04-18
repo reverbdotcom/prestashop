@@ -43,7 +43,7 @@ class ReverbOrders extends ReverbClient
     {
         $params = null;
         if ($date) {
-            $dateISO8601 = new DateTime($date);
+            $dateISO8601 = new \DateTime($date);
             $params = array(
                 'updated_start_date' => $dateISO8601->format('Y-m-d\TH:i:s')
             );

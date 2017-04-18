@@ -296,6 +296,8 @@ class Reverb extends Module
             $this->context->smarty->assign(array(
                 'active_tab' => 'login',
                 'is_logged' => false,
+                'reverb_product_preview_url' => '',
+                'ps_product_preview_base_url' => '',
             ));
         }
 

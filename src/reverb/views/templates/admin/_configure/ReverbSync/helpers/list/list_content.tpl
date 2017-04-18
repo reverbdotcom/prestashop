@@ -109,8 +109,12 @@
         </span>
     {elseif $key == 'reverb_slug'}
         <a href="#" title="" data-id="{$tr.$identifier|escape:'htmlall':'UTF-8'}" class="btn btn-default btn-view-sync" title="Syncronization"><i class="icon-refresh"></i></a>
-        <a href="{$ps_product_preview_base_url|escape:'htmlall':'UTF-8'}/index.php?id_product={$tr.id_product|escape:'htmlall':'UTF-8'}&id_product_attribute={$tr.id_product_attribute|escape:'htmlall':'UTF-8'}&controller=product" title="Preview" target="_blank" class="btn btn-default"><i class="icon-search-plus"></i></a>
-        <a href="{$reverb_product_preview_url|escape:'htmlall':'UTF-8'}{if $tr.$key}{$tr.$key}{/if}" title="" target="_blank" class="btn btn-default btn-reverb-preview{if !$tr.$key} hide-ps{/if}"><i class="icon-search-plus"> Preview on Reverb</i></a>
+        {if $ps_product_preview_base_url != ''}
+            <a href="{$ps_product_preview_base_url|escape:'htmlall':'UTF-8'}/index.php?id_product={$tr.id_product|escape:'htmlall':'UTF-8'}&id_product_attribute={$tr.id_product_attribute|escape:'htmlall':'UTF-8'}&controller=product" title="Preview" target="_blank" class="btn btn-default"><i class="icon-search-plus"></i></a>
+        {/if}
+        {if $reverb_product_preview_url != ''}
+            <a href="{$reverb_product_preview_url|escape:'htmlall':'UTF-8'}{if $tr.$key}{$tr.$key}{/if}" title="" target="_blank" class="btn btn-default btn-reverb-preview{if !$tr.$key} hide-ps{/if}"><i class="icon-search-plus"> Preview on Reverb</i></a>
+        {/if}
     {elseif $key == 'icon'}
         <div class="icon-status loading-mask" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}">Synchronisation</div>
         <div class="icon-status success" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}-success">Synchronisation success</div>

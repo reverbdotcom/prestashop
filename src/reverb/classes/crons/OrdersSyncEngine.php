@@ -15,7 +15,7 @@ require_once dirname(__FILE__) . '/../../classes/ReverbOrders.php';
 require_once dirname(__FILE__) . '/../../classes/models/ReverbSync.php';
 require_once dirname(__FILE__) . '/../../classes/ReverbProduct.php';
 require_once dirname(__FILE__) . '/../../reverb.php';
-require_once dirname(__FILE__) . 'ReverbPayment.php';
+require_once dirname(__FILE__) . '/ReverbPayment.php';
 
 /**
  * Engine for process Orders from Reverb
@@ -121,14 +121,26 @@ class OrdersSyncEngine
                 }
             }
 
-            $this->helper->insertOrUpdateCronStatus(
-                $idCron,
-                CODE_CRON_ORDERS,
-                HelperCron::CODE_CRON_STATUS_END,
-                "$nbOrdersSynced/$nbOrdersTotal order(s) synced, $nbOrdersError error(s), $nbOrdersIgnored ignored",
-                $nbOrdersTotal,
-                $nbOrdersSynced
-            );
+            if ($nbOrdersError > 1) {
+                $this->helper->insertOrUpdateCronStatus(
+                    $idCron,
+                    CODE_CRON_ORDERS,
+                    HelperCron::CODE_CRON_STATUS_ERROR,
+                    "$nbOrdersSynced/$nbOrdersTotal order(s) synced, $nbOrdersError error(s), $nbOrdersIgnored ignored",
+                    $nbOrdersTotal,
+                    $nbOrdersSynced
+                );
+            } else {
+                $this->helper->insertOrUpdateCronStatus(
+                    $idCron,
+                    CODE_CRON_ORDERS,
+                    HelperCron::CODE_CRON_STATUS_END,
+                    "$nbOrdersSynced/$nbOrdersTotal order(s) synced, $nbOrdersError error(s), $nbOrdersIgnored ignored",
+                    $nbOrdersTotal,
+                    $nbOrdersSynced
+                );
+            }
+
         } catch (\Exception $e) {
             $error = '/!\ Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString();
             $this->logInfoCrons($e->getMessage());
@@ -243,7 +255,7 @@ class OrdersSyncEngine
             $country = Configuration::get('PS_SHOP_COUNTRY_ID');
             $this->logInfoCrons('## $country = ' . var_export($country, true));
             if (!$country) {
-                throw new Exception('Unable to find configuration PS_SHOP_COUNTRY_ID');
+                throw new Exception('Unable to find configuration PS_SHOP_COUNTRY_ID : Please fill your address in prestashop');
             }
             $address->id_country = $country;
 
@@ -364,6 +376,7 @@ class OrdersSyncEngine
         // Validate order with amount paid without shipping cost
         $this->logInfoCrons('# validateOrder');
         $amount_without_shipping = (float)$orderReverb['amount_product']['amount'];
+        Configuration::set('PS_TAX',0);
         $payment_module->validateOrder(
             $this->module->getContext()->cart->id,
             (int)$id_order_state,
@@ -376,6 +389,7 @@ class OrdersSyncEngine
             $this->module->customer->secure_key,
             $shop
         );
+        Configuration::set('PS_TAX',1);
 
         $this->logInfoCrons('# validateOrder finished');
 
