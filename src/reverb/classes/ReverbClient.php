@@ -53,6 +53,10 @@ class ReverbClient extends Client
             $api_key_token = $token;
         }
 
+        $this->addHeaders(array(
+            'X-Reverb-App' => 'Prestashop ' . _PS_VERSION_,
+        ));
+
         if (!empty($api_key_token)) {
             $this->addHeaders(array(
                 'Authorization' => 'Bearer ' . $api_key_token,
