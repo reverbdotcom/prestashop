@@ -282,12 +282,16 @@ class Reverb extends Module
         if ($this->isApiTokenAvailable()) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
 
+            $module_url = $this->context->link->getAdminLink('AdminModules', true)
+                . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
+
             $this->context->smarty->assign(array(
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
                 'is_logged' => true,
                 'token' => Tools::getAdminTokenLite('AdminModules'),
                 'reverb_product_preview_url' => $this->getReverbProductPreviewUrl(),
                 'ps_product_preview_base_url' => _PS_BASE_URL_,
+                'module_url' => $module_url,
             ));
             if (!$this->active_tab) {
                 $this->active_tab = 'sync_status';
@@ -729,6 +733,22 @@ class Reverb extends Module
                 $this->_successes[] = $this->l('The ' . count($identifiers) . ' products will be synced soon');
             } else {
                 $this->_errors[] = $this->l('Please select at least one product.');
+            }
+        }
+
+        // Get log file content
+        if (Tools::isSubmit('logfile')) {
+            $logFile = Tools::getValue('logfile');
+
+            $path = _PS_MODULE_DIR_ . '/reverb/logs/' . $logFile;
+            if (!file_exists($path)) {
+                http_response_code(404);
+                die('<h1>File not found</h1>');
+            } else {
+                header('Content-Type: text/plain');
+                $content = file_get_contents($path);
+                echo $content;
+                die();
             }
         }
     }

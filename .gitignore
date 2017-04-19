@@ -2,4 +2,5 @@
 data
 web
 src/reverb/logs/*
+!src/reverb/logs/.htaccess
 vendor
