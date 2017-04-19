@@ -199,10 +199,23 @@ class ProductMapper
         } else {
             $images = Image::getImages((int)$product['id_lang'], (int)$product['id_product']);
             foreach ($images as $image) {
-                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], ImageType::getFormattedName('large'));
+                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], $this->getImageTypeFormattedName('large'));
             }
         }
         return $urls;
+    }
+
+    /**
+     * Get image type formatted name according to the Prestashop version
+     * @param $name
+     * @return string
+     */
+    private function getImageTypeFormattedName($name)
+    {
+        if (version_compare(_PS_VERSION_, '1.7', '<')) {
+            return ImageType::getFormatedName($name);
+        }
+        return ImageType::getFormattedName($name);
     }
 
     /**
