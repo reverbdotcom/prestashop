@@ -1,13 +1,13 @@
 <?php
-
 /**
- * Model Reverb Sync
+ *  Mapping Order
  *
- * @package Reverb
  * @author Johan Protin
  * @copyright Copyright (c) 2017 - Johan Protin
- * @license
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
  */
+
 class ReverbOrders
 {
     const REVERB_ORDERS_STATUS_ORDER_SAVED = 'saved';
@@ -72,8 +72,16 @@ class ReverbOrders
      * @param $shippingMethod
      * @param null $shippingTracker
      */
-    public function insert($idShop, $idShopGroup, $idOrder, $orderNumber, $status, $details, $shippingMethod, $shippingTracker = null)
-    {
+    public function insert(
+        $idShop,
+        $idShopGroup,
+        $idOrder,
+        $orderNumber,
+        $status,
+        $details,
+        $shippingMethod,
+        $shippingTracker = null
+    ) {
         $this->module->logs->infoLogs('insertOrder');
         $this->module->logs->infoLogs(' - $idOrder = ' . $idOrder);
         $this->module->logs->infoLogs(' - $orderNumber = ' . $orderNumber);
@@ -91,17 +99,18 @@ class ReverbOrders
         );
 
         if ($idOrder) {
-            $params['id_order'] = (int) $idOrder;
+            $params['id_order'] = (int)$idOrder;
         }
         if ($idShop) {
-            $params['id_shop'] = (int) $idShop;
+            $params['id_shop'] = (int)$idShop;
         }
         if ($idShopGroup) {
-            $params['id_shop_group'] = (int) $idShop;
+            $params['id_shop_group'] = (int)$idShop;
         }
 
         Db::getInstance()->insert(
-            'reverb_orders', $params
+            'reverb_orders',
+            $params
         );
 
         $this->module->logs->infoLogs(' reverb_orders inserted !');
@@ -120,7 +129,7 @@ class ReverbOrders
         Db::getInstance()->update(
             'reverb_orders',
             $params,
-            'id_reverb_orders= ' . (int) $id_reverb_orders
+            'id_reverb_orders= ' . (int)$id_reverb_orders
         );
     }
 }

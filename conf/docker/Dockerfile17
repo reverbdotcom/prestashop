@@ -1,4 +1,4 @@
-FROM prestashop/prestashop:1.7.0.6
+FROM prestashop/prestashop:1.7.1.0
 
 MAINTAINER Johan PROTIN <jprotin@boutiquedubio.fr>
 

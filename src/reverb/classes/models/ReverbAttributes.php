@@ -1,13 +1,13 @@
 <?php
-
 /**
- * Model Reverb Sync
+ *  Reverb Attributes
  *
- * @package Reverb
  * @author Johan Protin
  * @copyright Copyright (c) 2017 - Johan Protin
- * @license
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
  */
+
 class ReverbAttributes
 {
     const ORIGIN_MANUAL_SYNC_SINGLE = 'manual_sync_single';
@@ -38,8 +38,7 @@ class ReverbAttributes
         $sql->select('*')
             ->from('reverb_attributes', 'ra')
             ->where('ra.id_product = ' . $productId)
-            ->where('ra.id_lang = ' . $this->module->language_id)
-        ;
+            ->where('ra.id_lang = ' . $this->module->language_id);
 
         $result = Db::getInstance()->getRow($sql);
 
@@ -57,8 +56,7 @@ class ReverbAttributes
             $sql = new DbQuery();
             $sql->select('rsm.*')
                 ->from('reverb_shipping_methods', 'rsm')
-                ->where('rsm.id_attribute = ' . $attributeId)
-            ;
+                ->where('rsm.id_attribute = ' . $attributeId);
             $result = Db::getInstance()->executeS($sql);
 
             return $result;

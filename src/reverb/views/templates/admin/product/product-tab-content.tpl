@@ -1,3 +1,11 @@
+{**
+*
+*
+* @author Johan Protin
+* @copyright Copyright (c) 2017 - Johan Protin
+* @license Apache License Version 2.0, January 2004
+* @package Reverb
+*}
 <div class="panel" style="padding:30px">
     <div class="row moduleconfig-header">
         <div class="col-lg-3 text-right">
@@ -32,9 +40,9 @@
                 </span>
                 <div class="alert alert-info" role="alert">
                     <p class="alert-text">
-                        {l s='When you activate the syncronization with reverb the product is sent to  Reverb\'s marketplace.'}
+                        {l s='When you activate the syncronization with reverb the product is sent to  Reverb\'s marketplace.' mod='reverb'}
                         <br/>
-                        {l s='Then you can see the status of the synchronization on the page of Reverb Module.'}
+                        {l s='Then you can see the status of the synchronization on the page of Reverb Module.' mod='reverb'}
                     </p>
                 </div>
             </div>
@@ -55,9 +63,9 @@
                    <select class="form-control reverb-condition" name="reverb_condition">
                        <option value="" {if ($reverb_condition == '')}selected="selected"{/if}>--</option>
                        {foreach from=$reverb_list_conditions item=condition key=reverb_key}
-                           {$reverb_key}
-                           <option value="{$reverb_key}"
-                                   {if ($reverb_condition == $reverb_key)}selected="selected"{/if}>{$condition}</option>
+                           {$reverb_key|escape:'htmlall':'UTF-8'}
+                           <option value="{$reverb_key|escape:'htmlall':'UTF-8'}"
+                                   {if ($reverb_condition == $reverb_key)}selected="selected"{/if}>{$condition|escape:'htmlall':'UTF-8'}}</option>
                        {/foreach}
                     </select>
                 </span>
@@ -76,7 +84,7 @@
             </label>
             <div class="col-lg-9">
                 <input type="text" name="reverb_finish" class="form-control reverb-finish"
-                       value="{$reverb_finish}"/>
+                       value="{$reverb_finish|escape:'htmlall':'UTF-8'}}"/>
             </div>
         </div>
     </div>
@@ -92,7 +100,7 @@
             </label>
             <div class="col-lg-9">
                 <input type="text" name="reverb_year" class="form-control reverb-year"
-                       value="{$reverb_year}"/>
+                       value="{$reverb_year|escape:'htmlall':'UTF-8'}}"/>
             </div>
         </div>
     </div>
@@ -134,7 +142,7 @@
                 <span class="switch prestashop-switch">
                     <select name="reverb_country" id="country_select" class="form-control input-large" >
                         {foreach from=$reverb_list_country item='country'}
-                            <option value="{$country.iso_code}" {if ($country.iso_code == $reverb_country)}selected="selected"{/if}>&nbsp;{$country.name|escape}</option>
+                            <option value="{$country.iso_code|escape:'htmlall':'UTF-8'}" {if ($country.iso_code == $reverb_country)}selected="selected"{/if}>&nbsp;{$country.name|escape:'htmlall':'UTF-8'}}</option>
                         {/foreach}
                     </select>
                 </span>
@@ -155,10 +163,10 @@
                 <span class="switch prestashop-switch">
                     <select name="reverb_shipping" id="shipping_select" class="form-control input-large" >
                         <option value="reverb" {if ($reverb_shipping_profile != '')}selected="selected"{/if}>
-                            {l s='Reverb shipping profile'}
+                            {l s='Reverb shipping profile'  mod='reverb'}
                         </option>
                         <option value="custom" {if ($reverb_shipping_methods|count)}selected="selected"{/if}>
-                            {l s='Any : use custom shipping'}
+                            {l s='Any : use custom shipping' mod='reverb'}
                         </option>
                     </select>
                 </span>
@@ -179,11 +187,11 @@
                 <input type="text" name="reverb_shipping_profile"
                        class="form-control reverb-shipping-profile"
                        id="reverb-shipping-profile-id"
-                       value="{$reverb_shipping_profile}"/>
+                       value="{$reverb_shipping_profile|escape:'htmlall':'UTF-8'}}"/>
                 <div class="alert alert-info" role="alert">
                     <p class="alert-text">
-                        <a target="_blank" href="{$reverb_url}/my/selling/shipping_rates">
-                            {l s='See your Reverb shipping profile'}
+                        <a target="_blank" href="{$reverb_url|escape:'htmlall':'UTF-8'}/my/selling/shipping_rates">
+                            {l s='See your Reverb shipping profile' mod='reverb'}
                         </a>
                     </p>
                 </div>
@@ -220,8 +228,8 @@
                 <table class="table" id="shipping-methods-table">
                     <thead>
                     <tr>
-                        <th>{l s='Location'}</th>
-                        <th>{l s='Standard Rate'}</th>
+                        <th>{l s='Location' mod='reverb'}</th>
+                        <th>{l s='Standard Rate'mod='reverb'}</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -231,21 +239,21 @@
                             <tr>
                                 <td>
                                     <select class="form-control reverb-shipping-region"  name="reverb_shipping_methods_region[]" >
-                                        <option value="">{l s='Select a region'}</option>
+                                        <option value="">{l s='Select a region' mod='reverb'}</option>
                                         {foreach from=$reverb_regions item='region' key="code"}
-                                            <option value="{$code}" {if ($code == $method['region_code'])}selected="selected"{/if}>
-                                                {$region}
+                                            <option value="{$code|escape:'htmlall':'UTF-8'}" {if ($code == $method['region_code'])}selected="selected"{/if}>
+                                                {$region|escape:'htmlall':'UTF-8'}}
                                             </option>
                                         {/foreach}
                                     </select>
                                 </td>
                                 <td>
                                     <div class="input-group money-type">
-                                        <span class="input-group-addon">{$currency}</span>
+                                        <span class="input-group-addon">{$currency|escape:'htmlall':'UTF-8'}}</span>
                                         <input type="text"
                                                name="reverb_shipping_methods_rate[]"
                                                class="form-control reverb-shipping-rate"
-                                               value="{$method['rate']}" />
+                                               value="{$method['rate']|escape:'htmlall':'UTF-8'}" />
                                     </div>
                                 </td>
                                 <td>
@@ -259,15 +267,15 @@
                         <tr>
                             <td>
                                 <select class="form-control reverb-shipping-region"  name="reverb_shipping_methods_region[]" >
-                                    <option value="">{l s='Select a region'}</option>
+                                    <option value="">{l s='Select a region' mod='reverb'}</option>
                                     {foreach from=$reverb_regions item='region' key="code"}
-                                        <option value="{$code}">{$region}</option>
+                                        <option value="{$code|escape:'htmlall':'UTF-8'}">{$region|escape:'htmlall':'UTF-8'}}</option>
                                     {/foreach}
                                 </select>
                             </td>
                             <td>
                                 <div class="input-group money-type">
-                                    <span class="input-group-addon">{$currency}</span>
+                                    <span class="input-group-addon">{$currency|escape:'htmlall':'UTF-8'}</span>
                                     <input type="text"
                                            name="reverb_shipping_methods_rate[]"
                                            class="form-control reverb-shipping-rate"
@@ -282,14 +290,14 @@
             </div>
             <div class="col-md-3"></div>
             <div class="col-md-9">
-                <button type="button" class="btn btn-primary-outline sensitive add" id="add-shipping-method"><i class="icon-plus-sign"></i> {l s='Add shipping locations'}</button>
+                <button type="button" class="btn btn-primary-outline sensitive add" id="add-shipping-method"><i class="icon-plus-sign"></i> {l s='Add shipping locations' mod='reverb'}</button>
             </div>
         </div>
     </div>
     <div class="panel-footer">
-        <a href="{$link->getAdminLink('AdminProducts')|escape:'html':'UTF-8'}{if isset($smarty.request.page) && $smarty.request.page > 1}&amp;submitFilterproduct={$smarty.request.page|intval}{/if}" class="btn btn-default"><i class="process-icon-cancel"></i> {l s='Cancel'}</a>
-        <button type="submit" name="submitAddproduct" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save'}</button>
-        <button type="submit" name="submitAddproductAndStay" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save and stay'}</button>
+        <a href="{$link->getAdminLink('AdminProducts')|escape:'htmlall':'UTF-8'}:'html':'UTF-8'}{if isset($smarty.request.page) && $smarty.request.page > 1}&amp;submitFilterproduct={$smarty.request.page|intval}{/if}" class="btn btn-default"><i class="process-icon-cancel"></i> {l s='Cancel' mod='reverb'}</a>
+        <button type="submit" name="submitAddproduct" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save' mod='reverb'}</button>
+        <button type="submit" name="submitAddproductAndStay" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save and stay' mod='reverb'}</button>
     </div>
 </div>
 
@@ -324,7 +332,7 @@
             var region = lastTr.find('select.reverb-shipping-region').val();
             var rate = lastTr.find('input.reverb-shipping-rate').val();
             if (region == '' || rate == '') {
-                showErrorMessage("{l s='Please fill last shipping region and method'}")
+                showErrorMessage("{l s='Please fill last shipping region and method' mod='reverb'}")
             } else {
                 var newTr = lastTr.clone();
                 newTr.find('td select.reverb-shipping-region').val('');

@@ -1,20 +1,21 @@
 <?php
-namespace Reverb;
-
 /**
- * Client Conditions
  *
- * @package Reverb
+ *
+ *
  * @author Johan Protin
  * @copyright Copyright (c) 2017 - Johan Protin
- * @license
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
  */
+
+namespace Reverb;
+
 class ReverbConditions extends ReverbClient
 {
-
-    CONST REVERB_CONDITIONS_ENDPOINT = 'listing_conditions';
-    CONST REVERB_ROOT_KEY = 'conditions';
-    CONST REVERB_DISPLAYNAME= 'display_name';
+    const REVERB_CONDITIONS_ENDPOINT = 'listing_conditions';
+    const REVERB_ROOT_KEY = 'conditions';
+    const REVERB_DISPLAYNAME = 'display_name';
 
     public function __construct($module)
     {

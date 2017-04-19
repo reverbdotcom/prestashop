@@ -1,37 +1,18 @@
 <?php
 /**
- * 2007-2016 PrestaShop
+ *  Helper for cron
  *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@prestashop.com so we can send you a copy immediately.
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
- * versions in the future. If you wish to customize PrestaShop for your
- * needs please refer to http://www.prestashop.com for more information.
- *
- * @author    PrestaShop SA <contact@prestashop.com>
- * @copyright 2007-2016 PrestaShop SA
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- * International Registered Trademark & Property of PrestaShop SA
+ * @author Johan Protin
+ * @copyright Copyright (c) 2017 - Johan Protin
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
  */
 
-/**
- * @since 1.5.0
- */
 class HelperCron
 {
-    CONST CODE_CRON_STATUS_PROGRESS = 'process';
-    CONST CODE_CRON_STATUS_END = 'finish';
-    CONST CODE_CRON_STATUS_ERROR = 'error';
+    const CODE_CRON_STATUS_PROGRESS = 'process';
+    const CODE_CRON_STATUS_END = 'finish';
+    const CODE_CRON_STATUS_ERROR = 'error';
 
     /**
      * @var $module
@@ -82,7 +63,8 @@ class HelperCron
                 $status,
                 $details,
                 $nbToSync,
-                $nbSync);
+                $nbSync
+            );
         }
 
         return $id ? $id : true;
@@ -111,7 +93,7 @@ class HelperCron
             'id_cron= ' . (int)$idCron
         );
 
-        $this->module->logs->infoLogs('Update cron status ' . $idCron .' with status ' . $status);
+        $this->module->logs->infoLogs('Update cron status ' . $idCron . ' with status ' . $status);
     }
 
     /**
@@ -154,11 +136,12 @@ class HelperCron
      * @param $status
      * @return null|string
      */
-    public function getDateLastCronWithStatus($code, $status) {
+    public function getDateLastCronWithStatus($status)
+    {
         $sql = new DbQuery();
         $sql->select('rc.date')
             ->from('reverb_crons', 'rc')
-            ->where('rc.`status` = "' . $status .'"')
+            ->where('rc.`status` = "' . $status . '"')
             ->orderBy('rc.`id_cron` DESC');
 
         $date = Db::getInstance()->getValue($sql);

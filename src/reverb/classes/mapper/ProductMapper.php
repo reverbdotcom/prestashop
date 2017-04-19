@@ -1,13 +1,13 @@
 <?php
-
 /**
- * Model Reverb Sync
+ *  Map product reverb and prestashop
  *
- * @package Reverb
  * @author Johan Protin
  * @copyright Copyright (c) 2017 - Johan Protin
- * @license
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
  */
+
 class ProductMapper
 {
     protected $request;
@@ -46,10 +46,10 @@ class ProductMapper
         $product->title = $product_ps['name'];
         $product->categories = $this->mapCategories($product_ps);
         $product->location = $this->mapLocation();
-        $product->sold_as_is =  $product_ps['sold_as_is'] ? true : false;
+        $product->sold_as_is = $product_ps['sold_as_is'] ? true : false;
         $product->finish = $product_ps['finish'];
         $product->origin_country_code = $product_ps['origin_country_code'];
-        $product->year = $product_ps['year'];;
+        $product->year = $product_ps['year'];
         $product->seller_cost = $product_ps['wholesale_price'];
 
 
@@ -68,20 +68,21 @@ class ProductMapper
      * @param string|false $productExists
      * @return ProductReverb
      */
-    private function processMappingAccordingSettings(ProductReverb $product,$product_ps, $productExists) {
-        if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION) ){
+    private function processMappingAccordingSettings(ProductReverb $product, $product_ps, $productExists)
+    {
+        if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION)) {
             $product->description = $product_ps['description'];
         }
 
-        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PRICE)) ) {
+        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PRICE))) {
             $product->price = $this->mapPrice($product_ps);
         }
 
-        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PHOTOS)) ) {
+        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PHOTOS))) {
             $product->photos = $this->getImagesUrl($product_ps);
         }
 
-        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_CONDITION)) ) {
+        if (!$productExists || ($productExists && $this->module->getReverbConfig(\Reverb::KEY_SETTINGS_CONDITION))) {
             $product->condition = $this->mapCondition($product_ps);
         }
 
@@ -124,13 +125,13 @@ class ProductMapper
         $region = Tools::strtolower(State::getNameById(Configuration::get('PS_SHOP_STATE_ID')));
         $locality = Configuration::get('PS_SHOP_CITY');
 
-        if (!$locality){
+        if (!$locality) {
             $locality = "";
         }
-        if (!$region){
+        if (!$region) {
             $region = "";
         }
-        if (!$country){
+        if (!$country) {
             $country = "";
         }
 
@@ -198,7 +199,7 @@ class ProductMapper
         } else {
             $images = Image::getImages((int)$product['id_lang'], (int)$product['id_product']);
             foreach ($images as $image) {
-                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], 'large_default');
+                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], ImageType::getFormattedName('large'));
             }
         }
         return $urls;

@@ -1,11 +1,20 @@
 <?php
+/**
+ *
+ *
+ *
+ * @author Johan Protin
+ * @copyright Copyright (c) 2017 - Johan Protin
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
+ */
+
 namespace Reverb;
 
 class ReverbCategories extends ReverbClient
 {
-
-    CONST REVERB_CATEGORIES_ENDPOINT = 'categories';
-    CONST REVERB_ROOT_KEY = 'categories';
+    const REVERB_CATEGORIES_ENDPOINT = 'categories';
+    const REVERB_ROOT_KEY = 'categories';
 
     public function __construct($module)
     {

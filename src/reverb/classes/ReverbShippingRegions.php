@@ -1,20 +1,21 @@
 <?php
-namespace Reverb;
-
 /**
- * Client ShippingRegions
  *
- * @package Reverb
+ *
+ *
  * @author Johan Protin
  * @copyright Copyright (c) 2017 - Johan Protin
- * @license
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
  */
+
+namespace Reverb;
+
 class ReverbShippingRegions extends ReverbClient
 {
-
-    CONST REVERB_SHIPPING_REGIONS_ENDPOINT = 'shipping/regions';
-    CONST REVERB_ROOT_KEY = 'shipping_regions';
-    CONST REVERB_DISPLAYNAME= 'display_name';
+    const REVERB_SHIPPING_REGIONS_ENDPOINT = 'shipping/regions';
+    const REVERB_ROOT_KEY = 'shipping_regions';
+    const REVERB_DISPLAYNAME = 'display_name';
 
     public function __construct($module)
     {

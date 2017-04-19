@@ -1,26 +1,27 @@
 <?php
+/**
+ *
+ *
+ *
+ * @author Johan Protin
+ * @copyright Copyright (c) 2017 - Johan Protin
+ * @license Apache License Version 2.0, January 2004
+ * @package Reverb
+ */
 
 namespace Reverb;
 
 use ICanBoogie\DateTime;
 
-/**
- * Client order
- *
- * @package Reverb
- * @author Johan Protin
- * @copyright Copyright (c) 2017 - Johan Protin
- * @license
- */
 class ReverbOrders extends ReverbClient
 {
-
-    CONST REVERB_MY_SELLING = 'my/orders/selling/all';
-    CONST REVERB_MY_SELLING_SHIP = 'my/orders/selling/[ID]/ship';
-    CONST REVERB_MY_SELLING_PICKED_UP = 'my/orders/selling/[ID]/mark_picked_up';
-    CONST REVERB_ROOT_KEY = 'orders';
+    const REVERB_MY_SELLING = 'my/orders/selling/all';
+    const REVERB_MY_SELLING_SHIP = 'my/orders/selling/[ID]/ship';
+    const REVERB_MY_SELLING_PICKED_UP = 'my/orders/selling/[ID]/mark_picked_up';
+    const REVERB_ROOT_KEY = 'orders';
 
     public static $statusToSync = array('paid', 'shipped', 'picked_up', 'received', 'partially_paid');
+
     /**
      * ReverbOrders constructor.
      */
@@ -42,13 +43,13 @@ class ReverbOrders extends ReverbClient
     {
         $params = null;
         if ($date) {
-            $dateISO8601 = new DateTime($date);
+            $dateISO8601 = new \DateTime($date);
             $params = array(
                 'updated_start_date' => $dateISO8601->format('Y-m-d\TH:i:s')
             );
         }
 
-        return $this->getListFromEndpoint(null,$params);
+        return $this->getListFromEndpoint(null, $params);
     }
 
     public function setOrderShip($reverbOrderId, $provider, $trackingNumber)
@@ -72,5 +73,4 @@ class ReverbOrders extends ReverbClient
             'date' => (new \DateTime())->format('Y-m-d H:i:s')
         )));
     }
-
 }
