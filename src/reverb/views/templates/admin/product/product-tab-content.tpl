@@ -65,7 +65,7 @@
                        {foreach from=$reverb_list_conditions item=condition key=reverb_key}
                            {$reverb_key|escape:'htmlall':'UTF-8'}
                            <option value="{$reverb_key|escape:'htmlall':'UTF-8'}"
-                                   {if ($reverb_condition == $reverb_key)}selected="selected"{/if}>{$condition|escape:'htmlall':'UTF-8'}}</option>
+                                   {if ($reverb_condition == $reverb_key)}selected="selected"{/if}>{$condition|escape:'htmlall':'UTF-8'}</option>
                        {/foreach}
                     </select>
                 </span>
@@ -84,7 +84,7 @@
             </label>
             <div class="col-lg-9">
                 <input type="text" name="reverb_finish" class="form-control reverb-finish"
-                       value="{$reverb_finish|escape:'htmlall':'UTF-8'}}"/>
+                       value="{$reverb_finish|escape:'htmlall':'UTF-8'}"/>
             </div>
         </div>
     </div>
@@ -100,7 +100,7 @@
             </label>
             <div class="col-lg-9">
                 <input type="text" name="reverb_year" class="form-control reverb-year"
-                       value="{$reverb_year|escape:'htmlall':'UTF-8'}}"/>
+                       value="{$reverb_year|escape:'htmlall':'UTF-8'}"/>
             </div>
         </div>
     </div>
@@ -142,7 +142,7 @@
                 <span class="switch prestashop-switch">
                     <select name="reverb_country" id="country_select" class="form-control input-large" >
                         {foreach from=$reverb_list_country item='country'}
-                            <option value="{$country.iso_code|escape:'htmlall':'UTF-8'}" {if ($country.iso_code == $reverb_country)}selected="selected"{/if}>&nbsp;{$country.name|escape:'htmlall':'UTF-8'}}</option>
+                            <option value="{$country.iso_code|escape:'htmlall':'UTF-8'}" {if ($country.iso_code == $reverb_country)}selected="selected"{/if}>&nbsp;{$country.name|escape:'htmlall':'UTF-8'}</option>
                         {/foreach}
                     </select>
                 </span>
@@ -187,7 +187,7 @@
                 <input type="text" name="reverb_shipping_profile"
                        class="form-control reverb-shipping-profile"
                        id="reverb-shipping-profile-id"
-                       value="{$reverb_shipping_profile|escape:'htmlall':'UTF-8'}}"/>
+                       value="{$reverb_shipping_profile|escape:'htmlall':'UTF-8'}"/>
                 <div class="alert alert-info" role="alert">
                     <p class="alert-text">
                         <a target="_blank" href="{$reverb_url|escape:'htmlall':'UTF-8'}/my/selling/shipping_rates">
@@ -229,7 +229,7 @@
                     <thead>
                     <tr>
                         <th>{l s='Location' mod='reverb'}</th>
-                        <th>{l s='Standard Rate'mod='reverb'}</th>
+                        <th>{l s='Standard Rate' mod='reverb'}</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -242,14 +242,14 @@
                                         <option value="">{l s='Select a region' mod='reverb'}</option>
                                         {foreach from=$reverb_regions item='region' key="code"}
                                             <option value="{$code|escape:'htmlall':'UTF-8'}" {if ($code == $method['region_code'])}selected="selected"{/if}>
-                                                {$region|escape:'htmlall':'UTF-8'}}
+                                                {$region|escape:'htmlall':'UTF-8'}
                                             </option>
                                         {/foreach}
                                     </select>
                                 </td>
                                 <td>
                                     <div class="input-group money-type">
-                                        <span class="input-group-addon">{$currency|escape:'htmlall':'UTF-8'}}</span>
+                                        <span class="input-group-addon">{$currency|escape:'htmlall':'UTF-8'}</span>
                                         <input type="text"
                                                name="reverb_shipping_methods_rate[]"
                                                class="form-control reverb-shipping-rate"
@@ -269,7 +269,7 @@
                                 <select class="form-control reverb-shipping-region"  name="reverb_shipping_methods_region[]" >
                                     <option value="">{l s='Select a region' mod='reverb'}</option>
                                     {foreach from=$reverb_regions item='region' key="code"}
-                                        <option value="{$code|escape:'htmlall':'UTF-8'}">{$region|escape:'htmlall':'UTF-8'}}</option>
+                                        <option value="{$code|escape:'htmlall':'UTF-8'}">{$region|escape:'htmlall':'UTF-8'}</option>
                                     {/foreach}
                                 </select>
                             </td>
