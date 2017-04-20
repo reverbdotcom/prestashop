@@ -389,7 +389,6 @@ class OrdersSyncEngine
             $this->module->customer->secure_key,
             $shop
         );
-        Configuration::set('PS_TAX',1);
 
         $this->logInfoCrons('# validateOrder finished');
 
@@ -435,6 +434,7 @@ class OrdersSyncEngine
             $orderCarrier->shipping_cost_tax_incl = (float)$orderReverb['shipping']['amount'];
             $orderCarrier->update();
         }
+        Configuration::set('PS_TAX',1);
 
         $this->logInfoCrons('Order ' . $order->reference . ' : ' . $orderReverb['order_number'] . ' is now synced');
 
