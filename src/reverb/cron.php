@@ -56,12 +56,8 @@ try {
                 $products = $module->reverbSync->getProductsToSync();
                 $module->logs->cronLogs('# ' . count($products) . ' product(s) to sync');
                 foreach ($products as $product) {
-                    if ($product['reverb_enabled']) {
-                        $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_CRON);
-                        $module->logs->cronLogs('# ' . json_encode($res));
-                    } else {
-                        $module->logs->cronLogs('# Product ' . $product['id_product'] . ' not enabled for reverb sync');
-                    }
+                    $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_CRON);
+                    $module->logs->cronLogs('# ' . json_encode($res));
                 }
                 break;
         }

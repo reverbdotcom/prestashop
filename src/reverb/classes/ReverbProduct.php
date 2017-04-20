@@ -59,7 +59,30 @@ class ReverbProduct extends ReverbClient
     {
         $this->logInfosMessage('##########################');
         $this->logInfosMessage('# BEGIN Request SYNC product ' . $product['reference']);
+        $this->logInfosMessage('# ' . json_encode($product));
         $this->logInfosMessage('##########################');
+
+        // Reverb sync not enabled
+        if (empty($product['reverb_enabled']) || !$product['reverb_enabled']) {
+            return $this->insertOrUpdateSyncStatus(
+                $product['id_product'],
+                $product['id_product_attribute'],
+                $origin,
+                self::REVERB_CODE_ERROR,
+                'Product ' . $product['id_product'] . ' not enabled for reverb sync'
+            );
+        }
+
+        // SKU required
+        if (empty($product['reference'])) {
+            return $this->insertOrUpdateSyncStatus(
+                $product['id_product'],
+                $product['id_product_attribute'],
+                $origin,
+                self::REVERB_CODE_ERROR,
+                'Product reference is mandatory to sync on Reverb'
+            );
+        }
 
         try {
             // Checks if product already exists on Reberb
@@ -94,25 +117,24 @@ class ReverbProduct extends ReverbClient
             $this->logInfosMessage('# END Request SYNC product');
             $this->logInfosMessage('##########################');
         } catch (\Exception $e) {
-            return $this->proccessTechnicalError($e);
+            $this->module->logs->errorLogs($e->getMessage());
+            $this->module->logs->errorLogs($e->getTraceAsString());
+
+            if ($e->getCode() == 1) {
+                $message = $e->getMessage();
+            } else {
+                $message = 'An error occured. Please see the error logs file';
+            }
+            return $this->insertOrUpdateSyncStatus(
+                $product['id_product'],
+                $product['id_product_attribute'],
+                $origin,
+                self::REVERB_CODE_ERROR,
+                $message
+            );
         }
 
         return $return;
-    }
-
-    /**
-     *  Process Technical Eror
-     *
-     * @param \Exception $e
-     * @return array
-     */
-    private function proccessTechnicalError($e)
-    {
-        $this->module->logs->errorLogs($e->getMessage());
-        return array(
-            'status' => 'error',
-            'message' => $e->getTraceAsString(),
-        );
     }
 
     /**
@@ -125,8 +147,6 @@ class ReverbProduct extends ReverbClient
      */
     private function proccessResponse($product, $response, $origin)
     {
-        $return = array();
-
         // Get Reverb ID and slug from response
         $reverbSlug = $this->getReverbProductSlugFromResponse($response);
         $reverbId = $this->getReverbProductIdFromResponse($response);
@@ -138,18 +158,28 @@ class ReverbProduct extends ReverbClient
             $status = self::REVERB_CODE_ERROR;
         }
 
+        return $this->insertOrUpdateSyncStatus($product['id_product'], $product['id_product_attribute'], $origin, $status, $response['message'], $reverbSlug, $reverbId);
+    }
+
+    private function insertOrUpdateSyncStatus($id_product, $id_product_attribute, $origin, $status, $message, $reverbSlug = null, $reverbId = null)
+    {
+        $return = array();
         // Construct return response
         $return['status'] = $status;
-        $return['message'] = $response['message'];
-        $return['reverb-slug'] = $reverbSlug;
-        $return['reverb-id'] = $reverbId;
+        $return['message'] = $message;
+        if (!empty($reverbSlug)) {
+            $return['reverb-slug'] = $reverbSlug;
+        }
+        if (!empty($reverbId)) {
+            $return['reverb-id'] = $reverbId;
+        }
 
         // Insert or update sync on DB
         $lastSync = $this->module->reverbSync->insertOrUpdateSyncStatus(
-            $product['id_product'],
-            $product['id_product_attribute'],
+            $id_product,
+            $id_product_attribute,
             $status,
-            $response['message'],
+            $message,
             $reverbId,
             $reverbSlug,
             $origin,
