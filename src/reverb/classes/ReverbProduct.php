@@ -66,10 +66,10 @@ class ReverbProduct extends ReverbClient
         if (empty($product['reverb_enabled']) || !$product['reverb_enabled']) {
             return $this->insertOrUpdateSyncStatus(
                 $product['id_product'],
-                    $product['id_product_attribute'],
-                    $origin,
-                    self::REVERB_CODE_ERROR,
-                    'Product ' . $product['id_product'] . ' not enabled for reverb sync'
+                $product['id_product_attribute'],
+                $origin,
+                self::REVERB_CODE_ERROR,
+                'Product ' . $product['id_product'] . ' not enabled for reverb sync'
             );
         }
 
@@ -117,26 +117,24 @@ class ReverbProduct extends ReverbClient
             $this->logInfosMessage('# END Request SYNC product');
             $this->logInfosMessage('##########################');
         } catch (\Exception $e) {
-            return $this->proccessTechnicalError($e);
+            $this->module->logs->errorLogs($e->getMessage());
+            $this->module->logs->errorLogs($e->getTraceAsString());
+
+            if ($e->getCode() == 1) {
+                $message = $e->getMessage();
+            } else {
+                $message = 'An error occured. Please see the error logs file';
+            }
+            return $this->insertOrUpdateSyncStatus(
+                $product['id_product'],
+                $product['id_product_attribute'],
+                $origin,
+                self::REVERB_CODE_ERROR,
+                $message
+            );
         }
 
         return $return;
-    }
-
-    /**
-     *  Process Technical Eror
-     *
-     * @param \Exception $e
-     * @return array
-     */
-    private function proccessTechnicalError($e)
-    {
-        $this->module->logs->errorLogs($e->getMessage());
-        $this->module->logs->errorLogs($e->getTraceAsString());
-        return array(
-            'status' => 'error',
-            'message' => 'An error occured. Please see the error logs file',
-        );
     }
 
     /**

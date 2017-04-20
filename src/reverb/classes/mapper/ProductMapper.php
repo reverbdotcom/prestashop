@@ -149,12 +149,16 @@ class ProductMapper
     {
         $list = null;
 
-        $uuid = ReverbMapping::getReverbCode((int)$product_ps['id_category_default']);
+        $id_category = (int)$product_ps['id_category_default'];
+        $uuid = ReverbMapping::getReverbCode($id_category);
 
         if ($uuid) {
             $list = array();
             $category = new Reverb\Mapper\Models\Category($uuid);
             $list[] = $category;
+        } else {
+            $psCategory = new Category($id_category);
+            throw new Exception('Category "' . $psCategory->getName((int)$product_ps['id_lang']) . '" is not mapped with a Reverb category', 1);
         }
         return $list;
     }
