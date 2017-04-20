@@ -41,7 +41,7 @@ class ProductMapper
         $product->inventory = $product_ps['quantity_stock'];
 
         $product->sku = $product_ps['reference'];
-        $product->upc = $product_ps['ean13'];
+        $product->upc = $product_ps['upc'];
         $product->publish = false;
         $product->title = $product_ps['name'];
         $product->categories = $this->mapCategories($product_ps);
