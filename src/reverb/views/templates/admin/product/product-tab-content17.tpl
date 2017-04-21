@@ -126,6 +126,7 @@
             <div class="col-lg-9">
                 <span class="switch prestashop-switch fixed-width-lg">
                     <select name="reverb_country" id="country_select" class="form-control input-large" >
+                        <option value="">--</option>
                         {foreach from=$reverb_list_country item='country'}
                             <option value="{$country.iso_code|escape:'htmlall':'UTF-8'}" {if ($country.iso_code == $reverb_country)}selected="selected"{/if}>&nbsp;{$country.name|escape:'htmlall':'UTF-8'}</option>
                         {/foreach}
