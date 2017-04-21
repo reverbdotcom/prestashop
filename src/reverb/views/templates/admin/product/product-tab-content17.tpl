@@ -6,7 +6,8 @@
 * @license Apache License Version 2.0, January 2004
 * @package Reverb
 *}
-<div class="panel" style="padding:30px">
+
+<div class="panel bootstrap" style="padding:30px">
     <div class="row moduleconfig-header">
         <div class="col-lg-3 text-right">
             <h1 class="site-header__logo"></h1>
@@ -28,20 +29,8 @@
                 </span>
             </label>
             <div class="col-lg-9">
-                <span class="switch prestashop-switch fixed-width-lg">
-                    <span class="switch prestashop-switch fixed-width-lg">
-                        <input type="radio" name="reverb_enabled" id="reverb_enabled_sync_on" value="1"
-                               {if ($reverb_enabled)}checked="checked"{/if}>
-                        <label for="reverb_enabled_sync_on">Yes</label>
-
-                        <input type="radio" name="reverb_enabled" id="reverb_enabled_sync_off" value="0"
-                               {if !($reverb_enabled)}checked="checked"{/if}>
-                        <label for="reverb_enabled_sync_off">No</label>
-                        <a class="slide-button btn"></a>
-                    </span>
-                </span>
+                <input id="reverb_enabled" data-toggle="switch" type="checkbox" name="reverb_enabled" value="1" {if ($reverb_enabled)}checked="checked"{/if}>
                 <div class="alert alert-info" role="alert">
-                    <i class="material-icons">help</i>
                     <p class="alert-text">
                         {l s='When you activate the syncronization with reverb the product is sent to  Reverb\'s marketplace.'  mod='reverb' }
                         <br/>
@@ -116,22 +105,11 @@
                       data-toggle="tooltip"
                       data-html="true"
                       title=""
-                      data-original-title="{l s='' mod='reverb'}">{l s='Sold as is' mod='reverb'}
+                      data-original-title="{l s='' mod='reverb'}">{l s='Make an Offer' mod='reverb'}
                 </span>
             </label>
             <div class="col-lg-9">
-                <span class="switch prestashop-switch fixed-width-lg">
-                    <span class="switch prestashop-switch fixed-width-lg">
-                        <input type="radio" name="reverb_sold" id="reverb_enabled_sold_on" value="1"
-                               {if ($reverb_sold)}checked="checked"{/if}>
-                        <label for="reverb_enabled_sold_on">Yes</label>
-
-                        <input type="radio" name="reverb_sold" id="reverb_enabled_sold_off" value="0"
-                               {if !($reverb_sold)}checked="checked"{/if}>
-                        <label for="reverb_enabled_sold_off">No</label>
-                        <a class="slide-button btn"></a>
-                    </span>
-                </span>
+                <input id="reverb_offers_enabled" data-toggle="switch" type="checkbox" name="offers_enabled" value="1" {if ($reverb_offers_enabled)}checked="checked"{/if}>
             </div>
         </div>
     </div>
@@ -218,8 +196,7 @@
                 </span>
             </label>
             <div class="col-lg-9">
-                <input type="checkbox" name="reverb_shipping_local" value="1"
-                       {if ($reverb_enabled)}checked="checked"{/if}>
+                <input id="reverb_shipping_local" data-toggle="switch" type="checkbox" name="reverb_shipping_local" value="1" {if ($reverb_shipping_local)}checked="checked"{/if}>
             </div>
         </div>
         <div class="col-md-12">
