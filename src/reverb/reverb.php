@@ -487,14 +487,14 @@ class Reverb extends Module
                 'desc' => $this->l('You can selectively disable sync for certain items by tagging them with the prestashop tag.'),
             ),
             array(
-                'name' => self::KEY_SETTINGS_AUTO_PUBLISH,
-                'label' => $this->l('Automatically publish listings after sync'),
-                'desc' => $this->l('To publish the listing right away requires more fields such as images and shipping rates, and may not always be possible.'),
-            ),
-            array(
                 'name' => self::KEY_SETTINGS_CREATE_NEW_LISTINGS,
                 'label' => $this->l('Create new listings'),
                 'desc' => $this->l('If the settings is off, only updates will be synced. New listings will not be automatically created.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_AUTO_PUBLISH,
+                'label' => $this->l('Automatically publish listings after sync'),
+                'desc' => $this->l('To publish the listing right away requires more fields such as images and shipping rates, and may not always be possible.'),
             ),
             array(
                 'name' => self::KEY_SETTINGS_DESCRIPTION,
