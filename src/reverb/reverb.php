@@ -128,7 +128,7 @@ class Reverb extends Module
             `id_product` int(10) unsigned NOT NULL,
             `reverb_enabled` tinyint(1),
             `id_lang` ' . (version_compare(_PS_VERSION_, '1.7', '<') ? 'int(10) unsigned' : 'int(11)') . ' NOT NULL,
-            `sold_as_is` tinyint(1),
+            `offers_enabled` tinyint(1),
             `finish` varchar(50),
             `origin_country_code` varchar(50),
             `year` varchar(50),
@@ -487,14 +487,14 @@ class Reverb extends Module
                 'desc' => $this->l('You can selectively disable sync for certain items by tagging them with the prestashop tag.'),
             ),
             array(
-                'name' => self::KEY_SETTINGS_AUTO_PUBLISH,
-                'label' => $this->l('Automatically publish listings after sync'),
-                'desc' => $this->l('To publish the listing right away requires more fields such as images and shipping rates, and may not always be possible.'),
-            ),
-            array(
                 'name' => self::KEY_SETTINGS_CREATE_NEW_LISTINGS,
                 'label' => $this->l('Create new listings'),
                 'desc' => $this->l('If the settings is off, only updates will be synced. New listings will not be automatically created.'),
+            ),
+            array(
+                'name' => self::KEY_SETTINGS_AUTO_PUBLISH,
+                'label' => $this->l('Automatically publish listings after sync'),
+                'desc' => $this->l('To publish the listing right away requires more fields such as images and shipping rates, and may not always be possible.'),
             ),
             array(
                 'name' => self::KEY_SETTINGS_DESCRIPTION,
@@ -806,15 +806,18 @@ class Reverb extends Module
                 'reverb_finish' => $attribute['finish'],
                 'reverb_condition' => $attribute['id_condition'],
                 'reverb_year' => $attribute['year'],
-                'reverb_sold' => $attribute['sold_as_is'],
+                'reverb_offers_enabled' => $attribute['offers_enabled'],
                 'reverb_country' => $attribute['origin_country_code'],
                 'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
                 'reverb_list_country' => Country::getCountries($this->context->language->id),
                 'reverb_url' => $this->getReverbUrl(),
                 'reverb_regions' => $reverbShippingRegions->getFormattedShippingRegions(),
                 'reverb_shipping_profile' => $attribute['id_shipping_profile'],
+                'reverb_shipping_local' => $attribute['shipping_local'],
                 'reverb_shipping_methods' => $reverbAttributes->getShippingMethods($attribute['id_attribute']),
                 'currency' => $this->getContext()->currency->getSign(),
+                'admin_css' => _PS_CSS_DIR_,
+                'admin_css' => _PS_ADMIN_DIR_,
             ));
         } else {
             $this->logs->errorLogs('hookDisplayAdminProductsExtra does not found idProduct ! __PS_VERSION__ = ' . _PS_VERSION_);
@@ -936,7 +939,7 @@ class Reverb extends Module
             $condition = Tools::getValue('reverb_condition');
             $finish = Tools::getValue('reverb_finish');
             $year = Tools::getValue('reverb_year');
-            $soldAsIs = Tools::getValue('reverb_sold');
+            $offers_enabled = Tools::getValue('offers_enabled');
             $reverb_country = Tools::getValue('reverb_country');
             $reverb_shipping = Tools::getValue('reverb_shipping');
             $reverb_shipping_profile = Tools::getValue('reverb_shipping_profile');
@@ -950,7 +953,7 @@ class Reverb extends Module
                 'id_condition' => pSQL($condition),
                 'finish' => pSQL($finish),
                 'year' => pSql($year),
-                'sold_as_is' => pSql($soldAsIs),
+                'offers_enabled' => pSql($offers_enabled),
                 'origin_country_code' => pSql($reverb_country)
             );
             if ($reverb_shipping == 'reverb') {

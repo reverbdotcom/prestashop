@@ -46,7 +46,7 @@ class ProductMapper
         $product->title = $product_ps['name'];
         $product->categories = $this->mapCategories($product_ps);
         $product->location = $this->mapLocation();
-        $product->sold_as_is = $product_ps['sold_as_is'] ? true : false;
+        $product->offers_enabled = $product_ps['offers_enabled'] ? 1 : false;
         $product->finish = $product_ps['finish'];
         $product->origin_country_code = $product_ps['origin_country_code'];
         $product->year = $product_ps['year'];

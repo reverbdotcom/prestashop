@@ -111,18 +111,18 @@
                       data-toggle="tooltip"
                       data-html="true"
                       title=""
-                      data-original-title="{l s='' mod='reverb'}">{l s='Sold as is' mod='reverb'}
+                      data-original-title="{l s='' mod='reverb'}">{l s='Make an Offer' mod='reverb'}
                 </span>
             </label>
             <div class="col-lg-9">
                 <span class="switch prestashop-switch fixed-width-lg">
-                    <input type="radio" name="reverb_sold" id="reverb_enabled_sold_on" value="1"
-                           {if ($reverb_sold)}checked="checked"{/if}>
-                    <label for="reverb_enabled_sold_on">Yes</label>
+                    <input type="radio" name="offers_enabled" id="reverb_offers_enabled_on" value="1"
+                           {if ($reverb_offers_enabled)}checked="checked"{/if}>
+                    <label for="reverb_offers_enabled_on">Yes</label>
 
-                    <input type="radio" name="reverb_sold" id="reverb_enabled_sold_off" value="0"
-                           {if !($reverb_sold)}checked="checked"{/if}>
-                    <label for="reverb_enabled_sold_off">No</label>
+                    <input type="radio" name="offers_enabled" id="reverb_offers_enabled_off" value="0"
+                           {if !($reverb_offers_enabled)}checked="checked"{/if}>
+                    <label for="reverb_offers_enabled_off">No</label>
                     <a class="slide-button btn"></a>
                 </span>
             </div>
@@ -141,6 +141,7 @@
             <div class="col-lg-9">
                 <span class="switch prestashop-switch">
                     <select name="reverb_country" id="country_select" class="form-control input-large" >
+                        <option value="">--</option>
                         {foreach from=$reverb_list_country item='country'}
                             <option value="{$country.iso_code|escape:'htmlall':'UTF-8'}" {if ($country.iso_code == $reverb_country)}selected="selected"{/if}>&nbsp;{$country.name|escape:'htmlall':'UTF-8'}</option>
                         {/foreach}
@@ -210,8 +211,16 @@
                 </span>
             </label>
             <div class="col-lg-9">
-                <input type="checkbox" name="reverb_shipping_local" value="1"
-                       {if ($reverb_enabled)}checked="checked"{/if}>
+                <span class="switch prestashop-switch fixed-width-lg">
+                    <input type="radio" name="reverb_shipping_local" id="reverb_shipping_local_on" value="1"
+                           {if ($reverb_shipping_local)}checked="checked"{/if}>
+                    <label for="reverb_shipping_local_on">Yes</label>
+
+                    <input type="radio" name="reverb_shipping_local" id="reverb_shipping_local_off" value="0"
+                           {if !($reverb_shipping_local)}checked="checked"{/if}>
+                    <label for="reverb_shipping_local_off">No</label>
+                    <a class="slide-button btn"></a>
+                </span>
             </div>
         </div>
         <div class="col-md-12">
