@@ -159,9 +159,61 @@ Ainsi les fonds arriveront directement sur votre compte PayPal.
 
 ### Configurer le mapping des catégories 
 
+Le module propose d'associer les catégories de votre catalogue avec celle de Reverb.
+Pour ceci, il faut sélectionner une de vos catégories et mapper avec une catégorie Reverb.
+L'enregistrement est automatique.
 
+![categories](img/categories.png)
 
 ### Configurer vos produits
+
+Afin d'avoir des produits disponible pour la synchronisation vers Reverb, vous devez configurer les produits avec des informations dont Rerverb à besoin.
+
+Pour accéder à cette configuration : Catalog > Products > Edit your product > Modules Tab > configure Reverb
+
+![Products](img/product.png)
+
+Lorsque le produit est éligible à la synchronisation, votre produit sera disponible sur le prochain écran _Gestion des synchronisations de vos produits_.
+
 ### Gestion des synchronisations de vos produits
+
+Lorsque vous avez configuré vos produits du catalogue PrestaShop avec les informations nécessaire pour être éligible à la synchronisation Reverb, vous pourrez accéder la gestion de la synchronisation de produits manuellement ou par tâche automatique CRON.
+
+#### Gestion manuelle
+
+Il faut accéder dans l'onglet "_Sync status_" pour voir la liste des produits en attente de synchronisation, mais aussi voir l'historique des synchronisations en erreur ou succès.
+
+![sync](img/sync-status.png)
+
+Il vous ait possible de lancer quelques actions manuelles via ces boutons :
+
+![buttons](img/sync-action.png)
+
+* Premier bouton : déclenche la synchronisation pour le produit sélectionné.
+* Deuxième bouton : redirige le marchand vers la page produit en Front Office du site PrestaShop.
+* Troisième bouton : redirige le marchand vers le produit directement sur Reverb pour l'editer ou vérifier qu'il est publié.
+
+En plus de faire une synchronisation manuelle et unitaire, il est possible de lancer une synchronisation avec une liste de produits sélectionnés en cochant cahque ligne du tableau puis en cliquant sur l'action suivante :
+
+![list sync](img/sync-list-products.png)
+
+Reverb vous retournera un réponse suite à la synchronisation avec un statut _erreur_ ou _succès_ et en fonction de cette réponse il sera historisé le message de la réponse.
+
+_Remarque : la synchronisation de produit n'est fonctionnelle que dans un seul sens, de PrestaShop vers Reverb mais pas l'inverse. Votre catalogue PrestaShop reste donc le catalogue principal._
+
+#### Gestion automatique
+
+Pour la gestion de vos tâches CRON sur votre hébergement, nous vous conseillons vivement de vous renseigner auprès de votre fournisseur pour insérer, modifier une tâche CRON.
+
+    */5 * * * * php [RACINE ROOT du SERVEUR]/modules/reverb/cron.php products > /var/log/cron.log
+
+Par défaut, cette commande se lance toutes les 5 minutes, ainsi cela permet à votre site d'être à jour en permanence avec votre espace Reverb.com.
+
+Pour vos tests il est possible de lancer le cron dans votre navigateur [URL de votre site]/modules/reverb/cron.php?code=products 
+
 ### Gestion des synchronisation de vos commandes et stock
+
+
+
+_Remarque :  Il se peut aussi que vous ayez déjà des produits sur le site Reverb mais dont les produits sur PrestaShop n'ont jamais été synchronisés. Si une commande est validé sur Reverb, le module PrestaShop enregistrera la commande sur PrestaShop en précisant dans un message de la commande que le produit n'est pas synchronisé et qu'il faut faire attention à cette commance._
 ### FAQ
