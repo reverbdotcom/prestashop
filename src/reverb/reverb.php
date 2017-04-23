@@ -1104,15 +1104,13 @@ class Reverb extends Module
                 'title' => $this->l('ID'),
                 'width' => 30,
                 'type' => 'int',
-                'filter_key' => 'p.id_product',
-                'value' => 'true'
+                'filter_key' => 'p.id_product'
             ),
             'reverb_id' => array(
                 'title' => $this->l('Reverb ID'),
                 'width' => 70,
                 'type' => 'text',
-                'filter_key' => 'rs.id_sync',
-                'value' => true
+                'filter_key' => 'rs.id_sync'
             ),
             'reference' => array(
                 'title' => $this->l('SKU'),
@@ -1163,7 +1161,7 @@ class Reverb extends Module
                 'filter_key' => 'last_synced',
                 'search' => false,
                 'orderby' => false,
-            )
+            ),
         );
 
         //=========================================
