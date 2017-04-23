@@ -68,7 +68,7 @@ Vous devez attendre quelques minutes pour que PrestaShop s'installe correctement
 
 #### Liens pour accéder aux sites
 
-**Avec la configuration par défaut:**
+Avec la configuration par défaut:
 
 * Front office PrestaShop 1.6: http://localhost:8016/
 * Front office PrestaShop 1.7: http://localhost:8017/
@@ -76,7 +76,7 @@ Vous devez attendre quelques minutes pour que PrestaShop s'installe correctement
 * Back office PrestaShop 1.7: http://localhost:8017/admin-reverb
 * SMTP Mail Catcher: http://localhost:1082/
 
-**Pour accéder à la base de données, vous devez utiliser un logiciel comme MySQL Workbench et vous connectez avec les informations suivantes :**
+Pour accéder à la base de données, vous devez utiliser un logiciel comme MySQL Workbench et vous connectez avec les informations suivantes :
 
 * Hostname: localhost
 * Port: 3317
@@ -123,16 +123,44 @@ Vous devez avoir une logiciel de transfert de fichier comme "_FileZilla_" par ex
 2. Allez à la racine de votre projet PrestaShop.
 3. Transéfer les sources du module "_reverb_" le répertoire "_/modules/_".
 
-![legend](img/ftp.png)
+![upload by FTP](img/ftp.png)
 
 ### Comment mettre à jour votre module Reverb ?
+
+Lorsque Reverb mettra à jour le module sur l'addons de PrestaShop, il vous sera proposé dans la liste des modules dans votre Back offcie PrestaShop une mise à jour du module.
+Sinon par l'intermédiaire de GitHub ou le téléchargement du fichier ZIP, d'appliquer la même méthodologie que le point "_Par FTP_" ou "_Fichier ZIP_".
 
 
 ### Connexion avec votre compte Reverb
 
+Vous devez connecter le module avec Reverb par l'intermédiaire d'un Token qui vous avez au préalable généré sur votre espace Reverb.
+
+#### Comment configurer le module Reverb
+
+Pour configurer sur PrestaShop 1.6 : _Modules & services > modules & services > Trouver le module Reverb > Configure_
+Pour configurer sur PrestaShop 1.7 : _Modules > Modules & services > installed > Reverb > Configure_
+
+#### Connexion
+
+Sélectionnez le mode de fonctionnement test ou production puis saisir votre token Reverb.
+
+![login](img/login.png)
+
 
 ### Configurer les paramètres
+
+Configurer les différentes règles sur la synchronisation des produits :
+
+![configure settings](img/settings.png)
+
+Le champ _PayPal Email_ permet d'associer votre compte PayPal sur la méthode de paiement directement sur Reverb. 
+Ainsi les fonds arriveront directement sur votre compte PayPal.
+
+
 ### Configurer le mapping des catégories 
+
+
+
 ### Configurer vos produits
 ### Gestion des synchronisations de vos produits
 ### Gestion des synchronisation de vos commandes et stock

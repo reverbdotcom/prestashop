@@ -126,9 +126,37 @@ You must have a file transfer software like "_FileZilla_" for example.
 ![legend](img/ftp.png)
 
 ### How do you update the Reverb module ?
+
+When Reverb updates the module on the addons of PrestaShop, you will be offered a module update in the list of modules in your PrestaShop Back Office.
+Else via GitHub or downloading the ZIP file, apply the same methodology as the point "_By FTP_" or "_ZIP package_".
+
 ### Login with your Reverb account
+
+You should connect the module with Reverb via a Token that you have previously generated on your Reverb space.
+
+#### How to configure the Reverb module ?
+
+Configure in PrestaShop 1.6 : _Modules & services > modules & services > Fin the Reverb module > Configure_
+Configure in PrestaShop 1.7 : _Modules > Modules & services > installed > Reverb > Configure_
+
+#### Login
+
+Select the sandbox mode or production and please enter your Reverb Token.
+
+![login](img/login.png)
+
 ### Configure the settings
+
+Configure the different rules in the product sync :
+
+![configure settings](img/settings.png)
+
+The field _PayPal Email_ can associate your PayPal account directly in Reverb.
+Thus, the funds will transfert directly in your PayPal account.
+
 ### Configure the mapping categories 
+
+
 ### Configure your products
 ### Sync management of products
 ### Sync management of Orders and inventory
