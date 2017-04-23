@@ -170,20 +170,30 @@ class ReverbSync
             if (preg_match('/' . Reverb::LIST_ID . 'Filter_/', $key) && !empty($params)) {
                 $fieldWithPrefix = preg_replace('/ps_productFilter_/', '', $key);
                 $field = preg_replace('/p_/', '', $fieldWithPrefix);
+                $field = preg_replace('/rs_/', '', $field);
+                $field = preg_replace('/pl_/', '', $field);
                 $filterKey = $field;
-                switch ($list_field[$field]['type']) {
-                    case 'text':
-                        if (isset($list_field[$field]['filter_key'])) {
-                            $filterKey = $list_field[$field]['filter_key'];
-                        }
-                        $sql->where($filterKey . ' like "%' . $params . '%"');
-                        break;
-                    case 'int':
-                        if (isset($list_field[$field]['filter_key'])) {
-                            $filterKey = $list_field[$field]['filter_key'];
-                        }
-                        $sql->where($filterKey . ' = ' . $params);
-                        break;
+                if (isset($list_field[$field])){
+                    switch ($list_field[$field]['type']) {
+                        case 'text':
+                            if (isset($list_field[$field]['filter_key'])) {
+                                $filterKey = $list_field[$field]['filter_key'];
+                            }
+                            $sql->where($filterKey . ' like "%' . pSQL($params) . '%"');
+                            break;
+                        case 'int':
+                            if (isset($list_field[$field]['filter_key'])) {
+                                $filterKey = $list_field[$field]['filter_key'];
+                            }
+                            $sql->where($filterKey . ' = ' . pSQL($params));
+                            break;
+                        case 'select':
+                            if (isset($list_field[$field]['filter_key'])) {
+                                $filterKey = $list_field[$field]['filter_key'];
+                            }
+                            $sql->where($filterKey . ' like "%' . pSQL($params) . '%"');
+                            break;
+                    }
                 }
             };
         }
