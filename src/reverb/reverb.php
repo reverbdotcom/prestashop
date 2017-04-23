@@ -279,11 +279,11 @@ class Reverb extends Module
     {
         $this->postProcess();
 
+        $module_url = $this->context->link->getAdminLink('AdminModules', true)
+            . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
+
         if ($this->isApiTokenAvailable()) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
-
-            $module_url = $this->context->link->getAdminLink('AdminModules', true)
-                . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
 
             $this->context->smarty->assign(array(
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
@@ -302,6 +302,7 @@ class Reverb extends Module
                 'is_logged' => false,
                 'reverb_product_preview_url' => '',
                 'ps_product_preview_base_url' => '',
+                'module_url' => $module_url
             ));
         }
 
@@ -1103,25 +1104,27 @@ class Reverb extends Module
                 'title' => $this->l('ID'),
                 'width' => 30,
                 'type' => 'int',
-                'filter_key' => 'p.id_product'
+                'filter_key' => 'p.id_product',
+                'value' => 'true'
             ),
             'reverb_id' => array(
                 'title' => $this->l('Reverb ID'),
                 'width' => 70,
                 'type' => 'text',
-                'filter_key' => 'id_sync'
+                'filter_key' => 'rs.id_sync',
+                'value' => true
             ),
             'reference' => array(
                 'title' => $this->l('SKU'),
                 'width' => 140,
                 'type' => 'text',
-                'filter_key' => 'reference'
+                'filter_key' => 'p.reference'
             ),
             'name' => array(
                 'title' => $this->l('Name'),
                 'width' => 140,
                 'type' => 'text',
-                'filter_key' => 'name'
+                'filter_key' => 'pl.name'
             ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
@@ -1129,11 +1132,11 @@ class Reverb extends Module
                 'type' => 'select',
                 'search' => true,
                 'orderby' => true,
-                'cast' => 'intval',
-                'identifier' => 'name',
-                'filter_key' => 'status',
+                'filter_key' => 'rs.status',
                 'badge_success' => true,
-                'list' => array('success', 'error')
+                'list' => array('success' => 'success',
+                                'error' => 'error',
+                                'to_sync' => 'to_sync')
             ),
             'details' => array(
                 'title' => $this->l('Sync Detail'),
@@ -1160,7 +1163,7 @@ class Reverb extends Module
                 'filter_key' => 'last_synced',
                 'search' => false,
                 'orderby' => false,
-            ),
+            )
         );
 
         //=========================================
