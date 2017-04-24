@@ -6,7 +6,7 @@ Cette documentation a pour but d'aider le marchand à installer puis configurer 
 
 ## Sommaire
 
-### Vous êtes developpeur ?
+### Vous êtes développeur ?
 
 1. Pré-requis
 2. Installer votre environement de développement 
@@ -26,7 +26,7 @@ Cette documentation a pour but d'aider le marchand à installer puis configurer 
 10. FAQ
 
 
-## You are developer ?
+## Vous êtes développeur ?
 
 ### Pré-requis
 
@@ -133,7 +133,7 @@ Sinon par l'intermédiaire de GitHub ou le téléchargement du fichier ZIP, d'ap
 
 ### Connexion avec votre compte Reverb
 
-Vous devez connecter le module avec Reverb par l'intermédiaire d'un Token qui vous avez au préalable généré sur votre espace Reverb.
+Vous devez connecter le module avec Reverb par l'intermédiaire d'un Token que vous avez au préalable généré sur votre espace Reverb.
 
 #### Comment configurer le module Reverb
 
@@ -185,7 +185,7 @@ Il faut accéder dans l'onglet "_Sync status_" pour voir la liste des produits e
 
 ![sync](img/sync-status.png)
 
-Il vous ait possible de lancer quelques actions manuelles via ces boutons :
+Il vous est possible de lancer quelques actions manuelles via ces boutons :
 
 ![buttons](img/sync-action.png)
 
@@ -203,9 +203,11 @@ _Remarque : la synchronisation de produit n'est fonctionnelle que dans un seul s
 
 #### Gestion automatique
 
-Pour la gestion de vos tâches CRON sur votre hébergement, nous vous conseillons vivement de vous renseigner auprès de votre fournisseur pour insérer, modifier une tâche CRON.
+Pour la gestion de vos tâches CRON sur votre hébergement, nous vous conseillons vivement de vous renseigner auprès de votre hébergeur pour insérer, modifier une tâche CRON.
 
-    */5 * * * * php [RACINE ROOT du SERVEUR]/modules/reverb/cron.php products > /var/log/cron.log
+    */5 * * * * php [Racine du Projet PrestaShop]/modules/reverb/cron.php products > /var/log/cron.log
+
+_il faut remplacer la valeur avec les crochets par le chemin de votre espace._
 
 Par défaut, cette commande se lance toutes les 5 minutes, ainsi cela permet à votre site d'être à jour en permanence avec votre espace Reverb.com.
 
@@ -213,7 +215,57 @@ Pour vos tests il est possible de lancer le cron dans votre navigateur [URL de v
 
 ### Gestion des synchronisation de vos commandes et stock
 
+Pour pouvoir un fonctionnement optimal, nous vous conseillons de configurer une tâche CRON permettant de lancer en tâche de fond les synchronisations de commandes Reverb vers PrestaShop. Il faut vous renseigner auprès de votre hébergeur pour gérer l'insertion de la commande suivante :
 
+    */8 * * * * php [Racine du Projet PrestaShop]/modules/reverb/cron.php orders > /var/log/cron.log
 
-_Remarque :  Il se peut aussi que vous ayez déjà des produits sur le site Reverb mais dont les produits sur PrestaShop n'ont jamais été synchronisés. Si une commande est validé sur Reverb, le module PrestaShop enregistrera la commande sur PrestaShop en précisant dans un message de la commande que le produit n'est pas synchronisé et qu'il faut faire attention à cette commance._
+_il faut remplacer la valeur avec les crochets par le chemin de votre espace._
+
+#### Un de vos produits a été vendu sur le site de Reverb.com ?
+
+La tâche automatique qui tourne toutes les 8 minutes appelle Reverb.com pour récupérer toutes les commandes prêtes à être expédiées.
+Elles sont ensuite contrôlées et créer dans votre PrestaShop, accessible dans _Commandes > Commandes_
+
+![list orders](img/list-fr-order.png)
+
+Votre commande est créée avec un statut _Paiement accepté_, vous pouvez ensuite traiter votre commande depuis PrestaShop.
+
+Lorsque vous mettez votre commande au statut "_expédiée_", PrestaShop proposera d'éditer dans le bloc _Shipping_ le _Tracking number_
+
+![list orders](img/order-shipping.png)
+
+Vous pouvez visualiser le détail du paiement avec l'information d'où vient la transaction "_Reverb_" :
+
+![list orders](img/order-payment.png)
+
+Dans le bloc message, le module Reverb historise quelques informations afin de pouvoir matcher entre PrestaShop et Reverb.com.
+
+![list orders](img/order-message.png)
+
+#### Un de vos produits a été vendu sur votre site PrestaShop ?
+
+votre produit n'a pas été vendu sur Reverb.com mais sur votre site ecommerce. Au moment de la confirmation de la commande, le module Reverb envoit une notification à Reverb.com afin de mettre à jour le stock du produit. Seulement sur les produits ayant eu une synchronisation !
+
+_Remarque :  Il se peut aussi que vous ayez déjà des produits sur le site Reverb.com mais dont les produits sur PrestaShop n'ont jamais été synchronisés. Si une commande est validée sur Reverb.com, le module enregistrera la commande sur PrestaShop en précisant dans un message de la commande que le produit n'est pas synchronisé et qu'il faut faire attention à cette commande._
+
 ### FAQ
+
+#### Qu’est-ce que Reverb ?
+
+Reverb est la communauté de musiciens la plus importante et à la croissance la plus rapide sur le net. C’est une ressource unique qui permet aux musiciens d’apprendre, de comparer et de trouver le bon matériel au meilleur prix ainsi qu’une plateforme simple où les vendeurs privés et les magasins de musique peuvent vendre rapidement leur matériel. Reverb est à la fois un voyage et une destination.
+
+#### Comment se connecter à son compte Reverb.com dans le module PrestaShop ?
+
+Vous devez aller sur le site Reverb.com et vous connectez à votre compte vendeur. Ensuite il faut aller dans les paramètres de votre compte et accéder à API & Integration.
+Une fois le token généré, vous faites un copier/coller dans l'onglet de connexion du module Reverb.Valider votre saisit pour vous connectez.
+
+#### Comment Reverb.com peut reconnaître mes catégories de produit ?
+
+Le module de Reverb permet de sélectionner votre catégorie de produit et l'associer à une catégorie Reverb. Il faut se rendre dans la configuration du module Reverb et l'onglet Product type mapping.
+
+#### Et si la synchronisation ne fonctionne pas ?
+
+* Vérifier si le token de connexion est valide
+* Vérifier que chaque produit éligible à Reverb est bien paramétrés
+* Vérifier les logs dans l'onglet logs
+* si le problème persiste, veuillez contacter le support de Reverb (https://reverb.com/fr/page/contact)
