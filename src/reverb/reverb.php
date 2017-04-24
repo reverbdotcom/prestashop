@@ -127,6 +127,7 @@ class Reverb extends Module
             `id_attribute` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
             `reverb_enabled` tinyint(1),
+            `model` varchar(150),
             `id_lang` ' . (version_compare(_PS_VERSION_, '1.7', '<') ? 'int(10) unsigned' : 'int(11)') . ' NOT NULL,
             `offers_enabled` tinyint(1),
             `finish` varchar(50),
@@ -804,6 +805,7 @@ class Reverb extends Module
 
             $this->context->smarty->assign(array(
                 'reverb_enabled' => $attribute['reverb_enabled'],
+                'reverb_model' => $attribute['model'],
                 'reverb_finish' => $attribute['finish'],
                 'reverb_condition' => $attribute['id_condition'],
                 'reverb_year' => $attribute['year'],
@@ -937,6 +939,7 @@ class Reverb extends Module
 
         if (isset($id_product) && $id_product) {
             $settingsReverb = Tools::getValue('reverb_enabled');
+            $model = Tools::getValue('reverb_model');
             $condition = Tools::getValue('reverb_condition');
             $finish = Tools::getValue('reverb_finish');
             $year = Tools::getValue('reverb_year');
@@ -951,6 +954,7 @@ class Reverb extends Module
             //TODO Controle de validité ?
             $values = array(
                 'reverb_enabled' => pSQL($settingsReverb),
+                'model' => pSQL($model),
                 'id_condition' => pSQL($condition),
                 'finish' => pSQL($finish),
                 'year' => pSql($year),
@@ -1104,25 +1108,25 @@ class Reverb extends Module
                 'title' => $this->l('ID'),
                 'width' => 30,
                 'type' => 'int',
-                'filter_key' => 'p.id_product'
+                'filter_key' => 'p!id_product'
             ),
             'reverb_id' => array(
                 'title' => $this->l('Reverb ID'),
                 'width' => 70,
                 'type' => 'text',
-                'filter_key' => 'rs.id_sync'
+                'filter_key' => 'rs!id_sync'
             ),
             'reference' => array(
                 'title' => $this->l('SKU'),
                 'width' => 140,
                 'type' => 'text',
-                'filter_key' => 'p.reference'
+                'filter_key' => 'p!reference'
             ),
             'name' => array(
                 'title' => $this->l('Name'),
                 'width' => 140,
                 'type' => 'text',
-                'filter_key' => 'pl.name'
+                'filter_key' => 'pl!name'
             ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
@@ -1130,7 +1134,7 @@ class Reverb extends Module
                 'type' => 'select',
                 'search' => true,
                 'orderby' => true,
-                'filter_key' => 'rs.status',
+                'filter_key' => 'rs!status',
                 'badge_success' => true,
                 'list' => array('success' => 'success',
                                 'error' => 'error',
@@ -1144,7 +1148,7 @@ class Reverb extends Module
                 'orderby' => 'true',
                 'filter_key' => 'details'
             ),
-            'last_sync' => array(
+            'date' => array(
                 'title' => $this->l('Last synced'),
                 'width' => 140,
                 'type' => 'datetime',

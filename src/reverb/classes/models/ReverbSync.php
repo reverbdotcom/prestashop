@@ -101,7 +101,7 @@ class ReverbSync
             'rs.reverb_id as reverb_id,' .
             'rs.details as details,' .
             'rs.reverb_slug as reverb_slug, ' .
-            'rs.date as last_sync, ' .
+            'rs.date as date, ' .
             'pa.id_product_attribute as id_product_attribute'
         );
 
@@ -165,33 +165,45 @@ class ReverbSync
     protected function processFilter($list_field, DbQuery $sql)
     {
         $values = Tools::getAllValues();
+        $sql_filter = '';
 
         foreach ($values as $key => $params) {
             if (preg_match('/' . Reverb::LIST_ID . 'Filter_/', $key) && !empty($params)) {
                 $fieldWithPrefix = preg_replace('/ps_productFilter_/', '', $key);
-                $field = preg_replace('/p_/', '', $fieldWithPrefix);
-                $field = preg_replace('/rs_/', '', $field);
-                $field = preg_replace('/pl_/', '', $field);
-                $filterKey = $field;
+                $field = preg_replace('/pl!/', '', $fieldWithPrefix);
+                $field = preg_replace('/rs!/', '', $field);
+                $field = preg_replace('/pl!/', '', $field);
+                $filterKey = $fieldWithPrefix;
                 if (isset($list_field[$field])){
+                    if (isset($list_field[$field]['filter_key'])) {
+                        $filterKey = preg_replace('/!/', '.',$list_field[$field]['filter_key']);
+                    }
                     switch ($list_field[$field]['type']) {
                         case 'text':
-                            if (isset($list_field[$field]['filter_key'])) {
-                                $filterKey = $list_field[$field]['filter_key'];
-                            }
                             $sql->where($filterKey . ' like "%' . pSQL($params) . '%"');
                             break;
                         case 'int':
-                            if (isset($list_field[$field]['filter_key'])) {
-                                $filterKey = $list_field[$field]['filter_key'];
-                            }
                             $sql->where($filterKey . ' = ' . pSQL($params));
                             break;
                         case 'select':
-                            if (isset($list_field[$field]['filter_key'])) {
-                                $filterKey = $list_field[$field]['filter_key'];
-                            }
                             $sql->where($filterKey . ' like "%' . pSQL($params) . '%"');
+                            break;
+                        case 'datetime':
+                            if (isset($params[0]) && !empty($params[0])) {
+                                if (!Validate::isDate($params[0])) {
+                                    $this->errors[] = $this->trans('The \'From\' date format is invalid (YYYY-MM-DD)', array(), 'Admin.Notifications.Error');
+                                } else {
+                                    $sql->where($filterKey .' >= \''.pSQL(Tools::dateFrom($params[0])).'\'');
+                                }
+                            }
+
+                            if (isset($params[1]) && !empty($params[1])) {
+                                if (!Validate::isDate($value[1])) {
+                                    $this->errors[] = $this->trans('The \'To\' date format is invalid (YYYY-MM-DD)', array(), 'Admin.Notifications.Error');
+                                } else {
+                                    $sql->where($filterKey . ' <= \''.pSQL(Tools::dateFrom($params[0])).'\'');
+                                }
+                            }
                             break;
                     }
                 }
