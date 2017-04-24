@@ -79,6 +79,22 @@
                       data-toggle="tooltip"
                       data-html="true"
                       title=""
+                      data-original-title="{l s='' mod='reverb'}">{l s='Model' mod='reverb'}
+                </span>
+            </label>
+            <div class="col-lg-9">
+                <input type="text" name="reverb_model" class="form-control reverb-model"
+                       value="{$reverb_model|escape:'htmlall':'UTF-8'}"/>
+            </div>
+        </div>
+    </div>
+    <div class="row form-group">
+        <div class="col-md-12">
+            <label class="col-lg-3">
+                <span class="label-tooltip"
+                      data-toggle="tooltip"
+                      data-html="true"
+                      title=""
                       data-original-title="{l s='' mod='reverb'}">{l s='Finish' mod='reverb'}
                 </span>
             </label>

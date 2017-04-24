@@ -119,3 +119,7 @@ table.ps_product tr {
 .bootstrap .label-to_sync {
     background-color: #fbbb22;
 }
+
+.alert-info {
+    margin: 15px 0!important;
+}

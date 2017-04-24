@@ -36,7 +36,7 @@ class ProductMapper
         $product = new \ProductReverb();
 
         $product->make = $product_ps['manufacturer_name'];
-        $product->model = $product_ps['name'];
+        $product->model = $product_ps['model'];
         $product->has_inventory = $product_ps['quantity_stock'] > 0 ? 1 : false;
         $product->inventory = $product_ps['quantity_stock'];
 
