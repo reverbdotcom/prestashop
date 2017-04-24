@@ -1,6 +1,6 @@
 # Reverb.com
-[![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/jprotin/reverb-prestashop/develop/LICENSE.md)
-[![Circle CI](https://circleci.com/gh/jprotin/reverb-prestashop.svg?style=shield&circle-token=65d5d22b23e308ffc54b2884809b7b871a41bc8e)](https://circleci.com/gh/jprotin/reverb-prestashop)
+[![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/jprotin/reverb-prestashop/develop/LICENSE.md)  
+[![CircleCI](https://circleci.com/gh/jprotin/reverb-prestashop/tree/develop.svg?style=svg)](https://circleci.com/gh/jprotin/reverb-prestashop/tree/develop)
 
 ## Getting started
 
