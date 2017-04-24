@@ -226,7 +226,7 @@ _il faut remplacer la valeur avec les crochets par le chemin de votre espace._
 La tâche automatique qui tourne toutes les 8 minutes appelle Reverb.com pour récupérer toutes les commandes prêtes à être expédiées.
 Elles sont ensuite contrôlées et créer dans votre PrestaShop, accessible dans _Commandes > Commandes_
 
-![list orders](img/list-fr-order.png)
+![list orders](img/liste-fr-order.png)
 
 Votre commande est créée avec un statut _Paiement accepté_, vous pouvez ensuite traiter votre commande depuis PrestaShop.
 

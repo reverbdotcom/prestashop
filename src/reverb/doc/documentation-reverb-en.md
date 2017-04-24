@@ -222,7 +222,7 @@ _il faut remplacer la valeur avec les crochets par le chemin de votre espace._
 La tâche automatique qui tourne toutes les 8 minutes appelle Reverb.com pour récupérer toutes les commandes prêtes à être expédiées.
 Elles sont ensuite contrôlées et créer dans votre PrestaShop, accessible dans _Commandes > Commandes_
 
-![list orders](img/list-fr-order.png)
+![list orders](img/liste-fr-order.png)
 
 Votre commande est créée avec un statut _Paiement accepté_, vous pouvez ensuite traiter votre commande depuis PrestaShop.
 
@@ -264,4 +264,4 @@ The Reverb module allows you to select your product category and associate it wi
 * Control if the token is valid
 * Control that each eligible product in Reverb is setup correctly
 * Control the logs in Logs tab
-* If the problem persist, contact the Reverb support
+* If the problem persist, contact the Reverb support (https://reverb.com/fr/page/contact)
