@@ -4,8 +4,9 @@
 
 ## Getting started
 
-Read the **[project documentation][doc-home-fr]** for comprehensive information about the requirements, general workflow and installation procedure in french.
-Read the **[project documentation][doc-home-en]** for comprehensive information about the requirements, general workflow and installation procedure in english.  
+Read the **[project documentation][doc-home-fr] in French** for comprehensive information about the requirements, general workflow and installation procedure.
+
+Read the **[project documentation][doc-home-en] in English** for comprehensive information about the requirements, general workflow and installation procedure.  
 
 ## Resources
 - [Full project documentation][doc-home-fr] — To have a comprehensive understanding of the workflow and get the installation procedure in french
