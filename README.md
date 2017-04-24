@@ -1,75 +1,29 @@
-# Rever project
+# Reverb.com
+[![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/jprotin/reverb-prestashop/develop/LICENSE.md)
+[![Circle CI](https://circleci.com/gh/jprotin/reverb-prestashop.svg?style=shield&circle-token=65d5d22b23e308ffc54b2884809b7b871a41bc8e)](https://circleci.com/gh/jprotin/reverb-prestashop)
 
-How to test the Reverb plugin ?
+## Getting started
 
-Command line :
+Read the **[project documentation][doc-home-fr]** for comprehensive information about the requirements, general workflow and installation procedure in french.
+Read the **[project documentation][doc-home-en]** for comprehensive information about the requirements, general workflow and installation procedure in english.  
 
-<code>docker-compose build</code>
+## Resources
+- [Full project documentation][doc-home-fr] — To have a comprehensive understanding of the workflow and get the installation procedure in french
+- [Full project documentation][doc-home-fr] — To have a comprehensive understanding of the workflow and get the installation procedure in english
+- [Reverb Support Center][reverb-help] — To get technical help from Reverb
+- [Issues][project-issues] — To report issues, submit pull requests and get involved (see [Apache 2.0 License][project-license])
+- [Change log][project-changelog] — To check the changes of the latest versions
+- [Contributing guidelines][project-contributing] — To contribute to our source code
 
-<code>docker-compose up -d</code>
+## License
 
-Open a browse and go to http://localhost:8016
-Open a browse and go to http://localhost:8017
+The **Reverb.com** is available under the **Apache 2.0 License**. Check out the [license file][project-license] for more information.
 
-Access to the Back Office http://localhost:8016/admin-reverb
-Access to the Back Office http://localhost:8017/admin-reverb
 
-Login / Password : demo@reverb.com / 123456
-
-Access to reverb container
-
-<code>docker exec -it reverb bash</code>
-
-Compte Rerverb de sandbox:
-https://sandbox.reverb.com
-vincent.dossantos@gmail.com / reverb-test-account
-
-Token : 5b520e1fc15b429b3f6693c03a3bafa09b536b0b8e00db9c1cc746c12ff44f71
-
-A récupérer ici : https://sandbox.reverb.com/my/api_settings
-
-7-view-mapping-categories
-ALTER TABLE ps_reverb_mapping MODIFY reverb_code varchar(50);
-
-6-view-sync-status V2
-mysql -h $DB_SERVER -u $DB_USER -p$DB_PASSWD $DB_NAME < /tmp/sql/reverb_ps_product.sql
-
-To launch sync CRON from container:
-<code>php /var/www/html/modules/reverb/crons/reverb-products-sync.php</code>
-
-curl -X POST -H "Authorization: Bearer 5b520e1fc15b429b3f6693c03a3bafa09b536b0b8e00db9c1cc746c12ff44f71" \
--H "Accept-Version: 3.0" -H \
-"Content-Type: application/hal+json" \
-https://sandbox.reverb.com/api/listings --data \
-'{
-   "make": "Fender",
-   "model": "Stratocaster",
-   "categories": [{
-     "uuid": "af044b2e-88b9-4b3d-97f3-1d7b7c0831af"
-   }],
-   "condition": {
-     "uuid": "fbf35668-96a0-4baa-bcde-ab18d6b1b329"
-   },
-   "photos": [
-     "https://www.easyzic.com/common/datas/dossiers/6/6/acoustique-yamaha-c40-1.jpg"
-   ],
-   "description": "Awesome guitar",
-   "finish": "Sunburst",
-   "price": {
-     "amount": "5000.00",
-     "currency": "USD"
-   },
-   "title": "my favorite fender stratocaster",
-   "year": "1960s",
-   "sku": "vdossantos-guitar-4",
-   "has_inventory": true,
-   "inventory": 5,
-   "handmade": true,
-   "location": {
-     "country_code": "USA",
-     "region": "IL",
-     "locality": "Chicago"
-   },
-   "shipping_profile_id": "210"
- }
-'
+[doc-home-fr]: https://github.com/jprotin/reverb-prestashop/blob/develop/src/reverb/doc/documentation-reverb-fr.md
+[doc-home-en]: https://github.com/jprotin/reverb-prestashop/blob/develop/src/reverb/doc/documentation-reverb-fr.md
+[reverb-help]: https://reverb.com/fr/page/contact
+[project-issues]: https://github.com/jprotin/reverb-prestashop
+[project-license]: LICENSE.md
+[project-changelog]: CHANGELOG.md
+[project-contributing]: CONTRIBUTING.md
