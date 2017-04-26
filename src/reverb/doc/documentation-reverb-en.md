@@ -151,9 +151,6 @@ Configure the different rules in the product sync :
 
 ![configure settings](img/settings.png)
 
-The field _PayPal Email_ can associate your PayPal account directly in Reverb.
-Thus, the funds will transfert directly in your PayPal account.
-
 ### Configure the mapping categories 
 
 The module proposes to associate the categories of your catalog with that of Reverb.

@@ -123,3 +123,7 @@ table.ps_product tr {
 .alert-info {
     margin: 15px 0!important;
 }
+
+.add-shipping {
+    text-align: right;
+}

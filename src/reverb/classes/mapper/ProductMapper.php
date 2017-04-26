@@ -71,6 +71,9 @@ class ProductMapper
     private function processMappingAccordingSettings(ProductReverb $product, $product_ps, $productExists)
     {
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION)) {
+            if (empty($product_ps['description'])) {
+                throw new Exception('Description is empty.', 1);
+            }
             $product->description = $product_ps['description'];
         }
 
@@ -88,11 +91,6 @@ class ProductMapper
 
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_AUTO_PUBLISH)) {
             $product->publish = 1;
-        }
-
-        if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PAYPAL)) {
-            $seller = new Reverb\Mapper\Models\Seller($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_PAYPAL));
-            $product->seller = $seller;
         }
 
         return $product;

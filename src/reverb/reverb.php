@@ -29,7 +29,6 @@ class Reverb extends Module
     const KEY_SETTINGS_PHOTOS = 'settings_photos';
     const KEY_SETTINGS_CONDITION = 'settings_condition';
     const KEY_SETTINGS_PRICE = 'settings_price';
-    const KEY_SETTINGS_PAYPAL = 'settings_paypal';
 
     const LIST_ID = 'ps_product';
     const LIST_CATEGORY_ID = 'ps_mapping_category';
@@ -127,7 +126,7 @@ class Reverb extends Module
             `id_attribute` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
             `reverb_enabled` tinyint(1),
-            `model` varchar(150),
+            `model` varchar(50),
             `id_lang` ' . (version_compare(_PS_VERSION_, '1.7', '<') ? 'int(10) unsigned' : 'int(11)') . ' NOT NULL,
             `offers_enabled` tinyint(1),
             `finish` varchar(50),
@@ -199,7 +198,6 @@ class Reverb extends Module
 
 
         return parent::install() &&
-            $this->createAdminTab() &&
             $this->registerHook('backOfficeHeader') &&
             $this->registerHook('displayBackOfficeHeader') &&
             $this->registerHook('displayAdminProductsExtra') &&
@@ -211,7 +209,8 @@ class Reverb extends Module
             $this->registerHook('actionObjectProductUpdateAfter') &&
             $this->registerHook('actionOrderStatusPostUpdate') &&
             $this->registerHook('actionAdminOrdersTrackingNumberUpdate') &&
-            $this->registerHook('actionOrderEdited');
+            $this->registerHook('actionOrderEdited') &&
+            $this->createAdminTab();
     }
 
     public function uninstall()
@@ -517,13 +516,7 @@ class Reverb extends Module
                 'name' => self::KEY_SETTINGS_PRICE,
                 'label' => $this->l('Price'),
                 'desc' => $this->l('On first time listing create, we will always sync price. If you set special prices on Reverb, turn off this settings to avoid updating price.'),
-            ),
-            array(
-                'name' => self::KEY_SETTINGS_PAYPAL,
-                'label' => $this->l('Paypal email'),
-                'desc' => $this->l('Put your Paypal email'),
-                'type' => 'text'
-            ),
+            )
         );
 
         $input = array();
@@ -592,7 +585,6 @@ class Reverb extends Module
             self::KEY_SETTINGS_DESCRIPTION => $this->getReverbConfig(self::KEY_SETTINGS_DESCRIPTION),
             self::KEY_SETTINGS_PHOTOS => $this->getReverbConfig(self::KEY_SETTINGS_PHOTOS),
             self::KEY_SETTINGS_PRICE => $this->getReverbConfig(self::KEY_SETTINGS_PRICE),
-            self::KEY_SETTINGS_PAYPAL => $this->getReverbConfig(self::KEY_SETTINGS_PAYPAL),
         );
     }
 
