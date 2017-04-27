@@ -158,7 +158,13 @@ class ReverbProduct extends ReverbClient
             $status = self::REVERB_CODE_ERROR;
         }
 
-        return $this->insertOrUpdateSyncStatus($product['id_product'], $product['id_product_attribute'], $origin, $status, $response['message'], $reverbSlug, $reverbId);
+        $message = $response['message'];
+
+        if (count($response['warnings'])) {
+            $message .= '<br /><span style="color: #E08F95">' . implode('<br />', $response['warnings']) . '</span>';
+        }
+
+        return $this->insertOrUpdateSyncStatus($product['id_product'], $product['id_product_attribute'], $origin, $status, $message, $reverbSlug, $reverbId);
     }
 
     private function insertOrUpdateSyncStatus($id_product, $id_product_attribute, $origin, $status, $message, $reverbSlug = null, $reverbId = null)
