@@ -31,12 +31,12 @@ class ReverbOrders
 
     /**
      * Find an Reverb order by reference
-     * @param $reference
+     * @param $id_order
      * @return array|false|mysqli_result|null|PDOStatement|resource
      */
-    public function getOrderByReference($reference)
+    public function getOrderByPsId($id_order)
     {
-        return $this->getOrders(array('reverb_order_number' => $reference), true);
+        return $this->getOrders(array('id_order' => $id_order), true);
     }
 
     /**

@@ -860,24 +860,29 @@ class Reverb extends Module
 
         if (!empty($id_order)) {
             $order = new Order($id_order);
-            $reverbOrder = $this->reverbOrders->getOrderByReference($order->reference);
+            $reverbOrder = $this->reverbOrders->getOrderByPsId($id_order);
             if (!empty($reverbOrder)) {
                 $this->logs->infoLogs(' - Order ' . $id_order . ' : ' . $order->reference . ' comes from Reverb !');
 
                 $trackingNumber = Tools::getValue('shipping_tracking_number');
                 if (!empty($trackingNumber)) {
-                    $this->reverbOrders->update($id_order, array(
+                    $this->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
                         'shipping_tracker' => $trackingNumber,
-                        'status' => Reverb,
-                        Orders::REVERB_ORDERS_STATUS_SHIPPING_SENT
+                        'status' => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT
                     ));
                     $reverbOrders = new \Reverb\ReverbOrders($this);
 
                     $carrier = new Carrier((int)Tools::getValue('shipping_carrier'), $this->language_id);
                     $provider = $carrier->name;
                     $reverbOrders->setOrderShip($reverbOrder['reverb_order_number'], $provider, $trackingNumber);
+                } else {
+                    $this->logs->infoLogs('Empty $trackingNumber !');
                 }
+            } else {
+                $this->logs->infoLogs('Empty $reverbOrder with PS id ' . $id_order);
             }
+        } else {
+            $this->logs->infoLogs('Empty $id_order !');
         }
     }
 
@@ -902,7 +907,7 @@ class Reverb extends Module
             $orderState = new OrderState($id_order_state, $this->language_id);
             $this->logs->infoLogs(' - Order state = ' . $orderState->name . ' delivery = ' . $orderState->delivery);
             if ($orderState->delivery) {
-                $reverbOrder = $this->reverbOrders->getOrderByReference($order->reference);
+                $reverbOrder = $this->reverbOrders->getOrderByPsId($id_order);
                 if (!empty($reverbOrder) && $reverbOrder['status'] == ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED) {
                     $this->logs->infoLogs(' - Order ' . $id_order . ' : ' . $order->reference . ' comes from Reverb and not sent yet !');
 
