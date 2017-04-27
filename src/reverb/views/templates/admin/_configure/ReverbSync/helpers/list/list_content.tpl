@@ -88,7 +88,7 @@
             {if isset($params.position)}
                 id="td_{if !empty($position_group_identifier)}{$position_group_identifier|escape:'htmlall':'UTF-8'}{else}0{/if}_{$tr.$identifier|escape:'htmlall':'UTF-8'}{if $smarty.capture.tr_count > 1}_{($smarty.capture.tr_count - 1)|intval}{/if}"
             {/if}
-            class="reverb-buttons {strip}{if !$no_link}pointer{/if}
+            style="min-width: 250px" class="reverb-buttons {strip}{if !$no_link}pointer{/if}
                             {if isset($params.position) && $order_by == 'position'  && $order_way != 'DESC'} dragHandle{/if}
                             {if isset($params.class)} {$params.class|escape:'htmlall':'UTF-8'}{/if}
                             {if isset($params.align)} {$params.align|escape:'htmlall':'UTF-8'}{/if}{/strip}"
@@ -107,6 +107,7 @@
         <span class="label {if {$tr.$key}}label-{$tr.$key|escape:'htmlall':'UTF-8'}{/if}">
 			{$smarty.block.parent}
         </span>
+        <div class="icon-status loading-mask" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}">Synchronisation</div>
     {elseif $key == 'reverb_slug'}
         <a href="#" title="" data-id="{$tr.$identifier|escape:'htmlall':'UTF-8'}" class="btn btn-default btn-view-sync" title="Syncronization"><i class="icon-refresh"></i></a>
         {if $ps_product_preview_base_url != ''}
@@ -116,9 +117,6 @@
             <a href="{$reverb_product_preview_url|escape:'htmlall':'UTF-8'}{if $tr.$key}{$tr.$key}{/if}" title="" target="_blank" class="btn btn-default btn-reverb-preview{if !$tr.$key} hide-ps{/if}"><i class="icon-search-plus"> Preview on Reverb</i></a>
         {/if}
     {elseif $key == 'icon'}
-        <div class="icon-status loading-mask" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}">Synchronisation</div>
-        <div class="icon-status success" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}-success">Synchronisation success</div>
-        <div class="icon-status error" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}-error">Synchronisation error</div>
     {else}
         {$smarty.block.parent}
     {/if}

@@ -153,9 +153,6 @@ Configurer les différentes règles sur la synchronisation des produits :
 
 ![configure settings](img/settings.png)
 
-Le champ _PayPal Email_ permet d'associer votre compte PayPal sur la méthode de paiement directement sur Reverb. 
-Ainsi les fonds arriveront directement sur votre compte PayPal.
-
 
 ### Configurer le mapping des catégories 
 

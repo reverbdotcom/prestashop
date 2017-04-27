@@ -345,18 +345,27 @@
         return false;
     }
 
+    /**
+     * Init Shipping Method with Everywhere, Europe and France
+     */
+    function initShippingMethod() {
+        var listShipping = ['XX','EUR_EU','FR'];
+        listShipping.forEach( function(s) {
+                var lastTr = $('#shipping-methods-table tr').last();
+                var region = lastTr.find('select.reverb-shipping-region').val(s);
+                $('#add-shipping-method').click();
+            }
+        );
+    }
+
     $(document).ready(function () {
         showShippingMode($('#shipping_select').val());
-
-        $('#shipping_select').change(function () {
-            showShippingMode($(this).val());
-        });
 
         $('#add-shipping-method').click(function () {
             var lastTr = $('#shipping-methods-table tr').last();
             var region = lastTr.find('select.reverb-shipping-region').val();
             var rate = lastTr.find('input.reverb-shipping-rate').val();
-            if (region == '' || rate == '') {
+            if (region == '') {
                 showErrorMessage("{l s='Please fill last shipping region and method' mod='reverb'}")
             } else {
                 var newTr = lastTr.clone();
@@ -366,6 +375,14 @@
                 newTr.appendTo('#shipping-methods-table');
             }
             return false;
+        });
+
+        {if !($reverb_shipping_methods|count)}
+            initShippingMethod();
+        {/if}
+
+        $('#shipping_select').change(function () {
+            showShippingMode($(this).val());
         });
     });
 </script>
