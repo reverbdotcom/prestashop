@@ -1,5 +1,5 @@
 #!/bin/sh -e
 
-sudo rm src/reverb/logs/*
+sudo rm -f src/reverb/logs/*.txt
 
 

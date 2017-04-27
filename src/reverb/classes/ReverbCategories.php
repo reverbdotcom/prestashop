@@ -43,9 +43,11 @@ class ReverbCategories extends ReverbClient
 
         $formattedCategories = array();
 
-        foreach ($categories as $category) {
-            $formattedCategories[$category['uuid']] = $category['name'];
-            $formattedCategories = array_merge($formattedCategories, $this->getSubCategories($category));
+        if (!empty($categories) && is_array($categories)) {
+            foreach ($categories as $category) {
+                $formattedCategories[$category['uuid']] = $category['name'];
+                $formattedCategories = array_merge($formattedCategories, $this->getSubCategories($category));
+            }
         }
 
         return $formattedCategories;
