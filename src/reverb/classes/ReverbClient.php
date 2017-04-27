@@ -264,7 +264,7 @@ class ReverbClient extends Client
         $content = $response->getBody()->getContents();
         if (!$array = json_decode($content, true)) {
             $this->logRequestMessage(var_export($content, true));
-            $this->convertException(new \Exception('Api response is not a json'));
+            return $this->convertException(new \Exception('Api response is not a json'));
         }
         $this->logRequestMessage('### RESPONSE ###');
         $this->logRequestMessage(var_export($array, true));
