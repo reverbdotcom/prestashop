@@ -165,7 +165,7 @@ class ReverbClient extends Client
 
         if ($validKey) {
             if (!$uuid && !isset($list[$key])) {
-                return $this->convertException(new \Exception($this->getEndPoint() . ' not found'));
+                $this->convertException(new \Exception($this->getEndPoint() . ' not found'));
             }
             return $uuid ? $list : $list[$key];
         } else {
@@ -250,7 +250,7 @@ class ReverbClient extends Client
 
             return $this->convertResponse($response);
         } catch (\Exception $e) {
-            return $this->convertException($e);
+            $this->convertException($e);
         }
     }
 
@@ -284,10 +284,13 @@ class ReverbClient extends Client
         if ($e instanceof ClientException) {
             $message = json_decode($e->getResponse()->getBody()->getContents(), true);
             $this->module->logs->errorLogs(var_export($message, true));
-            return $message;
+            if (is_array($message)) {
+                $error = implode('<br />', $message);
+            }
+            throw new \Exception($error, 1);
         }
 
-        return $e->getMessage();
+        throw $e;
     }
 
     /**
