@@ -26,20 +26,38 @@ class ProductMapper
     }
 
     /**
+     *  Validate Product
+     *
+     * @param $product_ps
+     * @throws Exception
+     */
+    private function validateProductForSync($product_ps){
+        if (empty($product_ps['manufacturer_name'])) {
+            throw new Exception('Manufacturer is empty.', 1);
+        }
+
+        if (empty($product_ps['description'])) {
+            throw new Exception('Description is empty.', 1);
+        }
+    }
+
+    /**
      *  Map array prestashop To Reverb's model
      *
      * @param array $product_ps
      * @param bool $productExists
+     * @throws Exception
      */
     public function processMapping($product_ps, $productExists)
     {
         $product = new \ProductReverb();
 
+        $this->validateProductForSync($product_ps);
+
         $product->make = $product_ps['manufacturer_name'];
         $product->model = $product_ps['model'];
         $product->has_inventory = $product_ps['quantity_stock'] > 0 ? 1 : false;
         $product->inventory = $product_ps['quantity_stock'];
-
         $product->sku = $product_ps['reference'];
         $product->upc = $product_ps['upc'];
         $product->publish = false;
@@ -51,12 +69,8 @@ class ProductMapper
         $product->origin_country_code = $product_ps['origin_country_code'];
         $product->year = $product_ps['year'];
         $product->seller_cost = $product_ps['wholesale_price'];
-
-
-        $product = $this->mapShipping($product, $product_ps);
-
         $product->tax_exempt = null;
-
+        $product = $this->mapShipping($product, $product_ps);
         $product = $this->processMappingAccordingSettings($product, $product_ps, $productExists);
 
         $this->request = $product;
@@ -71,9 +85,6 @@ class ProductMapper
     private function processMappingAccordingSettings(ProductReverb $product, $product_ps, $productExists)
     {
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_DESCRIPTION)) {
-            if (empty($product_ps['description'])) {
-                throw new Exception('Description is empty.', 1);
-            }
             $product->description = $product_ps['description'];
         }
 

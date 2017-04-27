@@ -365,7 +365,7 @@
             var lastTr = $('#shipping-methods-table tr').last();
             var region = lastTr.find('select.reverb-shipping-region').val();
             var rate = lastTr.find('input.reverb-shipping-rate').val();
-            if (region == '' || rate == '') {
+            if (region == '') {
                 showErrorMessage("{l s='Please fill last shipping region and method' mod='reverb'}")
             } else {
                 var newTr = lastTr.clone();
@@ -377,7 +377,9 @@
             return false;
         });
 
-        initShippingMethod();
+        {if !($reverb_shipping_methods|count)}
+            initShippingMethod();
+        {/if}
 
         $('#shipping_select').change(function () {
             showShippingMode($(this).val());

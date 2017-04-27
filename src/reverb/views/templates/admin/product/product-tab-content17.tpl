@@ -347,7 +347,9 @@
             return false;
         });
 
+        {if !($reverb_shipping_methods|count)}
         initShippingMethod();
+        {/if}
 
         $('#shipping_select').change(function () {
             showShippingMode($(this).val());

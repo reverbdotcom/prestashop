@@ -1134,7 +1134,7 @@ class Reverb extends Module
             ),
             'details' => array(
                 'title' => $this->l('Sync Detail'),
-                'width' => 200,
+                'width' => 300,
                 'type' => 'text',
                 'search' => 'true',
                 'orderby' => 'true',
@@ -1150,14 +1150,7 @@ class Reverb extends Module
                 'title' => '',
                 'search' => false,
                 'orderby' => false,
-            ),
-            'icon' => array(
-                'title' => '',
-                'type' => 'text',
-                'filter_key' => 'last_synced',
-                'search' => false,
-                'orderby' => false,
-            ),
+            )
         );
 
         //=========================================

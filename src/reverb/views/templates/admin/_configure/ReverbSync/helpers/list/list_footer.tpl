@@ -26,12 +26,14 @@
 {block name="after"}
 	<script type="text/javascript">
 
-        function showReverbMessage(id, status, message)
+        function showReverbMessage(id, status, message, tr)
         {
-            $('#icon-' + id).hide();
-            $('#icon-' + id + '-' + status)
-                .fadeIn(2000)
-                .fadeOut(2000);
+            tr.find('.reverb-sync-details').html(message);
+
+            // Update sync status
+            var syncLoader = tr.find('.reverb-sync-status .icon-status');
+
+            syncLoader.fadeIn(2000).fadeOut(300);
 
             if (status == 'success') {
                 showSuccessMessage(message);
@@ -49,6 +51,8 @@
             syncStatus.removeClass('label-success').removeClass('label-error').removeClass('label-to_sync')
                 .addClass('label-' + response.status)
                 .html(response.status);
+
+            syncStatus.fadeIn(2301);
 
             // Update Reverb ID
             if (response['reverb-id'] !== 'undefined') {
@@ -75,6 +79,8 @@
 		    var link = $(this);
 		    link.attr('disabled', 'disabled');
 		    var tr =  $(this).parents('tr');
+            var syncStatus = tr.find('.reverb-sync-status span');
+            syncStatus.hide();
 		    var id =  $(this).data('id');
 		    $('#icon-' + id).fadeIn();
             $.ajax({
@@ -84,8 +90,7 @@
                 data: "ajax=1&controller=AdminReverbConfiguration&token={getAdminToken tab='AdminReverbConfiguration'}&action=syncronizeProduct&identifier="+ $(this).data('id'),
                 dataType: 'json',
                 success: function (response) {
-                    console.log(response);
-                    showReverbMessage(id, response.status, response.message);
+                    showReverbMessage(id, response.status, response.message, tr);
                     showReverbInformations(response, tr);
                 },
                 error: function (response) {
