@@ -71,8 +71,13 @@ class ReverbLogs
     private function writeLogs($file, $msg)
     {
         if ($this->enable) {
-            $fp = fopen(_PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-' . $file . '-logs.txt', 'r+');
-            rewind($fp);
+            $file = _PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-' . $file . '-logs.txt';
+            if (!file_exists($file)) {
+                $fp = fopen($file, 'a+');
+            } else {
+                $fp = fopen($file, 'r+');
+                rewind($fp);
+            }
             fputs($fp, '## ' . date('Y-m-d H:i:s') . ' : ' . $msg . PHP_EOL);
             fclose($fp);
         }
