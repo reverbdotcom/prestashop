@@ -456,7 +456,7 @@ class Reverb extends Module
                         'id' => 'token_production',
                         'col' => 3,
                         'type' => 'text',
-                        'desc' => '<a id="reverb-url-help" href="" target="_blank">' . $this->l('From https://reverb.com/my/api_settings') . '</a>',
+                        'desc' => '<a id="reverb-url-help" href="https://reverb.com/my/api_settings" target="_blank">' . $this->l('From https://reverb.com/my/api_settings') . '</a>',
                         'name' => self::KEY_API_TOKEN,
                         'label' => $this->l('API Token'),
                     ),
@@ -464,7 +464,7 @@ class Reverb extends Module
                         'id' => 'token_sandbox',
                         'col' => 3,
                         'type' => 'text',
-                        'desc' => '<a id="reverb-url-help" href="" target="_blank">' . $this->l('From https://sandbox.reverb.com/my/api_settings') . '</a>',
+                        'desc' => '<a id="reverb-url-help" href="https://sandbox.reverb.com/my/api_settings" target="_blank">' . $this->l('From https://sandbox.reverb.com/my/api_settings') . '</a>',
                         'name' => self::KEY_API_TOKEN_SANDBOX,
                         'label' => $this->l('API Token'),
                     ),
@@ -792,6 +792,7 @@ class Reverb extends Module
             $reverbConditions = new \Reverb\ReverbConditions($this);
             $reverbShippingRegions = new \Reverb\ReverbShippingRegions($this);
             $reverbAttributes = new ReverbAttributes($this);
+            $reverbShop = new \Reverb\ReverbShop($this);
 
             $attribute = $reverbAttributes->getAttributes($id_product);
 
@@ -810,6 +811,7 @@ class Reverb extends Module
                 'reverb_shipping_profile' => $attribute['id_shipping_profile'],
                 'reverb_shipping_local' => $attribute['shipping_local'],
                 'reverb_shipping_methods' => $reverbAttributes->getShippingMethods($attribute['id_attribute']),
+                'reverb_shipping_profiles' => $reverbShop->getShoppingProfiles(),
                 'currency' => $this->getContext()->currency->getSign(),
                 'admin_css' => _PS_CSS_DIR_,
                 'admin_css' => _PS_ADMIN_DIR_,
@@ -1327,5 +1329,6 @@ require_once(dirname(__FILE__) . '/classes/ReverbConditions.php');
 require_once(dirname(__FILE__) . '/classes/ReverbShippingRegions.php');
 require_once(dirname(__FILE__) . '/classes/ReverbProduct.php');
 require_once(dirname(__FILE__) . '/classes/ReverbOrders.php');
+require_once(dirname(__FILE__) . '/classes/ReverbShop.php');
 require_once(dirname(__FILE__) . '/classes/mapper/ProductMapper.php');
 require_once(dirname(__FILE__) . '/classes/helper/RequestSerializer.php');

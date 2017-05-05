@@ -201,10 +201,18 @@
                 </span>
             </label>
             <div class="col-lg-9">
-                <input type="text" name="reverb_shipping_profile"
-                       class="form-control reverb-shipping-profile"
-                       id="reverb-shipping-profile-id"
-                       value="{$reverb_shipping_profile|escape:'htmlall':'UTF-8'}"/>
+                {if ($reverb_shipping_profiles|count)}
+                    <select class="form-control reverb-shipping-profiles"  name="reverb_shipping_profile" >
+                        <option value="">{l s='Select a shipping profile'  mod='reverb'}</option>
+                        {foreach from=$reverb_shipping_profiles item='profile'}
+                            <option value="{$profile['id']|escape:'htmlall':'UTF-8'}" {if ($profile['id'] == $reverb_shipping_profile)}selected="selected"{/if}>
+                                {$profile['name']|escape:'htmlall':'UTF-8'}
+                            </option>
+                        {/foreach}
+                    </select>
+                {else}
+                    <p>{l s='You have no shipping profiles.' mod='reverb'}</p>
+                {/if}
                 <div class="alert alert-info" role="alert">
                     <p class="alert-text">
                         <a target="_blank" href="{$reverb_url|escape:'htmlall':'UTF-8'}/my/selling/shipping_rates">
