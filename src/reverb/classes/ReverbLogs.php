@@ -73,7 +73,7 @@ class ReverbLogs
         if ($this->enable) {
             $file = _PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-' . $file . '-logs.txt';
             if (!file_exists($file)) {
-                $fp = fopen($file, 'a+');
+                $fp = fopen($file, 'w+');
             } else {
                 $fp = fopen($file, 'r+');
                 rewind($fp);
