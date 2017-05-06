@@ -71,15 +71,8 @@ class ReverbLogs
     private function writeLogs($file, $msg)
     {
         if ($this->enable) {
-            $file = _PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-' . $file . '-logs.txt';
-            if (!file_exists($file)) {
-                $fp = fopen($file, 'w+');
-            } else {
-                $fp = fopen($file, 'r+');
-                rewind($fp);
-            }
-            fputs($fp, '## ' . date('Y-m-d H:i:s') . ' : ' . $msg . PHP_EOL);
-            fclose($fp);
+            $filename = _PS_MODULE_DIR_ . 'reverb/logs/' . date('Y-m-d') . '-' . $file . '-logs.txt';
+            $this->file_prepend('## ' . date('Y-m-d H:i:s') . ' : ' . $msg, $filename);
         }
     }
 
@@ -92,5 +85,11 @@ class ReverbLogs
             return self::LOG_LISTINGS;
         }
         return self::LOG_INFOS;
+    }
+
+    private function file_prepend ($string, $filename)
+    {
+        $fileContent = file_get_contents ($filename);
+        file_put_contents ($filename, $string . PHP_EOL . $fileContent);
     }
 }
