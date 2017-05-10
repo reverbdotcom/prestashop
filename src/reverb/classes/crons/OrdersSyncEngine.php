@@ -85,6 +85,7 @@ class OrdersSyncEngine
                             $context->getIdShopGroup(),
                             $idOrder,
                             $order['order_number'],
+                            $order['sku'],
                             ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
                             'Reverb order synced',
                             $order['shipping_method']
@@ -100,6 +101,7 @@ class OrdersSyncEngine
                             $context->getIdShopGroup(),
                             null,
                             $order['order_number'],
+                            $order['sku'],
                             ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                             $message,
                             $order['shipping_method']
@@ -114,6 +116,7 @@ class OrdersSyncEngine
                         $context->getIdShopGroup(),
                         null,
                         $order['order_number'],
+                        $order['sku'],
                         ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                         $e->getMessage(),
                         $order['shipping_method']

@@ -58,6 +58,8 @@ class ReverbOrders
             $sql->where("ro.`$field` = \"$value\"");
         }
 
+        $sql->orderBy('ro.date DESC');
+
         if ($findOne) {
             return Db::getInstance()->getRow($sql);
         }
@@ -65,8 +67,35 @@ class ReverbOrders
     }
 
     /**
+     * Find Reverb orders by criteria
+     * @param array $criteria
+     * @param boolean $findOne
+     * @return array|false|mysqli_result|null|PDOStatement|resource
+     */
+    public function getOrdersTotals($criteria = array(), $findOne = false)
+    {
+        //=========================================
+        //          SELECT CLAUSE
+        //=========================================
+        $sql = new DbQuery();
+        $sql->select('count(*) as totals')
+            ->from('reverb_orders', 'ro');
+
+        foreach ($criteria as $field => $value) {
+            $sql->where("ro.`$field` = \"$value\"");
+        }
+
+        $result = Db::getInstance()->getRow($sql);
+
+        return $result['totals'];
+    }
+
+    /**
+     * @param $idShop
+     * @param $idShopGroup
      * @param $idOrder
      * @param $orderNumber
+     * @param $sku
      * @param $status
      * @param $details
      * @param $shippingMethod
@@ -77,6 +106,7 @@ class ReverbOrders
         $idShopGroup,
         $idOrder,
         $orderNumber,
+        $sku,
         $status,
         $details,
         $shippingMethod,
@@ -85,6 +115,7 @@ class ReverbOrders
         $this->module->logs->infoLogs('insertOrder');
         $this->module->logs->infoLogs(' - $idOrder = ' . $idOrder);
         $this->module->logs->infoLogs(' - $orderNumber = ' . $orderNumber);
+        $this->module->logs->infoLogs(' - $sku = ' . $sku);
         $this->module->logs->infoLogs(' - $status = ' . $status);
         $this->module->logs->infoLogs(' - $details = ' . $details);
         $this->module->logs->infoLogs(' - $shippingMethod = ' . $shippingMethod);
@@ -94,6 +125,7 @@ class ReverbOrders
             'status' => pSQL($status),
             'details' => pSQL($details),
             'reverb_order_number' => pSQL($orderNumber),
+            'reverb_product_sku' => pSQL($sku),
             'shipping_method' => $shippingMethod,
             'shipping_tracker' => $shippingTracker,
         );

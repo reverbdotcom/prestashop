@@ -8,6 +8,9 @@
  * @package Reverb
  */
 
+require_once dirname(__FILE__) . '/../../classes/helper/HelperCron.php';
+require_once dirname(__FILE__) . '/../../classes/crons/OrdersSyncEngine.php';
+
 class AdminReverbConfigurationController extends ModuleAdminController
 {
     public function __construct()
@@ -41,7 +44,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
     public function ajaxProcessSyncronizeProduct()
     {
         if (!$this->module instanceof Reverb) {
-            die(json_encode(array('status' => 'error', 'An error occured')));
+            die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
         }
 
         $identifier = Tools::getValue('identifier');
@@ -74,6 +77,81 @@ class AdminReverbConfigurationController extends ModuleAdminController
             }
         }
         die(json_encode(array('status' => 'error', 'An error occured')));
+    }
+
+    /**
+     *  Proccess ajax call from order Sync status
+     */
+    public function ajaxProcessSyncronizeOrder()
+    {
+        if (!$this->module instanceof Reverb) {
+            die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
+        }
+
+        $reverbId = Tools::getValue('reverb-id');
+
+        if (!empty($reverbId)) {
+            $helper = new HelperCron($this->module);
+            $orderSyncEngine = new OrdersSyncEngine($this->module, $helper);
+
+            // Call and getting an order from reverb
+            $reverbOrders = new \Reverb\ReverbOrders($this->module);
+            $reverbOrder = $reverbOrders->getOrder($reverbId);
+
+            $order = $this->module->reverbOrders->getOrders(array('reverb_order_number' => $reverbId), true);
+
+            //var_dump($reverbOrder); exit;
+
+            if (!empty($reverbOrder)) {
+
+                $lastSynced = (new \DateTime())->format('Y-m-d H:i:s');
+
+                try {
+                    $context = new \ContextCron($this->module);
+                    $idOrder = $orderSyncEngine->createPrestashopOrder($reverbOrder, $context, 0);
+
+                    $this->module->reverbOrders->update($order['id_reverb_orders'],
+                        array(
+                            'id_order' => $idOrder,
+                            'id_shop' => $context->getIdShop(),
+                            'id_shop_group' => $context->getIdShopGroup(),
+                            'status' => 'success',
+                            'details' => 'Reverb order synced',
+                            'date' => $lastSynced,
+                            'shipping_method' => $reverbOrder['shipping_method'],
+                        )
+                    );
+                    die(json_encode(array(
+                        'status' => 'success',
+                        'message' => 'Reverb order synced',
+                        'last-synced' => $lastSynced,
+                        'reverb-id' => $reverbId,
+                    )));
+                } catch (Exception $e) {
+                    $this->module->reverbOrders->update($order['id_reverb_orders'],
+                        array(
+                            'id_shop' => $context->getIdShop(),
+                            'id_shop_group' => $context->getIdShopGroup(),
+                            'status' => 'error',
+                            'details' => $e->getMessage(),
+                            'date' => $lastSynced,
+                        )
+                    );
+                    die(json_encode(array(
+                        'status' => 'error',
+                        'message' => $e->getMessage(),
+                        'last-synced' => $lastSynced,
+                        'reverb-id' => $reverbId,
+                    )));
+                }
+            } else {
+                die(json_encode(array(
+                    'status' => 'error',
+                    'message' => 'No order found for ID ' . $reverbOrder
+                )));
+            }
+        }
+        die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
     }
 
     protected function sendErrorRequest($response)

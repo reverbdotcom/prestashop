@@ -54,6 +54,12 @@
 				</a>
 			</li>
 			<li role="presentation"
+				class="{if (!$is_logged)}disabled{elseif (isset($active_tab) && ($active_tab == 'orders_status'))}active{/if}">
+				<a href="#orders_status" aria-controls="orders_status" role="tab" {if ($is_logged)}data-toggle="tab"{/if}>
+					<span class="icon icon-refresh"></span> {l s='Orders Sync Status' mod='reverb'}
+				</a>
+			</li>
+			<li role="presentation"
 				class="{if (!$is_logged)}disabled{elseif (isset($active_tab) && ($active_tab == 'categories'))}active{/if}">
 				<a href="#categories" aria-controls="categories" role="tab" {if ($is_logged)}data-toggle="tab"{/if}>
 					<span class="icon icon-sort"></span> {l s='Product Type Mapping' mod='reverb'}
@@ -89,6 +95,13 @@
 					 id="sync_status">
 					{if ($is_logged)}
 						{include file='./tabs/sync_status.tpl'}
+                    {/if}
+				</div>
+				<div role="tabpanel"
+					 class="tab-pane {if ((isset($active_tab) == false) || ($active_tab == 'orders_status'))} active{/if}"
+					 id="orders_status">
+					{if ($is_logged)}
+						{include file='./tabs/orders_status.tpl'}
                     {/if}
 				</div>
 				<div role="tabpanel"
