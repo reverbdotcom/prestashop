@@ -16,6 +16,7 @@ use ICanBoogie\DateTime;
 class ReverbOrders extends ReverbClient
 {
     const REVERB_MY_SELLING = 'my/orders/selling/all';
+    const REVERB_MY_SELLING_ORDER = 'my/orders/selling/[ID]';
     const REVERB_MY_SELLING_SHIP = 'my/orders/selling/[ID]/ship';
     const REVERB_MY_SELLING_PICKED_UP = 'my/orders/selling/[ID]/mark_picked_up';
     const REVERB_ROOT_KEY = 'orders';
@@ -50,6 +51,19 @@ class ReverbOrders extends ReverbClient
         }
 
         return $this->getListFromEndpoint(null, $params);
+    }
+
+    /**
+     * Get a order by ID
+     *
+     * @param integer $reverbOrderId
+     * @return array
+     */
+    public function getOrder($reverbOrderId)
+    {
+        $endPoint = str_replace('[ID]', $reverbOrderId, self::REVERB_MY_SELLING_ORDER);
+        $this->setEndPoint($endPoint);
+        return $this->sendGet();
     }
 
     public function setOrderShip($reverbOrderId, $provider, $trackingNumber)

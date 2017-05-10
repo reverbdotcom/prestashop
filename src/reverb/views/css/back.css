@@ -129,6 +129,10 @@ table.ps_product tr {
     background-color: #fbbb22;
 }
 
+.bootstrap .label-shipping-sent {
+    background-color: #95CC6B;
+}
+
 .alert-info {
     margin: 15px 0!important;
 }

@@ -87,9 +87,15 @@ class ReverbLogs
         return self::LOG_INFOS;
     }
 
-    private function file_prepend ($string, $filename)
+    private function file_prepend($string, $filename)
     {
-        $fileContent = file_get_contents ($filename);
-        file_put_contents ($filename, $string . PHP_EOL . $fileContent);
+        if (!file_exists($filename)) {
+            $fp = fopen($filename, 'a+');
+            fputs($fp, $string . PHP_EOL);
+            fclose($fp);
+        } else {
+            $fileContent = file_get_contents($filename);
+            file_put_contents($filename, $string . PHP_EOL . $fileContent);
+        }
     }
 }
