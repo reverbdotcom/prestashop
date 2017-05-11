@@ -96,58 +96,78 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
             // Call and getting an order from reverb
             $reverbOrders = new \Reverb\ReverbOrders($this->module);
-            $reverbOrder = $reverbOrders->getOrder($reverbId);
+            $order = $reverbOrders->getOrder($reverbId);
 
-            $order = $this->module->reverbOrders->getOrders(array('reverb_order_number' => $reverbId), true);
+            $reverbOrder = $this->module->reverbOrders->getOrders(array('reverb_order_number' => $reverbId), true);
 
-            //var_dump($reverbOrder); exit;
-
-            if (!empty($reverbOrder)) {
+            if (!empty($order)) {
 
                 $lastSynced = (new \DateTime())->format('Y-m-d H:i:s');
 
                 try {
                     $context = new \ContextCron($this->module);
-                    $idOrder = $orderSyncEngine->createPrestashopOrder($reverbOrder, $context, 0);
-
-                    $this->module->reverbOrders->update($order['id_reverb_orders'],
-                        array(
-                            'id_order' => $idOrder,
-                            'id_shop' => $context->getIdShop(),
-                            'id_shop_group' => $context->getIdShopGroup(),
-                            'status' => 'success',
-                            'details' => 'Reverb order synced',
-                            'date' => $lastSynced,
-                            'shipping_method' => $reverbOrder['shipping_method'],
-                        )
-                    );
-                    die(json_encode(array(
-                        'status' => 'success',
-                        'message' => 'Reverb order synced',
-                        'last-synced' => $lastSynced,
-                        'reverb-id' => $reverbId,
-                    )));
+                    if (in_array($order['status'], \Reverb\ReverbOrders::$statusToSync)) {
+                        $idOrder = $orderSyncEngine->createPrestashopOrder($order, $context, 0);
+                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
+                            array(
+                                'id_order' => $idOrder,
+                                'id_shop' => $context->getIdShop(),
+                                'id_shop_group' => $context->getIdShopGroup(),
+                                'status' => $order['status'],
+                                'details' => 'Reverb order synced',
+                                'date' => $lastSynced,
+                                'shipping_method' => isset($order['shipping_method']) ? $order['shipping_method'] : null,
+                            )
+                        );
+                        die(json_encode(array(
+                            'status' => $order['status'],
+                            'message' => 'Reverb order synced',
+                            'last-synced' => $lastSynced,
+                            'reverb-id' => $reverbId,
+                        )));
+                    } else {
+                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
+                            array(
+                                'id_shop' => $context->getIdShop(),
+                                'id_shop_group' => $context->getIdShopGroup(),
+                                'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                                'details' => 'Status not synced : ' . $order['status'],
+                                'date' => $lastSynced,
+                                'shipping_method' => isset($order['shipping_method']) ? $order['shipping_method'] : null,
+                                'reverb_order_number' => $order['order_number'],
+                                'reverb_product_sku' => $order['sku'],
+                            )
+                        );
+                        die(json_encode(array(
+                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                            'message' => 'Status not synced : ' . $order['status'],
+                            'last-synced' => $lastSynced,
+                            'reverb-id' => $reverbId,
+                        )));
+                    }
                 } catch (Exception $e) {
-                    $this->module->reverbOrders->update($order['id_reverb_orders'],
+                    throw $e;
+                    $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
                         array(
                             'id_shop' => $context->getIdShop(),
                             'id_shop_group' => $context->getIdShopGroup(),
-                            'status' => 'error',
+                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                             'details' => $e->getMessage(),
                             'date' => $lastSynced,
                         )
                     );
                     die(json_encode(array(
-                        'status' => 'error',
+                        'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                         'message' => $e->getMessage(),
                         'last-synced' => $lastSynced,
                         'reverb-id' => $reverbId,
                     )));
                 }
+
             } else {
                 die(json_encode(array(
-                    'status' => 'error',
-                    'message' => 'No order found for ID ' . $reverbOrder
+                    'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                    'message' => 'No order found for ID ' . $reverbId
                 )));
             }
         }

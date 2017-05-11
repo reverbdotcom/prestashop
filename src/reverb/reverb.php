@@ -87,6 +87,7 @@ class Reverb extends Module
         $this->_infos[] = $this->l('The following cron tasks must be configured in your hosting:');
         $this->_infos[] = '*/5 * * * *  php /var/www/html/modules/reverb/cron.php products  > /var/log/cron.log';
         $this->_infos[] = '*/8 * * * *  php /var/www/html/modules/reverb/cron.php orders > /var/log/cron.log';
+        $this->_infos[] = '0 8 * * *  php /var/www/html/modules/reverb/cron.php orders-reconciliation > /var/log/cron.log';
     }
 
     /**
