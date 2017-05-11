@@ -100,6 +100,9 @@
         {if $tr['status'] == 'error'}
             <a href="#" title="" data-id="{$tr['reverb_order_number']|escape:'htmlall':'UTF-8'}" class="btn btn-default btn-view-order-sync" title="Syncronization"><i class="icon-refresh"></i></a>
         {/if}
+        {if $ps_order_preview_base_url != '' && $tr.id_order > 0 && $tr.id_order != '' }
+            <a href="{$ps_order_preview_base_url}&id_order={$tr.id_order|escape:'htmlall':'UTF-8'}&vieworder" title="Preview" target="_blank" class="btn btn-default"><i class="icon-search-plus"></i></a>
+        {/if}
         {if $reverb_order_preview_url != '' && $tr.$key}
             <a href="{$reverb_order_preview_url|escape:'htmlall':'UTF-8'}{if $tr.$key}{$tr.$key}{/if}" title="" target="_blank" class="btn btn-default btn-reverb-preview{if !$tr.$key} hide-ps{/if}"><i class="icon-search-plus"> Preview on Reverb</i></a>
         {/if}
