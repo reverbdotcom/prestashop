@@ -1296,14 +1296,6 @@ class Reverb extends Module
         $helper->show_toolbar = true;
         $helper->identifier = 'id_order';
 
-        $helper->bulk_actions = array(
-            'Syncronize' => array(
-                'text' => $this->l('Syncronize selected orders'),
-                'icon' => 'icon-refresh',
-                'confirm' => $this->l('Are you sure ?')
-            )
-        );
-
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
             . '&configure=' . $this->name . '&module_name=' . $this->name;
