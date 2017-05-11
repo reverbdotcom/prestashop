@@ -37,17 +37,18 @@ class ReverbOrders extends ReverbClient
     /**
      * Get all orders
      *
-     * @param null $date
-     * @return array
+     * @param \DateTime|null $startDate
+     * @param \DateTime|null $endDate
+     * @return mixed|string
      */
-    public function getOrders($date = null)
+    public function getOrders(\DateTime $startDate = null, \DateTime $endDate = null)
     {
-        $params = null;
-        if ($date) {
-            $dateISO8601 = new \DateTime($date);
-            $params = array(
-                'updated_start_date' => $dateISO8601->format('Y-m-d\TH:i:s')
-            );
+        $params = array();
+        if ($startDate) {
+            $params['updated_start_date'] = $startDate->format('Y-m-d\TH:i:s');
+        }
+        if ($endDate) {
+            $params['updated_end_date'] = $endDate->format('Y-m-d\TH:i:s');
         }
 
         return $this->getListFromEndpoint(null, $params);
