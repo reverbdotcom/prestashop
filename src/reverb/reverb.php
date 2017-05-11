@@ -297,6 +297,7 @@ class Reverb extends Module
                 'reverb_product_preview_url' => $this->getReverbProductPreviewUrl(),
                 'reverb_order_preview_url' => $this->getReverbOrderPreviewUrl(),
                 'ps_product_preview_base_url' => _PS_BASE_URL_,
+                'ps_order_preview_base_url' => $this->context->link->getAdminLink('AdminOrders', true),
                 'module_url' => $module_url,
             ));
             if (!$this->active_tab) {
@@ -309,6 +310,7 @@ class Reverb extends Module
                 'reverb_product_preview_url' => '',
                 'reverb_order_preview_url' => '',
                 'ps_product_preview_base_url' => '',
+                'ps_order_preview_base_url' => '',
                 'module_url' => $module_url
             ));
         }
@@ -1222,11 +1224,11 @@ class Reverb extends Module
         $helper = new HelperListReverb();
 
         $this->fields_list = array(
-            'id_product' => array(
+            'id_order' => array(
                 'title' => $this->l('ID'),
                 'width' => 30,
                 'type' => 'int',
-                'filter_key' => 'id_product'
+                'filter_key' => 'id_order'
             ),
             'reverb_order_number' => array(
                 'title' => $this->l('Reverb ID'),
