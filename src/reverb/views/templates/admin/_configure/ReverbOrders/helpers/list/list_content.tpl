@@ -97,7 +97,9 @@
         </span>
         <div class="icon-status loading-mask" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}">Synchronisation</div>
     {elseif $key == 'reverb_slug'}
-        <a href="#" title="" data-id="{$tr['reverb_order_number']|escape:'htmlall':'UTF-8'}" class="btn btn-default btn-view-order-sync" title="Syncronization"><i class="icon-refresh"></i></a>
+        {if $tr['status'] == 'error'}
+            <a href="#" title="" data-id="{$tr['reverb_order_number']|escape:'htmlall':'UTF-8'}" class="btn btn-default btn-view-order-sync" title="Syncronization"><i class="icon-refresh"></i></a>
+        {/if}
         {if $reverb_order_preview_url != '' && $tr.$key}
             <a href="{$reverb_order_preview_url|escape:'htmlall':'UTF-8'}{if $tr.$key}{$tr.$key}{/if}" title="" target="_blank" class="btn btn-default btn-reverb-preview{if !$tr.$key} hide-ps{/if}"><i class="icon-search-plus"> Preview on Reverb</i></a>
         {/if}
