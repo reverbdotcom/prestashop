@@ -32,8 +32,7 @@
 
             // Update sync status
             var syncLoader = tr.find('.reverb-order-status .icon-status');
-
-            syncLoader.fadeIn(2000).fadeOut(300);
+            syncLoader.fadeOut(300);
 
             if (status == 'success') {
                 showSuccessMessage(message);
@@ -76,6 +75,11 @@
 		    var tr =  $(this).parents('tr');
             var syncStatus = tr.find('.reverb-order-status span');
             syncStatus.hide();
+
+            // Update sync status
+            var syncLoader = tr.find('.reverb-order-status .icon-status');
+            syncLoader.fadeIn(2000);
+
 		    var id =  $(this).data('id');
 		    $('#icon-' + id).fadeIn();
             $.ajax({

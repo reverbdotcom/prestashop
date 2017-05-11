@@ -51,7 +51,7 @@ class ReverbOrders
         //          SELECT CLAUSE
         //=========================================
         $sql = new DbQuery();
-        $sql->select('*')
+        $sql->select('ro.*, ro.reverb_order_number AS reverb_slug')
             ->from('reverb_orders', 'ro');
 
         foreach ($criteria as $field => $value) {
