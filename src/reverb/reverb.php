@@ -721,6 +721,11 @@ class Reverb extends Module
             $this->active_tab = 'categories';
         }
 
+        // Orders sync pagination
+        if (Tools::isSubmit('submitFilterps_reverb_orders') || Tools::isSubmit('ps_reverb_ordersOrderby')) {
+            $this->active_tab = 'orders_status';
+        }
+
         // Bulk sync all
         if (Tools::isSubmit('submitFilterps_product')) {
             $identifiers = Tools::getValue('ps_productBox');
@@ -1223,7 +1228,7 @@ class Reverb extends Module
         //=========================================
         $helper = new HelperListReverb();
 
-        $this->fields_list = array(
+        $fields_list = array(
             'id_order' => array(
                 'title' => $this->l('ID'),
                 'width' => 30,
@@ -1254,11 +1259,17 @@ class Reverb extends Module
                 'type' => 'select',
                 'search' => true,
                 'orderby' => true,
-                'filter_key' => 'ro.status',
+                'filter_key' => 'status',
                 'badge_success' => true,
-                'list' => array('success' => 'success',
-                                'error' => 'error',
-                                'to_sync' => 'to_sync')
+                'list' => array(
+                    ReverbOrders::REVERB_ORDERS_STATUS_ERROR => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                    ReverbOrders::REVERB_ORDERS_STATUS_IGNORED => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                    ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED => ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
+                    ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT,
+                    ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL => ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL,
+                    ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_SHIPPED => ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_SHIPPED,
+                    ReverbOrders::REVERB_ORDERS_STATUS_PAID => ReverbOrders::REVERB_ORDERS_STATUS_PAID,
+                )
             ),
             'details' => array(
                 'title' => $this->l('Sync Detail'),
@@ -1266,7 +1277,7 @@ class Reverb extends Module
                 'type' => 'text',
                 'search' => 'true',
                 'orderby' => 'true',
-                'filter_key' => 'ro.details'
+                'filter_key' => 'details'
             ),
             'date' => array(
                 'title' => $this->l('Last synced'),
@@ -1284,14 +1295,14 @@ class Reverb extends Module
         //=========================================
         //         GET DATAS FOR LIST
         //=========================================
-        $datas = $this->reverbOrders->getOrders();
+        $datas = $this->reverbOrders->getOrdersList($fields_list);
 
         $helper->override_folder = 'ReverbOrders/';
         $helper->table = self::LIST_ORDERS_ID;
         $helper->allow_export = true;
         $helper->shopLinkType = '';
         $helper->default_pagination = 20;
-        $helper->listTotal = $this->reverbOrders->getOrdersTotals();
+        $helper->listTotal = $this->reverbOrders->getOrdersTotals($fields_list);
         $helper->module = $this;
         $helper->no_link = true;
 
@@ -1306,7 +1317,7 @@ class Reverb extends Module
         //=========================================
         //              GENERATE VIEW
         //=========================================
-        return $helper->generateList($datas, $this->fields_list);
+        return $helper->generateList($datas, $fields_list);
     }
 
     /**
