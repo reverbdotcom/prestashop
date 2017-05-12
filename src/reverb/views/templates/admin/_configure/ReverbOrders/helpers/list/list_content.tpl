@@ -97,7 +97,7 @@
         </span>
         <div class="icon-status loading-mask" id="icon-{$tr.$identifier|escape:'htmlall':'UTF-8'}">Synchronisation</div>
     {elseif $key == 'reverb_slug'}
-        {if $tr['status'] == 'error'}
+        {if $tr['status'] == 'error' || $tr['status'] == 'ignored'}
             <a href="#" title="" data-id="{$tr['reverb_order_number']|escape:'htmlall':'UTF-8'}" class="btn btn-default btn-view-order-sync" title="Syncronization"><i class="icon-refresh"></i></a>
         {/if}
         {if $reverb_order_preview_url != '' && $tr.$key}

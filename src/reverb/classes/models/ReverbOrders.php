@@ -41,6 +41,101 @@ class ReverbOrders
 
     /**
      * Find Reverb orders by criteria
+     * @param $criteria
+     * @return array|false|mysqli_result|null|PDOStatement|resource
+     */
+    public function getOrdersList($fields_list)
+    {
+        //=========================================
+        //          SELECT CLAUSE
+        //=========================================
+        $sql = new DbQuery();
+        $sql->select('ro.*, ro.reverb_order_number AS reverb_slug')
+            ->from('reverb_orders', 'ro');
+
+        if (
+            Tools::isSubmit('submitFilterps_reverb_orders')
+            && !Tools::isSubmit('submitResetps_reverb_orders')
+        ) {
+            $this->processFilter($fields_list, $sql);
+        }
+
+        //=========================================
+        //          ORDER CLAUSE
+        //=========================================
+        if (Tools::getValue('ps_reverb_ordersOrderby')) {
+            $sql->orderBy(Tools::getValue('ps_reverb_ordersOrderby') . ' ' . Tools::getValue('ps_reverb_ordersOrderway'));
+        } else {
+            $sql->orderBy('ro.date DESC');
+        }
+
+        //=========================================
+        //          PAGINATION
+        //=========================================
+        $page = (int)Tools::getValue('submitFilterps_reverb_orders');
+        if ($page > 1) {
+            $sql->limit(Tools::getValue('ps_reverb_orders_pagination'), ($page-1) * Tools::getValue('ps_reverb_orders_pagination'));
+        } else {
+            $sql->limit(Tools::getValue('ps_reverb_orders_pagination', 50));
+        }
+
+        return Db::getInstance()->executeS($sql);
+    }
+
+    /**
+     * Generate WHERE Clause with actives filters
+     * @param $list_field
+     * @param $sql
+     * @return string
+     */
+    protected function processFilter($list_field, DbQuery $sql)
+    {
+        $values = Tools::getAllValues();
+
+        foreach ($values as $key => $params) {
+            if (preg_match('/' . Reverb::LIST_ORDERS_ID . 'Filter_/', $key) && !empty($params)) {
+                $field = preg_replace('/' . Reverb::LIST_ORDERS_ID . 'Filter_/', '', $key);
+                $filterKey = $field;
+                if (isset($list_field[$field])){
+                    if (isset($list_field[$field]['filter_key'])) {
+                        $filterKey = preg_replace('/!/', '.',$list_field[$field]['filter_key']);
+                    }
+                    switch ($list_field[$field]['type']) {
+                        case 'text':
+                            $sql->where($filterKey . ' like "%' . pSQL($params) . '%"');
+                            break;
+                        case 'int':
+                            $sql->where($filterKey . ' = ' . pSQL($params));
+                            break;
+                        case 'select':
+                            $sql->where($filterKey . ' like "%' . pSQL($params) . '%"');
+                            break;
+                        case 'datetime':
+                            if (isset($params[0]) && !empty($params[0])) {
+                                if (!Validate::isDate($params[0])) {
+                                    $this->errors[] = $this->trans('The \'From\' date format is invalid (YYYY-MM-DD)', array(), 'Admin.Notifications.Error');
+                                } else {
+                                    $sql->where($filterKey .' >= \''.pSQL(Tools::dateFrom($params[0])).'\'');
+                                }
+                            }
+
+                            if (isset($params[1]) && !empty($params[1])) {
+                                if (!Validate::isDate($params[1])) {
+                                    $this->errors[] = $this->trans('The \'To\' date format is invalid (YYYY-MM-DD)', array(), 'Admin.Notifications.Error');
+                                } else {
+                                    $sql->where($filterKey . ' <= \''.pSQL(Tools::dateFrom($params[0])).'\'');
+                                }
+                            }
+                            break;
+                    }
+                }
+            };
+        }
+        return $sql;
+    }
+
+    /**
+     * Find Reverb orders by criteria
      * @param array $criteria
      * @param boolean $findOne
      * @return array|false|mysqli_result|null|PDOStatement|resource
@@ -68,11 +163,10 @@ class ReverbOrders
 
     /**
      * Find Reverb orders by criteria
-     * @param array $criteria
-     * @param boolean $findOne
-     * @return array|false|mysqli_result|null|PDOStatement|resource
+     * @param array $fields_list
+     * @return int
      */
-    public function getOrdersTotals($criteria = array(), $findOne = false)
+    public function getOrdersTotals($fields_list)
     {
         //=========================================
         //          SELECT CLAUSE
@@ -81,8 +175,14 @@ class ReverbOrders
         $sql->select('count(*) as totals')
             ->from('reverb_orders', 'ro');
 
-        foreach ($criteria as $field => $value) {
-            $sql->where("ro.`$field` = \"$value\"");
+        if (Tools::isSubmit('submitFilterps_reverb_orders')) {
+            $this->processFilter($fields_list, $sql);
+        }
+
+        if (Tools::getValue('ps_reverb_ordersOrderby')) {
+            $sql->orderBy(Tools::getValue('ps_reverb_ordersOrderby') . ' ' . Tools::getValue('ps_reverb_ordersOrderway'));
+        } else {
+            $sql->orderBy('ro.date DESC');
         }
 
         $result = Db::getInstance()->getRow($sql);
