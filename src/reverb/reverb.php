@@ -85,9 +85,9 @@ class Reverb extends Module
         $this->reverbConfig = $this->getReverbConfig();
 
         $this->_infos[] = $this->l('The following cron tasks must be configured in your hosting:');
-        $this->_infos[] = '*/5 * * * *  php /var/www/html/modules/reverb/cron.php products  > /var/log/cron.log';
-        $this->_infos[] = '*/8 * * * *  php /var/www/html/modules/reverb/cron.php orders > /var/log/cron.log';
-        $this->_infos[] = '0 8 * * *  php /var/www/html/modules/reverb/cron.php orders-reconciliation > /var/log/cron.log';
+        $this->_infos[] = '*/5 * * * *  php '.dirname(__FILE__).'/cron.php products  > /var/log/cron.log';
+        $this->_infos[] = '*/8 * * * *  php '.dirname(__FILE__).'/cron.php orders > /var/log/cron.log';
+        $this->_infos[] = '0 8 * * *  php '.dirname(__FILE__).'/cron.php orders-reconciliation > /var/log/cron.log';
     }
 
     /**
@@ -328,6 +328,7 @@ class Reverb extends Module
             'logs' => $this->getLogFiles(),
             'active_tab' => $this->active_tab,
             'ajax_url' => $this->context->link->getAdminLink('AdminReverbConfiguration'),
+            'url_site' => Tools::getHttpHost(true).__PS_BASE_URI__,
         ));
 
         // Set alert messages
