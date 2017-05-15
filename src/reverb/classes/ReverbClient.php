@@ -283,10 +283,14 @@ class ReverbClient extends Client
 
         if ($e instanceof ClientException) {
             $message = json_decode($e->getResponse()->getBody()->getContents(), true);
-            $this->module->logs->errorLogs(var_export($message, true));
-            if (is_array($message)) {
+            if (isset($message['message'])) {
+                $this->module->logs->errorLogs($message['message']);
+                $error = $message['message'];
+            } elseif (is_array($message)) {
+                $this->module->logs->errorLogs(var_export($message, true));
                 $error = implode('<br />', $message);
             }
+
             throw new \Exception($error, 1);
         }
 
