@@ -121,12 +121,24 @@ table.ps_product tr {
     background-color: #95CC6B;
 }
 
-.bootstrap .label-error {
+.bootstrap .label-error
+{
     background-color: #E08F95;
 }
 
-.bootstrap .label-to_sync {
+.bootstrap .label-to_sync,
+.bootstrap .label-ignored
+{
     background-color: #fbbb22;
+}
+
+.bootstrap .label-shipping-sent,
+.bootstrap .label-saved,
+.bootstrap .label-paid,
+.bootstrap .label-shipped,
+.bootstrap .label-local
+{
+    background-color: #95CC6B;
 }
 
 .alert-info {

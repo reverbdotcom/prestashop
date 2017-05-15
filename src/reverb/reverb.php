@@ -32,6 +32,7 @@ class Reverb extends Module
 
     const LIST_ID = 'ps_product';
     const LIST_CATEGORY_ID = 'ps_mapping_category';
+    const LIST_ORDERS_ID = 'ps_reverb_orders';
 
     protected $config_form = false;
     public $reverbConfig;
@@ -84,8 +85,9 @@ class Reverb extends Module
         $this->reverbConfig = $this->getReverbConfig();
 
         $this->_infos[] = $this->l('The following cron tasks must be configured in your hosting:');
-        $this->_infos[] = '*/5 * * * *  php /var/www/html/modules/reverb/cron.php products  > /var/log/cron.log';
-        $this->_infos[] = '*/8 * * * *  php /var/www/html/modules/reverb/cron.php orders > /var/log/cron.log';
+        $this->_infos[] = '*/5 * * * *  php '.dirname(__FILE__).'/cron.php products  > /var/log/cron.log';
+        $this->_infos[] = '*/8 * * * *  php '.dirname(__FILE__).'/cron.php orders > /var/log/cron.log';
+        $this->_infos[] = '0 8 * * *  php '.dirname(__FILE__).'/cron.php orders-reconciliation > /var/log/cron.log';
     }
 
     /**
@@ -178,9 +180,12 @@ class Reverb extends Module
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'reverb_orders` (
             `id_reverb_orders` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_order` int(10) unsigned,
+            `id_product` int(10) unsigned,
             `id_shop` int(11) unsigned,
             `id_shop_group` int(11) unsigned,
             `reverb_order_number` varchar(32),
+            `reverb_product_sku` varchar(32),
+            `reverb_product_title` text,
             `status` varchar(32) NOT NULL,
             `details` text,
             `date` datetime,
@@ -290,7 +295,9 @@ class Reverb extends Module
                 'is_logged' => true,
                 'token' => Tools::getAdminTokenLite('AdminModules'),
                 'reverb_product_preview_url' => $this->getReverbProductPreviewUrl(),
+                'reverb_order_preview_url' => $this->getReverbOrderPreviewUrl(),
                 'ps_product_preview_base_url' => _PS_BASE_URL_,
+                'ps_order_preview_base_url' => $this->context->link->getAdminLink('AdminOrders', true),
                 'module_url' => $module_url,
             ));
             if (!$this->active_tab) {
@@ -301,7 +308,9 @@ class Reverb extends Module
                 'active_tab' => 'login',
                 'is_logged' => false,
                 'reverb_product_preview_url' => '',
+                'reverb_order_preview_url' => '',
                 'ps_product_preview_base_url' => '',
+                'ps_order_preview_base_url' => '',
                 'module_url' => $module_url
             ));
         }
@@ -314,10 +323,12 @@ class Reverb extends Module
             'reverb_settings_form' => $this->renderSettingsForm(),
             'reverb_config' => $this->reverbConfig,
             'reverb_sync_status' => $this->getViewSyncStatus(),
+            'reverb_orders_status' => $this->getViewOrdersSync(),
             'reverb_mapping_categories' => $this->getViewMappingCategories(),
             'logs' => $this->getLogFiles(),
             'active_tab' => $this->active_tab,
             'ajax_url' => $this->context->link->getAdminLink('AdminReverbConfiguration'),
+            'url_site' => Tools::getHttpHost(true).__PS_BASE_URI__,
         ));
 
         // Set alert messages
@@ -711,6 +722,11 @@ class Reverb extends Module
             $this->active_tab = 'categories';
         }
 
+        // Orders sync pagination
+        if (Tools::isSubmit('submitFilterps_reverb_orders') || Tools::isSubmit('ps_reverb_ordersOrderby')) {
+            $this->active_tab = 'orders_status';
+        }
+
         // Bulk sync all
         if (Tools::isSubmit('submitFilterps_product')) {
             $identifiers = Tools::getValue('ps_productBox');
@@ -1014,11 +1030,13 @@ class Reverb extends Module
                 $this->logs->infoLogs('shipping_regions = ' . var_export($reverb_shipping_methods_region, true));
                 $this->logs->infoLogs('shipping_rates = ' . var_export($reverb_shipping_methods_rate, true));
                 foreach ($reverb_shipping_methods_region as $key => $reverb_shipping_method_region) {
-                    $db->insert('reverb_shipping_methods', array(
-                        'id_attribute' => $idAttribute,
-                        'region_code' => pSql($reverb_shipping_method_region),
-                        'rate' => pSql($reverb_shipping_methods_rate[$key]),
-                    ));
+                    if (!empty($idAttribute) && !empty($reverb_shipping_method_region)) {
+                        $db->insert('reverb_shipping_methods', array(
+                            'id_attribute' => $idAttribute,
+                            'region_code' => pSql($reverb_shipping_method_region),
+                            'rate' => pSql($reverb_shipping_methods_rate[$key]),
+                        ));
+                    }
                 }
             }
 
@@ -1202,6 +1220,110 @@ class Reverb extends Module
     }
 
     /**
+     * Prepare view orders sync
+     *
+     * @return HelperList
+     */
+    public function getViewOrdersSync()
+    {
+        //=========================================
+        //         PREPARE VIEW
+        //=========================================
+        $helper = new HelperListReverb();
+
+        $fields_list = array(
+            'id_order' => array(
+                'title' => $this->l('ID'),
+                'width' => 30,
+                'type' => 'int',
+                'filter_key' => 'id_order'
+            ),
+            'reverb_order_number' => array(
+                'title' => $this->l('Reverb ID'),
+                'width' => 70,
+                'type' => 'text',
+                'filter_key' => 'reverb_order_number'
+            ),
+            'reverb_product_sku' => array(
+                'title' => $this->l('SKU'),
+                'width' => 70,
+                'type' => 'text',
+                'filter_key' => 'reverb_product_sku'
+            ),
+            'reverb_product_title' => array(
+                'title' => $this->l('Name'),
+                'width' => 140,
+                'type' => 'text',
+                'filter_key' => 'reverb_product_title'
+            ),
+            'status' => array(
+                'title' => $this->l('Sync Status'),
+                'width' => 50,
+                'type' => 'select',
+                'search' => true,
+                'orderby' => true,
+                'filter_key' => 'status',
+                'badge_success' => true,
+                'list' => array(
+                    ReverbOrders::REVERB_ORDERS_STATUS_ERROR => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                    ReverbOrders::REVERB_ORDERS_STATUS_IGNORED => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                    ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED => ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
+                    ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT,
+                    ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL => ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL,
+                    ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_SHIPPED => ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_SHIPPED,
+                    ReverbOrders::REVERB_ORDERS_STATUS_PAID => ReverbOrders::REVERB_ORDERS_STATUS_PAID,
+                )
+            ),
+            'details' => array(
+                'title' => $this->l('Sync Detail'),
+                'width' => 300,
+                'type' => 'text',
+                'search' => 'true',
+                'orderby' => 'true',
+                'filter_key' => 'details'
+            ),
+            'date' => array(
+                'title' => $this->l('Last synced'),
+                'width' => 140,
+                'type' => 'datetime',
+                'filter_key' => 'date'
+            ),
+            'reverb_slug' => array(
+                'title' => '',
+                'search' => false,
+                'orderby' => false,
+            )
+        );
+
+        //=========================================
+        //         GET DATAS FOR LIST
+        //=========================================
+        $datas = $this->reverbOrders->getOrdersList($fields_list);
+
+        $helper->override_folder = 'ReverbOrders/';
+        $helper->table = self::LIST_ORDERS_ID;
+        $helper->allow_export = true;
+        $helper->shopLinkType = '';
+        $helper->default_pagination = 20;
+        $helper->listTotal = $this->reverbOrders->getOrdersTotals($fields_list);
+        $helper->module = $this;
+        $helper->no_link = true;
+
+        $helper->simple_header = false;
+        $helper->show_toolbar = true;
+        $helper->identifier = 'id_order';
+
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
+            . '&configure=' . $this->name . '&module_name=' . $this->name;
+
+        //=========================================
+        //              GENERATE VIEW
+        //=========================================
+        return $helper->generateList($datas, $fields_list);
+    }
+
+    /**
      *   Prepare view mapping categories
      *
      * @return HelperList
@@ -1277,6 +1399,14 @@ class Reverb extends Module
     private function getReverbProductPreviewUrl()
     {
         return $this->getReverbUrl() . '/preview/';
+    }
+
+    /**
+     * @return string
+     */
+    private function getReverbOrderPreviewUrl()
+    {
+        return $this->getReverbUrl() . '/my/selling/orders/';
     }
 
     /**

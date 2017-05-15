@@ -16,6 +16,7 @@ use ICanBoogie\DateTime;
 class ReverbOrders extends ReverbClient
 {
     const REVERB_MY_SELLING = 'my/orders/selling/all';
+    const REVERB_MY_SELLING_ORDER = 'my/orders/selling/[ID]';
     const REVERB_MY_SELLING_SHIP = 'my/orders/selling/[ID]/ship';
     const REVERB_MY_SELLING_PICKED_UP = 'my/orders/selling/[ID]/mark_picked_up';
     const REVERB_ROOT_KEY = 'orders';
@@ -36,20 +37,34 @@ class ReverbOrders extends ReverbClient
     /**
      * Get all orders
      *
-     * @param null $date
-     * @return array
+     * @param \DateTime|null $startDate
+     * @param \DateTime|null $endDate
+     * @return mixed|string
      */
-    public function getOrders($date = null)
+    public function getOrders(\DateTime $startDate = null, \DateTime $endDate = null)
     {
-        $params = null;
-        if ($date) {
-            $dateISO8601 = new \DateTime($date);
-            $params = array(
-                'updated_start_date' => $dateISO8601->format('Y-m-d\TH:i:s')
-            );
+        $params = array();
+        if ($startDate) {
+            $params['updated_start_date'] = $startDate->format('Y-m-d\TH:i:s');
+        }
+        if ($endDate) {
+            $params['updated_end_date'] = $endDate->format('Y-m-d\TH:i:s');
         }
 
         return $this->getListFromEndpoint(null, $params);
+    }
+
+    /**
+     * Get a order by ID
+     *
+     * @param integer $reverbOrderId
+     * @return array
+     */
+    public function getOrder($reverbOrderId)
+    {
+        $endPoint = str_replace('[ID]', $reverbOrderId, self::REVERB_MY_SELLING_ORDER);
+        $this->setEndPoint($endPoint);
+        return $this->sendGet();
     }
 
     public function setOrderShip($reverbOrderId, $provider, $trackingNumber)

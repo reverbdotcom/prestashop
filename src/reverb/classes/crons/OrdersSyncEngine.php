@@ -48,7 +48,7 @@ class OrdersSyncEngine
      *  Processing an sync with orders from Reverb
      *
      */
-    public function processSyncOrder($idCron)
+    public function processSyncOrder($idCron, $reconciliation = false)
     {
         try {
             $context = new \ContextCron($this->module);
@@ -56,9 +56,21 @@ class OrdersSyncEngine
             // Call and getting all orders from reverb
             $reverbOrders = new \Reverb\ReverbOrders($this->module);
 
-            $date = $this->helper->getDateLastCronWithStatus(HelperCron::CODE_CRON_STATUS_END);
-            $this->logInfoCrons('# Last orders sync : ' . var_export($date, true));
-            $orders = $reverbOrders->getOrders($date);
+            if ($reconciliation) {
+                $startDate = new \DateTime('yesterday');
+                $endDate = new \DateTime('midnight');
+                $orders = $reverbOrders->getOrders($startDate, $endDate);
+            } else {
+                $date = $this->helper->getDateLastCronWithStatus(HelperCron::CODE_CRON_STATUS_END);
+                $this->logInfoCrons('# Last orders sync : ' . var_export($date, true));
+                if ($date) {
+                    $startDate = new \DateTime($date);
+                } else {
+                    $startDate = null;
+                }
+
+                $orders = $reverbOrders->getOrders($startDate);
+            }
 
             $nbOrdersTotal = count($orders);
             $nbOrdersSynced = $nbOrdersError = $nbOrdersIgnored = 0;
@@ -85,9 +97,10 @@ class OrdersSyncEngine
                             $context->getIdShopGroup(),
                             $idOrder,
                             $order['order_number'],
+                            $order['sku'],
                             ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
                             'Reverb order synced',
-                            $order['shipping_method']
+                            isset($order['shipping_method']) ? $order['shipping_method'] : null
                         );
                         $nbOrdersSynced++;
                         $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
@@ -100,9 +113,10 @@ class OrdersSyncEngine
                             $context->getIdShopGroup(),
                             null,
                             $order['order_number'],
+                            $order['sku'],
                             ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                             $message,
-                            $order['shipping_method']
+                            isset($order['shipping_method']) ? $order['shipping_method'] : null
                         );
                     }
                 } catch (Exception $e) {
@@ -114,9 +128,10 @@ class OrdersSyncEngine
                         $context->getIdShopGroup(),
                         null,
                         $order['order_number'],
+                        $order['sku'],
                         ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                         $e->getMessage(),
-                        $order['shipping_method']
+                        isset($order['shipping_method']) ? $order['shipping_method'] : null
                     );
                 }
             }

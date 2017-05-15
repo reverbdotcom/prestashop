@@ -18,6 +18,7 @@ require_once dirname(__FILE__) . '/classes/ReverbProduct.php';
 require_once dirname(__FILE__) . '/reverb.php';
 
 const CODE_CRON_ORDERS = 'orders';
+const CODE_CRON_ORDERS_RECONCILIATION = 'orders-reconciliation';
 const CODE_CRON_PRODUCTS = 'products';
 
 try {
@@ -34,7 +35,7 @@ try {
         $code_cron = Tools::getValue('code');
     }
 
-    if (!isset($code_cron) || $code_cron != CODE_CRON_ORDERS && $code_cron != CODE_CRON_PRODUCTS) {
+    if (!isset($code_cron) || !in_array($code_cron, array(CODE_CRON_ORDERS,  CODE_CRON_PRODUCTS, CODE_CRON_ORDERS_RECONCILIATION))) {
         throw new \Exception('No code cron corresponding. ' . $code_cron);
     }
 
@@ -50,6 +51,10 @@ try {
             case CODE_CRON_ORDERS:
                 $engine = new \OrdersSyncEngine($module, $helper);
                 $engine->processSyncOrder($idCron);
+                break;
+            case CODE_CRON_ORDERS_RECONCILIATION:
+                $engine = new \OrdersSyncEngine($module, $helper);
+                $engine->processSyncOrder($idCron, true);
                 break;
             case CODE_CRON_PRODUCTS:
                 $reverbProduct = new \Reverb\ReverbProduct($module);

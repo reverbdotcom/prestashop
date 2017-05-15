@@ -198,7 +198,7 @@ class ReverbSync
                             }
 
                             if (isset($params[1]) && !empty($params[1])) {
-                                if (!Validate::isDate($value[1])) {
+                                if (!Validate::isDate($params[1])) {
                                     $this->errors[] = $this->trans('The \'To\' date format is invalid (YYYY-MM-DD)', array(), 'Admin.Notifications.Error');
                                 } else {
                                     $sql->where($filterKey . ' <= \''.pSQL(Tools::dateFrom($params[0])).'\'');
