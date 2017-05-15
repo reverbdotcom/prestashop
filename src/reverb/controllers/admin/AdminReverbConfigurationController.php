@@ -146,7 +146,6 @@ class AdminReverbConfigurationController extends ModuleAdminController
                         )));
                     }
                 } catch (Exception $e) {
-                    throw $e;
                     $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
                         array(
                             'id_shop' => $context->getIdShop(),

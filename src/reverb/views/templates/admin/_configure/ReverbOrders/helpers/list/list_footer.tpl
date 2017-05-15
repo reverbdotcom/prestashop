@@ -95,6 +95,13 @@
                 error: function (response) {
                     console.log(response);
                     showReverbOrderMessage(id, 'error', 'An error occured. Please try again later', tr);
+                    // Update sync status
+                    var syncStatus = tr.find('.reverb-order-status span');
+                    syncStatus.removeClass('label-success').removeClass('label-error').removeClass('label-to_sync')
+                        .addClass('label-error')
+                        .html('error');
+
+                    syncStatus.fadeIn(2301);
                 },
                 complete: function () {
                     link.removeAttr('disabled');
