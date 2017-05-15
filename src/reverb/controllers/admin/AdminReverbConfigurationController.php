@@ -146,23 +146,44 @@ class AdminReverbConfigurationController extends ModuleAdminController
                         )));
                     }
                 } catch (Exception $e) {
-                    $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
-                        array(
-                            'id_shop' => $context->getIdShop(),
-                            'id_shop_group' => $context->getIdShopGroup(),
+                    if ($e->getCode() == OrdersSyncEngine::ERROR_IGNORED) {
+                        $this->logInfoCrons('Order sync ignored : ' . $e->getMessage());
+                        $this->logInfoCrons($e->getTraceAsString());
+                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
+                            array(
+                                'id_shop' => $context->getIdShop(),
+                                'id_shop_group' => $context->getIdShopGroup(),
+                                'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                                'details' => $e->getMessage(),
+                                'date' => $lastSynced,
+                            )
+                        );
+                        die(json_encode(array(
+                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                            'message' => $e->getMessage(),
+                            'last-synced' => $lastSynced,
+                            'reverb-id' => $reverbId,
+                        )));
+                    } else {
+                        $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+                        $this->logInfoCrons($e->getTraceAsString());
+                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
+                            array(
+                                'id_shop' => $context->getIdShop(),
+                                'id_shop_group' => $context->getIdShopGroup(),
+                                'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                                'details' => $e->getMessage(),
+                                'date' => $lastSynced,
+                            )
+                        );
+                        die(json_encode(array(
                             'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                            'details' => $e->getMessage(),
-                            'date' => $lastSynced,
-                        )
-                    );
-                    die(json_encode(array(
-                        'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                        'message' => $e->getMessage(),
-                        'last-synced' => $lastSynced,
-                        'reverb-id' => $reverbId,
-                    )));
+                            'message' => $e->getMessage(),
+                            'last-synced' => $lastSynced,
+                            'reverb-id' => $reverbId,
+                        )));
+                    }
                 }
-
             } else {
                 die(json_encode(array(
                     'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
@@ -180,5 +201,15 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $output = Tools::jsonEncode($response);
 
         die($output);
+    }
+
+    /**
+     *  Log infos
+     *
+     * @param $message
+     */
+    private function logInfoCrons($message)
+    {
+        $this->module->logs->cronLogs($message);
     }
 }
