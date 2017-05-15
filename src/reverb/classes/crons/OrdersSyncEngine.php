@@ -30,6 +30,8 @@ class OrdersSyncEngine
     const EMAIL_GENERIC_CUSTOMER = 'prestashop@reverb.com';
     const ADDRESS_GENERIC = 'pickup';
 
+    const ERROR_IGNORED = 2;
+
     /** @var  Reverb */
     protected $module;
 
@@ -86,7 +88,7 @@ class OrdersSyncEngine
                         $this->logInfoCrons('# Order ' . $order['order_number'] . ' is already synced : ' . Tools::jsonEncode($reverbOrder));
                         if ($reverbOrder['id_order']) {
                             $this->logInfoCrons('# Prestashop order already saved : ' . $reverbOrder['id_order']);
-                            throw new Exception('Prestashop order already saved : ' . $reverbOrder['id_order']);
+                            throw new Exception('Prestashop order already saved : ' . $reverbOrder['id_order'], self::ERROR_IGNORED);
                         }
                     }
 
@@ -120,19 +122,35 @@ class OrdersSyncEngine
                         );
                     }
                 } catch (Exception $e) {
-                    $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
-                    $this->logInfoCrons($e->getTraceAsString());
-                    $nbOrdersError++;
-                    $this->module->reverbOrders->insert(
-                        $context->getIdShop(),
-                        $context->getIdShopGroup(),
-                        null,
-                        $order['order_number'],
-                        $order['sku'],
-                        ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                        $e->getMessage(),
-                        isset($order['shipping_method']) ? $order['shipping_method'] : null
-                    );
+                    if ($e->getCode() == self::ERROR_IGNORED) {
+                        $this->logInfoCrons('Order sync ignored : ' . $e->getMessage());
+                        $this->logInfoCrons($e->getTraceAsString());
+                        $nbOrdersIgnored++;
+                        $this->module->reverbOrders->insert(
+                            $context->getIdShop(),
+                            $context->getIdShopGroup(),
+                            null,
+                            $order['order_number'],
+                            $order['sku'],
+                            ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                            $e->getMessage(),
+                            isset($order['shipping_method']) ? $order['shipping_method'] : null
+                        );
+                    } else {
+                        $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+                        $this->logInfoCrons($e->getTraceAsString());
+                        $nbOrdersError++;
+                        $this->module->reverbOrders->insert(
+                            $context->getIdShop(),
+                            $context->getIdShopGroup(),
+                            null,
+                            $order['order_number'],
+                            $order['sku'],
+                            ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                            $e->getMessage(),
+                            isset($order['shipping_method']) ? $order['shipping_method'] : null
+                        );
+                    }
                 }
             }
 
@@ -310,6 +328,12 @@ class OrdersSyncEngine
         $customer->add();
 
         $context->setIdCustomer($customer->id);
+
+        // Add customer to Context if empty
+        if (!Context::getContext()->customer) {
+            Context::getContext()->customer = $customer;
+        }
+
         return $context;
     }
 
