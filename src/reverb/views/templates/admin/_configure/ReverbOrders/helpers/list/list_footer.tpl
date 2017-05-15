@@ -94,7 +94,7 @@
                 },
                 error: function (response) {
                     console.log(response);
-                    showReverbOrderMessage(id, 'error', 'An error occured. Please try again later');
+                    showReverbOrderMessage(id, 'error', 'An error occured. Please try again later', tr);
                 },
                 complete: function () {
                     link.removeAttr('disabled');

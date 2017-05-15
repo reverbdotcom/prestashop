@@ -1030,11 +1030,13 @@ class Reverb extends Module
                 $this->logs->infoLogs('shipping_regions = ' . var_export($reverb_shipping_methods_region, true));
                 $this->logs->infoLogs('shipping_rates = ' . var_export($reverb_shipping_methods_rate, true));
                 foreach ($reverb_shipping_methods_region as $key => $reverb_shipping_method_region) {
-                    $db->insert('reverb_shipping_methods', array(
-                        'id_attribute' => $idAttribute,
-                        'region_code' => pSql($reverb_shipping_method_region),
-                        'rate' => pSql($reverb_shipping_methods_rate[$key]),
-                    ));
+                    if (!empty($idAttribute) && !empty($reverb_shipping_method_region)) {
+                        $db->insert('reverb_shipping_methods', array(
+                            'id_attribute' => $idAttribute,
+                            'region_code' => pSql($reverb_shipping_method_region),
+                            'rate' => pSql($reverb_shipping_methods_rate[$key]),
+                        ));
+                    }
                 }
             }
 
