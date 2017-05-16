@@ -194,13 +194,33 @@ class Reverb extends Module
             PRIMARY KEY  (`id_reverb_orders`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
                 return false;
             }
         }
 
+        $query = 'INSERT INTO ' . _DB_PREFIX_ . 'order_state (unremovable, module_name, color) VALUES (0, \'reverb\', \'#FF8C00\');';
+        if (Db::getInstance()->execute($query) == false) {
+            return false;
+        }
+        $idOrderState = Db::getInstance()->Insert_ID();
+
+        $query = 'INSERT INTO ' . _DB_PREFIX_ . 'order_state_lang (id_order_state, id_lang, name, template) 
+            VALUES (' . $idOrderState . ', 1, \'Pending payment\', \'payment\');';
+        if (Db::getInstance()->execute($query) == false) {
+            return false;
+        }
+
+        // Copy status icon
+        $statusFileSrc = dirname(__FILE__) . '/status_pending.gif';
+        $statusFileDst = dirname(__FILE__) . '/../../img/os/15.gif';
+        if (file_exists($statusFileSrc)) {
+            copy($statusFileSrc, $statusFileDst);
+        }
+
+        // Add status to config
+        Configuration::updateValue('PS_OS_PENDING_PAYMENT', $idOrderState);
 
         return parent::install() &&
             $this->registerHook('backOfficeHeader') &&
@@ -222,6 +242,9 @@ class Reverb extends Module
     {
         Configuration::deleteByName(self::KEY_REVERB_CONFIG);
 
+        $idOrderState = Configuration::get('PS_OS_PENDING_PAYMENT');
+        Configuration::deleteByName('PS_OS_PENDING_PAYMENT');
+
         $sql = array();
 
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_sync`;';
@@ -231,6 +254,8 @@ class Reverb extends Module
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_sync_history`;';
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_crons`';
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_orders`';
+        $sql[] = 'DELETE FROM  `' . _DB_PREFIX_ . 'order_state_lang` WHERE id_order_state = ' . $idOrderState;
+        $sql[] = 'DELETE FROM  `' . _DB_PREFIX_ . 'order_state` WHERE id_order_state = ' . $idOrderState;
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
