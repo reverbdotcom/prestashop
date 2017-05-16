@@ -404,6 +404,8 @@ class OrdersSyncEngine
             $id_order_state = Configuration::get('PS_OS_OUTOFSTOCK_PAID');
             $this->logInfoCrons('## Product "' . $orderReverb['sku'] . '" has no more inventory on Prestashop !');
             $messages[] = 'Warning ! This product is out of stock !';
+        } elseif($orderReverb['status'] == 'unpaid') {
+            $id_order_state = Configuration::get('PS_OS_PENDING_PAYMENT');
         } else {
             $id_order_state = Configuration::get('PS_OS_PAYMENT');
         }
