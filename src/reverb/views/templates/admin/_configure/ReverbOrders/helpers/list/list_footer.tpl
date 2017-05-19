@@ -67,6 +67,11 @@
                 }
             }
 
+            // Update PS order ID
+            if (response['order-id'] !== 'undefined') {
+                tr.find('.order-id').html(response['order-id']);
+            }
+
         }
 
 		$('a.btn-view-order-sync').on('click',function(e) {

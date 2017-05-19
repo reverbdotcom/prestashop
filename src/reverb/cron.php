@@ -47,13 +47,14 @@ try {
     //$pstoken = Tools::getAdminTokenLite('AdminModules');
     //if (!Tools::getValue('token') && Tools::getValue('token') == $pstoken) {
     if ($module->isApiTokenAvailable()) {
+        $context = new \ContextCron($module);
         switch ($code_cron) {
             case CODE_CRON_ORDERS:
-                $engine = new \OrdersSyncEngine($module, $helper);
+                $engine = new \OrdersSyncEngine($module, $helper, $context);
                 $engine->processSyncOrder($idCron);
                 break;
             case CODE_CRON_ORDERS_RECONCILIATION:
-                $engine = new \OrdersSyncEngine($module, $helper);
+                $engine = new \OrdersSyncEngine($module, $helper, $context);
                 $engine->processSyncOrder($idCron, true);
                 break;
             case CODE_CRON_PRODUCTS:
