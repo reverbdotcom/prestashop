@@ -110,14 +110,14 @@ class ReverbSync
         //=========================================
         //          ORDER CLAUSE
         //=========================================
-        if (Tools::getValue('ps_productOrderby')) {
-            $sql->orderBy(Tools::getValue('ps_productOrderby') . ' ' . Tools::getValue('ps_productOrderway'));
+        if (Tools::getValue('ps_product_reverbOrderby')) {
+            $sql->orderBy(Tools::getValue('ps_product_reverbOrderby') . ' ' . Tools::getValue('ps_product_reverbOrderway'));
         }
 
         //=========================================
         //          PAGINATION
         //=========================================
-        $page = (int)Tools::getValue('submitFilterps_product');
+        $page = (int)Tools::getValue('submitFilterps_product_reverb');
         if ($page > 1) {
             $sql->limit(Tools::getValue('selected_pagination'), $page * Tools::getValue('selected_pagination'));
         } else {
@@ -169,10 +169,11 @@ class ReverbSync
 
         foreach ($values as $key => $params) {
             if (preg_match('/' . Reverb::LIST_ID . 'Filter_/', $key) && !empty($params)) {
-                $fieldWithPrefix = preg_replace('/ps_productFilter_/', '', $key);
+
+                $fieldWithPrefix = preg_replace('/ps_product_reverbFilter_/', '', $key);
                 $field = preg_replace('/pl!/', '', $fieldWithPrefix);
                 $field = preg_replace('/rs!/', '', $field);
-                $field = preg_replace('/pl!/', '', $field);
+                $field = preg_replace('/p!/', '', $field);
                 $filterKey = $fieldWithPrefix;
                 if (isset($list_field[$field])){
                     if (isset($list_field[$field]['filter_key'])) {

@@ -30,7 +30,7 @@ class Reverb extends Module
     const KEY_SETTINGS_CONDITION = 'settings_condition';
     const KEY_SETTINGS_PRICE = 'settings_price';
 
-    const LIST_ID = 'ps_product';
+    const LIST_ID = 'ps_product_reverb';
     const LIST_CATEGORY_ID = 'ps_mapping_category';
     const LIST_ORDERS_ID = 'ps_reverb_orders';
 
@@ -748,8 +748,23 @@ class Reverb extends Module
         }
 
         // Orders sync pagination
+        if (Tools::isSubmit('submitFilterps_reverb_') || Tools::isSubmit('ps_reverb_ordersOrderby')) {
+            $this->active_tab = 'orders_status';
+        }
+
+        // Orders sync pagination
         if (Tools::isSubmit('submitFilterps_reverb_orders') || Tools::isSubmit('ps_reverb_ordersOrderby')) {
             $this->active_tab = 'orders_status';
+        }
+
+        // Process reset to Filters
+        if (Tools::isSubmit('submitResetps_reverb_orders')) {
+            $this->processResetFilters(self::LIST_ORDERS_ID);
+        }
+
+        // Process reset to Filters
+        if (Tools::isSubmit('submitResetps_product_reverb')) {
+            $this->processResetFilters(self::LIST_ID);
         }
 
         // Bulk sync all
@@ -786,6 +801,51 @@ class Reverb extends Module
                 die();
             }
         }
+    }
+
+    /**
+     * Cancel all filters for this tab
+     *
+     * @param int|null $list_id
+     */
+    public function processResetFilters($list_id = null)
+    {
+        $prefix = $this->getCookieOrderByPrefix();
+        $filters = $this->context->cookie->getFamily($prefix.$list_id.'Filter_');
+        foreach ($filters as $cookie_key => $filter) {
+            if (strncmp($cookie_key, $prefix.$list_id.'Filter_', 7 + Tools::strlen($prefix.$list_id)) == 0) {
+                $key = substr($cookie_key, 7 + Tools::strlen($prefix.$list_id));
+                if (is_array($this->fields_list) && array_key_exists($key, $this->fields_list)) {
+                    $this->context->cookie->$cookie_key = null;
+                }
+                unset($this->context->cookie->$cookie_key);
+            }
+        }
+
+        if (isset($this->context->cookie->{'submitFilter'.$list_id})) {
+            unset($this->context->cookie->{'submitFilter'.$list_id});
+        }
+        if (isset($this->context->cookie->{$prefix.$list_id.'Orderby'})) {
+            unset($this->context->cookie->{$prefix.$list_id.'Orderby'});
+        }
+        if (isset($this->context->cookie->{$prefix.$list_id.'Orderway'})) {
+            unset($this->context->cookie->{$prefix.$list_id.'Orderway'});
+        }
+
+        $_POST = array();
+        $this->_filter = false;
+        unset($this->_filterHaving);
+        unset($this->_having);
+    }
+
+    /**
+     *  Oveeride from AdminController
+     *
+     * @return mixed
+     */
+    protected function getCookieOrderByPrefix()
+    {
+        return str_replace(array('admin', 'controller'), '', Tools::strtolower(get_class($this)));
     }
 
     /**
