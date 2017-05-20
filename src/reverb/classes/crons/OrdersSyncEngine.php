@@ -556,8 +556,8 @@ class OrdersSyncEngine
             $customer = new Customer();
             $customer->lastname = $order['buyer_last_name'];
             $customer->firstname = $order['buyer_first_name'];
-            $customer->email = $order['order_number'] . self::EMAIL_GENERIC_CUSTOMER;
-            $customer->passwd = $order['order_number'] . $order['buyer_last_name'];
+            $customer->email = $order['buyer_id'] . self::EMAIL_GENERIC_CUSTOMER;
+            $customer->passwd = $order['buyer_id'] . $order['buyer_last_name'];
             $customer->id_shop = $this->context->getIdShop();
             $customer->id_shop_group = $this->context->getIdShopGroup();
             $customer->active = false;

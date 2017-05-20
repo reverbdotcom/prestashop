@@ -127,15 +127,27 @@ table.ps_product tr {
 }
 
 .bootstrap .label-to_sync,
-.bootstrap .label-ignored
+.bootstrap .label-ignored,
+.bootstrap .label-unpaid,
+.bootstrap .label-pending_payment,
+.bootstrap .label-pending_review
 {
     background-color: #fbbb22;
+}
+
+.bootstrap .label-refunded,
+.bootstrap .label-blocked,
+.bootstrap .label-cancelled
+{
+    background-color:#8A2BE2;
 }
 
 .bootstrap .label-shipping-sent,
 .bootstrap .label-saved,
 .bootstrap .label-paid,
 .bootstrap .label-shipped,
+.bootstrap .label-received,
+.bootstrap .label-picked_up,
 .bootstrap .label-local
 {
     background-color: #95CC6B;
