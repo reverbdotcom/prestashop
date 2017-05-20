@@ -91,99 +91,17 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $reverbId = Tools::getValue('reverb-id');
 
         if (!empty($reverbId)) {
-            $helper = new HelperCron($this->module);
-            $orderSyncEngine = new OrdersSyncEngine($this->module, $helper);
 
             // Call and getting an order from reverb
             $reverbOrders = new \Reverb\ReverbOrders($this->module);
-            $order = $reverbOrders->getOrder($reverbId);
+            $distReverbOrder = $reverbOrders->getOrder($reverbId);
 
-            $reverbOrder = $this->module->reverbOrders->getOrders(array('reverb_order_number' => $reverbId), true);
-
-            if (!empty($order)) {
-
-                $lastSynced = (new \DateTime())->format('Y-m-d H:i:s');
-
-                try {
-                    $context = new \ContextCron($this->module);
-                    if (in_array($order['status'], \Reverb\ReverbOrders::$statusToSync)) {
-                        $idOrder = $orderSyncEngine->createPrestashopOrder($order, $context, 0);
-                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
-                            array(
-                                'id_order' => $idOrder,
-                                'id_shop' => $context->getIdShop(),
-                                'id_shop_group' => $context->getIdShopGroup(),
-                                'status' => $order['status'],
-                                'details' => 'Reverb order synced',
-                                'date' => $lastSynced,
-                                'shipping_method' => isset($order['shipping_method']) ? $order['shipping_method'] : null,
-                            )
-                        );
-                        die(json_encode(array(
-                            'status' => $order['status'],
-                            'message' => 'Reverb order synced',
-                            'last-synced' => $lastSynced,
-                            'reverb-id' => $reverbId,
-                        )));
-                    } else {
-                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
-                            array(
-                                'id_shop' => $context->getIdShop(),
-                                'id_shop_group' => $context->getIdShopGroup(),
-                                'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
-                                'details' => 'Status not synced : ' . $order['status'],
-                                'date' => $lastSynced,
-                                'shipping_method' => isset($order['shipping_method']) ? $order['shipping_method'] : null,
-                                'reverb_order_number' => $order['order_number'],
-                                'reverb_product_sku' => $order['sku'],
-                            )
-                        );
-                        die(json_encode(array(
-                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
-                            'message' => 'Status not synced : ' . $order['status'],
-                            'last-synced' => $lastSynced,
-                            'reverb-id' => $reverbId,
-                        )));
-                    }
-                } catch (Exception $e) {
-                    if ($e->getCode() == OrdersSyncEngine::ERROR_IGNORED) {
-                        $this->logInfoCrons('Order sync ignored : ' . $e->getMessage());
-                        $this->logInfoCrons($e->getTraceAsString());
-                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
-                            array(
-                                'id_shop' => $context->getIdShop(),
-                                'id_shop_group' => $context->getIdShopGroup(),
-                                'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
-                                'details' => $e->getMessage(),
-                                'date' => $lastSynced,
-                            )
-                        );
-                        die(json_encode(array(
-                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
-                            'message' => $e->getMessage(),
-                            'last-synced' => $lastSynced,
-                            'reverb-id' => $reverbId,
-                        )));
-                    } else {
-                        $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
-                        $this->logInfoCrons($e->getTraceAsString());
-                        $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'],
-                            array(
-                                'id_shop' => $context->getIdShop(),
-                                'id_shop_group' => $context->getIdShopGroup(),
-                                'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                                'details' => $e->getMessage(),
-                                'date' => $lastSynced,
-                            )
-                        );
-                        die(json_encode(array(
-                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                            'message' => $e->getMessage(),
-                            'last-synced' => $lastSynced,
-                            'reverb-id' => $reverbId,
-                        )));
-                    }
-                }
+            if (!empty($distReverbOrder)) {
+                $helper = new HelperCron($this->module);
+                $context = new \ContextCron($this->module);
+                $orderSyncEngine = new OrdersSyncEngine($this->module, $helper, $context);
+                $response = $orderSyncEngine->syncOrder($distReverbOrder);
+                die(json_encode($response));
             } else {
                 die(json_encode(array(
                     'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,

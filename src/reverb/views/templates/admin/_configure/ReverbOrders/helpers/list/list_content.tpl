@@ -55,6 +55,20 @@
         {else}
         >
         {/if}
+    {elseif $key == 'id_order'}
+        <td
+            {if isset($params.position)}
+                id="td_{if !empty($position_group_identifier)}{$position_group_identifier|escape:'htmlall':'UTF-8'}{else}0{/if}_{$tr.$identifier|escape:'htmlall':'UTF-8'}{if $smarty.capture.tr_count > 1}_{($smarty.capture.tr_count - 1)|intval}{/if}"
+            {/if}
+            class="order-id {strip}{if !$no_link}pointer{/if}
+                            {if isset($params.position) && $order_by == 'position'  && $order_way != 'DESC'} dragHandle{/if}
+                            {if isset($params.class)} {$params.class|escape:'htmlall':'UTF-8'}{/if}
+                            {if isset($params.align)} {$params.align|escape:'htmlall':'UTF-8'}{/if}{/strip}"
+            {if (!isset($params.position) && !$no_link && !isset($params.remove_onclick))}
+            onclick="document.location = '{$current_index|escape:'html':'UTF-8'}&amp;{$identifier|escape:'html':'UTF-8'}={$tr.$identifier|escape:'html':'UTF-8'}{if $view}&amp;view{else}&amp;update{/if}{$table|escape:'html':'UTF-8'}{if $page > 1}&amp;page={$page|intval}{/if}&amp;token={$token|escape:'html':'UTF-8'}'">
+        {else}
+        >
+        {/if}
     {elseif $key == 'details'}
         <td
             {if isset($params.position)}
@@ -69,7 +83,7 @@
         {else}
         >
         {/if}
-    {elseif $key == 'last_sync'}
+    {elseif $key == 'updated_at'}
         <td
             {if isset($params.position)}
                 id="td_{if !empty($position_group_identifier)}{$position_group_identifier|escape:'htmlall':'UTF-8'}{else}0{/if}_{$tr.$identifier|escape:'htmlall':'UTF-8'}{if $smarty.capture.tr_count > 1}_{($smarty.capture.tr_count - 1)|intval}{/if}"

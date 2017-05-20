@@ -35,144 +35,88 @@ class OrdersSyncEngine
     /** @var  Reverb */
     protected $module;
 
+    /** @var HelperCron  */
     public $helper;
+
+    /** @var ContextCron  */
+    public $context;
+
+    public $nbOrdersTotal = 0;
+    public $nbOrdersSynced = 0;
+    public $nbOrdersError = 0;
+    public $nbOrdersIgnored = 0;
+    public $currentDate;
+
+    public $id_product = null;
+    public $id_product_attribute = null;
+
+    public $customerAddressId;
+
+    /** @var ReverbSync */
+    public $reverbSync;
 
     /**
      * OrdersSyncEngine constructor.
+     * @param $module
+     * @param HelperCron $helper
+     * @param ContextCron $context
      */
-    public function __construct($module, \HelperCron $helper)
+    public function __construct($module, \HelperCron $helper, ContextCron $context)
     {
         $this->module = $module;
         $this->helper = $helper;
+        $this->context = $context;
+        $this->currentDate = (new \DateTime())->format('Y-m-d H:i:s');
+        $this->reverbSync = new ReverbSync($this->module);
     }
 
     /**
-     *  Processing an sync with orders from Reverb
+     * Processing orders sync from Reverb
      *
+     * @param $idCron
+     * @param bool $reconciliation
      */
     public function processSyncOrder($idCron, $reconciliation = false)
     {
         try {
-            $context = new \ContextCron($this->module);
-
             // Call and getting all orders from reverb
             $reverbOrders = new \Reverb\ReverbOrders($this->module);
 
             if ($reconciliation) {
                 $startDate = new \DateTime('yesterday');
                 $endDate = new \DateTime('midnight');
-                $orders = $reverbOrders->getOrders($startDate, $endDate);
             } else {
                 $date = $this->helper->getDateLastCronWithStatus(HelperCron::CODE_CRON_STATUS_END);
-                $this->logInfoCrons('# Last orders sync : ' . var_export($date, true));
+                $this->logInfoCrons('# Last orders sync : ' . $date);
                 if ($date) {
                     $startDate = new \DateTime($date);
+                    $startDate->sub(new DateInterval('PT12H'));
+                    $this->logInfoCrons('# sub 12 hours : ' . $startDate->format('Y-m-d\TH:i:s'));
                 } else {
                     $startDate = null;
                 }
 
-                $orders = $reverbOrders->getOrders($startDate);
+                $endDate = null;
             }
+            $distReverbOrders = $reverbOrders->getOrders($startDate, $endDate);
 
-            $nbOrdersTotal = count($orders);
-            $nbOrdersSynced = $nbOrdersError = $nbOrdersIgnored = 0;
-            $this->logInfoCrons('# ' . $nbOrdersTotal . ' order(s) to sync');
+            $this->nbOrdersTotal = count($distReverbOrders);
+
+            $this->logInfoCrons('# ' . $this->nbOrdersTotal . ' order(s) to sync');
 
             // Process Order in Prestashop
-            foreach ($orders as $order) {
-                try {
-                    $reverbOrder = $this->checkIfOrderAlreadySync($order);
-                    if (empty($reverbOrder)) {
-                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is not synced yet.');
-                    } else {
-                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is already synced : ' . Tools::jsonEncode($reverbOrder));
-                        if ($reverbOrder['id_order']) {
-                            $this->logInfoCrons('# Prestashop order already saved : ' . $reverbOrder['id_order']);
-                            throw new Exception('Prestashop order already saved : ' . $reverbOrder['id_order'], self::ERROR_IGNORED);
-                        }
-                    }
-
-                    if (in_array($order['status'], \Reverb\ReverbOrders::$statusToSync)) {
-                        $idOrder = $this->createPrestashopOrder($order, $context, $idCron);
-                        $this->module->reverbOrders->insert(
-                            $context->getIdShop(),
-                            $context->getIdShopGroup(),
-                            $idOrder,
-                            $order['order_number'],
-                            $order['sku'],
-                            ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
-                            'Reverb order synced',
-                            isset($order['shipping_method']) ? $order['shipping_method'] : null
-                        );
-                        $nbOrdersSynced++;
-                        $this->logInfoCrons('# Order ' . $order['order_number'] . ' is now synced with id : ' . $idOrder);
-                    } else {
-                        $message = 'Order ' . $order['order_number'] . ' status not synced : ' . $order['status'];
-                        $nbOrdersIgnored++;
-                        $this->logInfoCrons('# ' . $message);
-                        $this->module->reverbOrders->insert(
-                            $context->getIdShop(),
-                            $context->getIdShopGroup(),
-                            null,
-                            $order['order_number'],
-                            $order['sku'],
-                            ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                            $message,
-                            isset($order['shipping_method']) ? $order['shipping_method'] : null
-                        );
-                    }
-                } catch (Exception $e) {
-                    if ($e->getCode() == self::ERROR_IGNORED) {
-                        $this->logInfoCrons('Order sync ignored : ' . $e->getMessage());
-                        $this->logInfoCrons($e->getTraceAsString());
-                        $nbOrdersIgnored++;
-                        $this->module->reverbOrders->insert(
-                            $context->getIdShop(),
-                            $context->getIdShopGroup(),
-                            null,
-                            $order['order_number'],
-                            $order['sku'],
-                            ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
-                            $e->getMessage(),
-                            isset($order['shipping_method']) ? $order['shipping_method'] : null
-                        );
-                    } else {
-                        $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
-                        $this->logInfoCrons($e->getTraceAsString());
-                        $nbOrdersError++;
-                        $this->module->reverbOrders->insert(
-                            $context->getIdShop(),
-                            $context->getIdShopGroup(),
-                            null,
-                            $order['order_number'],
-                            $order['sku'],
-                            ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                            $e->getMessage(),
-                            isset($order['shipping_method']) ? $order['shipping_method'] : null
-                        );
-                    }
-                }
+            foreach ($distReverbOrders as $distReverbOrder) {
+                $this->syncOrder($distReverbOrder);
             }
 
-            if ($nbOrdersError > 1) {
-                $this->helper->insertOrUpdateCronStatus(
-                    $idCron,
-                    CODE_CRON_ORDERS,
-                    HelperCron::CODE_CRON_STATUS_ERROR,
-                    "$nbOrdersSynced/$nbOrdersTotal order(s) synced, $nbOrdersError error(s), $nbOrdersIgnored ignored",
-                    $nbOrdersTotal,
-                    $nbOrdersSynced
-                );
-            } else {
-                $this->helper->insertOrUpdateCronStatus(
-                    $idCron,
-                    CODE_CRON_ORDERS,
-                    HelperCron::CODE_CRON_STATUS_END,
-                    "$nbOrdersSynced/$nbOrdersTotal order(s) synced, $nbOrdersError error(s), $nbOrdersIgnored ignored",
-                    $nbOrdersTotal,
-                    $nbOrdersSynced
-                );
-            }
+            $this->helper->insertOrUpdateCronStatus(
+                $idCron,
+                CODE_CRON_ORDERS,
+                ($this->nbOrdersError > 1 ? HelperCron::CODE_CRON_STATUS_ERROR : HelperCron::CODE_CRON_STATUS_END),
+                $this->nbOrdersSynced . '/' . $this->nbOrdersTotal . ' order(s) synced, ' . $this->nbOrdersError . ' error(s), ' . $this->nbOrdersIgnored . ' ignored',
+                $this->nbOrdersTotal,
+                $this->nbOrdersSynced
+            );
 
         } catch (\Exception $e) {
             $error = '/!\ Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString();
@@ -188,94 +132,382 @@ class OrdersSyncEngine
         }
     }
 
+    public function syncOrder($distReverbOrder)
+    {
+        $reverbOrder = $this->checkIfOrderAlreadySync($distReverbOrder);
+
+        if (empty($reverbOrder)) {
+            $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is not synced yet => insert');
+            return $this->createOrderSync($distReverbOrder);
+        }
+        else {
+            $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' already synced before => update');
+            return $this->updateOrderSync($distReverbOrder, $reverbOrder);
+        }
+    }
+
+    /**
+     * Sync order for the first time
+     *
+     * @param array $distReverbOrder
+     * @return array
+     */
+    public function createOrderSync($distReverbOrder)
+    {
+        try {
+            // If status is ignored, we do not create PS order !
+            if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesIgnoredForOrderCreation())) {
+                $message = 'Order ' . $distReverbOrder['order_number'] . ' status not synced : ' . $distReverbOrder['status'];
+                $this->nbOrdersIgnored++;
+                $this->logInfoCrons('# ' . $message);
+                $this->module->reverbOrders->insert(
+                    $this->context->getIdShop(),
+                    $this->context->getIdShopGroup(),
+                    null,
+                    null,
+                    null,
+                    $distReverbOrder['order_number'],
+                    $distReverbOrder['sku'],
+                    ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                    $message,
+                    isset($distReverbOrder['shipping_method']) ? $distReverbOrder['shipping_method'] : null
+                );
+                return array(
+                    'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                    'message' => $message,
+                    'last-synced' => $this->currentDate,
+                    'reverb-id' => $distReverbOrder['order_number'],
+                );
+            }
+
+            // We create the PS order
+            $idOrder = $this->createPrestashopOrder($distReverbOrder);
+            $this->module->reverbOrders->insert(
+                $this->context->getIdShop(),
+                $this->context->getIdShopGroup(),
+                $idOrder,
+                $this->id_product,
+                $this->id_product_attribute,
+                $distReverbOrder['order_number'],
+                $distReverbOrder['sku'],
+                $distReverbOrder['status'],
+                'Reverb order synced',
+                isset($distReverbOrder['shipping_method']) ? $distReverbOrder['shipping_method'] : null
+            );
+            $this->nbOrdersSynced++;
+            $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is now synced with id : ' . $idOrder);
+            return array(
+                'status' => $distReverbOrder['status'],
+                'message' => 'Reverb order synced',
+                'last-synced' => $this->currentDate,
+                'reverb-id' => $distReverbOrder['order_number'],
+                'order-id' => $idOrder,
+            );
+        } catch (Exception $e) {
+            $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+            $this->logInfoCrons($e->getTraceAsString());
+            $this->nbOrdersError++;
+            $this->module->reverbOrders->insert(
+                $this->context->getIdShop(),
+                $this->context->getIdShopGroup(),
+                (isset($idOrder) && !empty($idOrder)) ? $idOrder : null,
+                $this->id_product,
+                $this->id_product_attribute,
+                $distReverbOrder['order_number'],
+                $distReverbOrder['sku'],
+                ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                $e->getMessage(),
+                isset($distReverbOrder['shipping_method']) ? $distReverbOrder['shipping_method'] : null
+            );
+            return array(
+                'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                'message' => $e->getMessage(),
+                'last-synced' => $this->currentDate,
+                'reverb-id' => $distReverbOrder['order_number'],
+            );
+        }
+    }
+
+    /**
+     * Sync order already synced before
+     *
+     * @param array $distReverbOrder
+     * @param array $reverbOrder
+     * @return array
+     */
+    public function updateOrderSync($distReverbOrder, $reverbOrder)
+    {
+        try {
+
+            // Reverb status unknown
+            if (!in_array($distReverbOrder['status'], ReverbOrders::getAllReverbStatuses())) {
+                $message = 'Order ' . $distReverbOrder['order_number'] . ' status not synced : ' . $distReverbOrder['status'];
+                $this->nbOrdersIgnored++;
+                $this->logInfoCrons('# ' . $message);
+                $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
+                    'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                    'details' => $message,
+                    'updated_at' => $this->currentDate,
+                ));
+                return array(
+                    'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
+                    'message' => $message,
+                    'last-synced' => $this->currentDate,
+                    'reverb-id' => $distReverbOrder['order_number'],
+                );
+            }
+
+            // PS order does not exist yet
+            if (empty($reverbOrder['id_order'])) {
+
+                // If status is ignored, we do not create PS order !
+                if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesIgnoredForOrderCreation())) {
+                    $message = 'Order ' . $distReverbOrder['order_number'] . ' status not synced : ' . $distReverbOrder['status'];
+                    $this->nbOrdersIgnored++;
+                    $this->logInfoCrons('# ' . $message);
+                    $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
+                        'reverb_order_number' => $distReverbOrder['order_number'],
+                        'reverb_product_sku' => $distReverbOrder['sku'],
+                        'status' => $distReverbOrder['status'],
+                        'details' => $message,
+                        'shipping_method' => isset($distReverbOrder['shipping_method']) ? $distReverbOrder['shipping_method'] : null,
+                    ));
+                    return array(
+                        'status' => $distReverbOrder['status'],
+                        'message' => $message,
+                        'last-synced' => $this->currentDate,
+                        'reverb-id' => $distReverbOrder['order_number'],
+                    );
+                }
+
+                // Create PS order
+                $idOrder = $this->createPrestashopOrder($distReverbOrder);
+                $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
+                    'id_order' => $idOrder,
+                    'id_product' => $this->id_product,
+                    'id_product_attribute' => $this->id_product_attribute,
+                    'reverb_order_number' => $distReverbOrder['order_number'],
+                    'reverb_product_sku' => $distReverbOrder['sku'],
+                    'status' => $distReverbOrder['status'],
+                    'details' => 'Reverb order synced',
+                    'shipping_method' => isset($distReverbOrder['shipping_method']) ? $distReverbOrder['shipping_method'] : null,
+                ));
+                $this->nbOrdersSynced++;
+                $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is now synced with id : ' . $idOrder);
+                return array(
+                    'status' => $distReverbOrder['status'],
+                    'message' => 'Reverb order synced',
+                    'last-synced' => $this->currentDate,
+                    'reverb-id' => $distReverbOrder['order_number'],
+                );
+            }
+
+            // PS order already exists
+            $this->logInfoCrons('# Prestashop order already saved : ' . $reverbOrder['id_order'] . ' - ' . $reverbOrder['status'] . ' => update');
+            $psOrder = new Order($reverbOrder['id_order']);
+            return $this->updatePsOrderByReverbOrder($psOrder, $reverbOrder, $distReverbOrder);
+
+        } catch (Exception $e) {
+            $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
+            $this->logInfoCrons($e->getTraceAsString());
+            $this->nbOrdersError++;
+            $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
+                'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                'details' => pSQL($e->getMessage()),
+                'updated_at' => $this->currentDate,
+                'shipping_method' => isset($distReverbOrder['shipping_method']) ? $distReverbOrder['shipping_method'] : null,
+            ));
+            return array(
+                'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
+                'message' => $e->getMessage(),
+                'last-synced' => $this->currentDate,
+                'reverb-id' => $distReverbOrder['order_number'],
+            );
+        }
+    }
+
 
     /**
      *  Check if order has already synced
      *
-     * @param $order
-     * @return false|null|string
+     * @param array $distReverbOrder
+     * @return false|null|array
      */
-    public function checkIfOrderAlreadySync($order)
+    public function checkIfOrderAlreadySync($distReverbOrder)
     {
-        $this->logInfoCrons('# Check if order "' . $order['order_number'] . '" exists on prestashop');
-        $this->logInfoCrons('# ' . json_encode($order));
+        $this->logInfoCrons('# Check if order "' . $distReverbOrder['order_number'] . '" exists on prestashop');
+        $this->logInfoCrons('# ' . json_encode($distReverbOrder));
         $sql = new DbQuery();
         $sql->select('o.*')
             ->from('reverb_orders', 'o')
-            ->where('o.`reverb_order_number` = "' . $order['order_number'] . '"');
+            ->where('o.`reverb_order_number` = "' . $distReverbOrder['order_number'] . '"');
 
         return Db::getInstance()->getRow($sql);
     }
 
     /**
-     *  Get product attribute
-     *
-     * @param $order
-     * @return false|null|string
+     * @param Order $psOrder
+     * @param array $localReverbOrder
+     * @param array $distReverbOrder
      */
-    public function getProductAttribute($order)
+    public function updatePsOrderByReverbOrder(Order $psOrder, $localReverbOrder, $distReverbOrder)
     {
-        $sql = new DbQuery();
-        $sql->select('pa.id_order')
-            ->from('product_attributes', 'pa')
-            ->where('pa.`reference` = "' . $order['order_number'] . '"');
+        // if Reverb status has no changed, we do nothing
+        if ($localReverbOrder['status'] == $distReverbOrder['status']) {
+            $this->nbOrdersIgnored++;
+            $this->logInfoCrons('# Order ' . $localReverbOrder['reverb_order_number'] . ' status has not changed : ' . $localReverbOrder['status'] . ' =  ' . $distReverbOrder['status']);
+            $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
+                'updated_at' => $this->currentDate,
+            ));
+            return array(
+                'status' => $localReverbOrder['status'],
+                'message' => $localReverbOrder['details'],
+                'last-synced' => $this->currentDate,
+                'reverb-id' => $distReverbOrder['order_number'],
+            );
+        }
 
-        $id = Db::getInstance()->getValue($sql);
-        return $id;
+        // if Reverb order is in a final status, we do nothing
+        if (in_array($localReverbOrder['status'], ReverbOrders::getFinalStatuses())) {
+            $this->nbOrdersIgnored++;
+            $this->logInfoCrons('# Order ' . $localReverbOrder['reverb_order_number'] . ' in final status : ' . $localReverbOrder['status']);
+            $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
+                'updated_at' => $this->currentDate,
+            ));
+
+            // Update quantity if needed
+            $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
+
+            return array(
+                'status' => $localReverbOrder['status'],
+                'message' => $localReverbOrder['details'],
+                'last-synced' => $this->currentDate,
+                'reverb-id' => $distReverbOrder['order_number'],
+            );
+        }
+
+        // Update PS order according reverb order status
+        $id_order_state = ReverbOrders::getPsStateAccordingReverbStatus($distReverbOrder['status']);
+
+        $order_history = new OrderHistory();
+        $order_history->id_order = $psOrder->id;
+        $order_history->id_order_state = $id_order_state;
+        $order_history->changeIdOrderState($id_order_state, $psOrder->id);
+
+        $message = 'Order ' . $distReverbOrder['order_number'] . ' sync updated : ' . $distReverbOrder['status'];
+        $this->nbOrdersSynced++;
+        $this->logInfoCrons('# ' . $message);
+        $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
+            'status' => $distReverbOrder['status'],
+            'details' => $message,
+            'updated_at' => $this->currentDate,
+        ));
+
+        // Update quantity if needed
+        $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
+
+        return array(
+            'status' => $distReverbOrder['status'],
+            'message' => $message,
+            'last-synced' => $this->currentDate,
+            'reverb-id' => $distReverbOrder['order_number'],
+        );
+    }
+
+    /**
+     * @param array $localReverbOrder
+     * @param array $distReverbOrder
+     * @return boolean
+     */
+    public function updateOrderQuantity($localReverbOrder, $distReverbOrder)
+    {
+        $this->logInfoCrons('# Check if quantity has to be updated');
+        if (!isset($localReverbOrder['id_product'])) {
+            $this->logInfoCrons('## id_product is empty');
+            return false;
+        }
+        if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesWhichUpdateExstingOrder())) {
+            $productFull = $this->reverbSync->getProductWithStatus($localReverbOrder['id_product'], $localReverbOrder['id_product_attribute']);
+
+            if (empty($productFull)) {
+                $this->logInfoCrons('## id_product : ' . $localReverbOrder['id_product'] . ' not found - id_product_attribute: ' . $localReverbOrder['id_product_attribute']);
+                return false;
+            }
+
+            $quantity = $productFull['quantity_stock'];
+
+            $qty = isset($distReverbOrder['quantity']) ? (int) $distReverbOrder['quantity'] : 1;
+
+            $this->logInfoCrons('## Change quantity for id_product: ' . $localReverbOrder['id_product'] . ' => from ' . $quantity . ' to ' . ($quantity+$qty));
+
+            StockAvailable::setQuantity(
+                $localReverbOrder['id_product'],
+                $localReverbOrder['id_product_attribute'],
+                ($quantity + $qty),
+                $this->context->getIdShop()
+            );
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
      *  Create a cart with products
      *
-     * @param $context
      * @param $id_address
      * @param $id_currency
      * @param $product
-     * @return int id Cart
+     * @return Cart
      */
-    public function initCart(ContextCron $context, $id_address, $id_currency, $product)
+    public function initCart($id_address, $id_currency, $product, $orderReverb)
     {
-        $this->logInfoCrons('# initCart');
+        $this->logInfoCrons('# initCart : ' . $id_address . ' ' . $id_currency);
 
         $cart = new Cart();
-        $cart->id_shop_group = $context->getIdShop();
-        $cart->id_shop = $context->getIdShopGroup();
-        $cart->id_customer = $context->getIdCustomer();
+        $cart->id_shop_group = $this->context->getIdShop();
+        $cart->id_shop = $this->context->getIdShopGroup();
+        $cart->id_customer = $this->context->getIdCustomer();
         $cart->id_carrier = 0;
         $cart->id_address_delivery = $id_address;
         $cart->id_address_invoice = $id_address;
         $cart->id_currency = $id_currency;
         $cart->add();
 
+        $qty = isset($orderReverb['quantity']) ? (int) $orderReverb['quantity'] : 1;
+
         // Add product in cart
-        $cart->updateQty(1, $product['id_product'], $product['id_product_attribute'], false);
+        $cart->updateQty($qty, $product['id_product'], $product['id_product_attribute'], false);
         $this->logInfoCrons('## cart added : ' . $cart->id);
 
-        return $cart->id;
+        return $cart;
     }
 
     /**
      *  Create an address for one customer
      *
      * @param $order
-     * @param $id_customer
-     * @param $id_shop
-     * @param $id_shop_group
-     * @return int idAdress
+     * @param Customer $customer
+     * @return Address
      */
-    public function initAddress($order, ContextCron $context)
+    public function initAddress($order, Customer $customer)
     {
         $this->logInfoCrons('# initAddress');
 
         $address = new Address();
-        $address->id_customer = $context->getIdCustomer();
+        $address->id_customer = $customer->id;
         $address->firstname = $order['buyer_first_name'];
         $address->lastname = $order['buyer_last_name'];
         $address->alias = $order['buyer_last_name'];
 
-        if ($order['shipping_method'] == 'shipped'  && array_key_exists('shipping_address', $order)
-            && !empty($order['shipping_address'])) {
-            $this->logInfoCrons('## Add buyer shipping address :');
+        if (
+            isset($order['shipping_method'])
+            && $order['shipping_method'] == 'shipped'
+            && array_key_exists('shipping_address', $order)
+            && !empty($order['shipping_address'])
+        ) {
+            $this->logInfoCrons('## Add buyer shipping address');
             $shipping = $order['shipping_address'];
             $address->address1 = $shipping['street_address'];
             $address->address2 = $shipping['extended_address'];
@@ -305,80 +537,79 @@ class OrdersSyncEngine
         $address->add();
         $this->logInfoCrons('## address added = ' . var_export($address->id, true));
 
-        return $address->id;
+        return $address;
     }
 
     /**
      * Create Basic customer for Order
      *
      * @param $order
-     * @param ContextCron
-     * @return int
+     * @return Customer $customer
      */
-    public function initCustomer($order, $context, $idCron)
+    public function initCustomer($order)
     {
-        $customer = new Customer();
-        $customer->lastname = $order['buyer_last_name'];
-        $customer->firstname = $order['buyer_first_name'];
-        $customer->email = $idCron . $order['order_number'] . self::EMAIL_GENERIC_CUSTOMER;
-        $customer->passwd = $idCron . $order['order_number'] . $order['buyer_last_name'];
-        $customer->id_shop = $context->getIdShop();
-        $customer->id_shop_group = $context->getIdShopGroup();
-        $customer->active = false;
-        $customer->add();
+        // Try to find customer if exists
+        $customer = $this->findCustomerByReverbOrder($order);
 
-        $context->setIdCustomer($customer->id);
+        if (!$customer) {
+            $this->logInfoCrons('### customer does not exist, create it');
+            $customer = new Customer();
+            $customer->lastname = $order['buyer_last_name'];
+            $customer->firstname = $order['buyer_first_name'];
+            $customer->email = $order['order_number'] . self::EMAIL_GENERIC_CUSTOMER;
+            $customer->passwd = $order['order_number'] . $order['buyer_last_name'];
+            $customer->id_shop = $this->context->getIdShop();
+            $customer->id_shop_group = $this->context->getIdShopGroup();
+            $customer->active = false;
+            $customer->add();
+            $this->logInfoCrons('### customer created : ' . $customer->id);
+
+            // Create a new Address for Customer
+            $this->logInfoCrons('### we create also an address');
+            $address = $this->initAddress($order, $customer);
+            $this->customerAddressId = $address->id;
+        }
+
+        return $customer;
+    }
+
+    /**
+     *  Create order in prestashop
+     *
+     * @param array $orderReverb
+     * @return int|null
+     */
+    public function createPrestashopOrder($orderReverb)
+    {
+        // Check if currency exists and is active
+        $extra_vars = array('reverb_order_number' => Tools::safeOutput($orderReverb['order_number']));
+        $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product_subtotal']['currency'], $this->context->getIdShop());
+        if (empty($id_currency)) {
+            throw new Exception('Reverb order is in currency ' . $orderReverb['amount_product_subtotal']['currency'] . ' wich is not activated on your shop ' . $this->context->getIdShop());
+        }
+
+        // Check if product exists
+        $product = $this->findProductByReverbOrder($orderReverb);
+
+        // Create Customer
+        $customer = $this->initCustomer($orderReverb);
+
+        $this->context->setIdCustomer($customer->id);
 
         // Add customer to Context if empty
         if (!Context::getContext()->customer) {
             Context::getContext()->customer = $customer;
         }
 
-        return $context;
-    }
-
-    /**
-     *  Create order in prestashop
-     *
-     * @param $order
-     * @param $context ContextCron
-     * @param int $idCron
-     * @return int|null
-     */
-    public function createPrestashopOrder($orderReverb, $context, $idCron)
-    {
-        $extra_vars = array('reverb_order_number' => Tools::safeOutput($orderReverb['order_number']));
-        $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product']['currency'], $context->getIdShop());
-        if (empty($id_currency)) {
-            throw new Exception('Reverb order is in currency ' . $orderReverb['amount_product']['currency'] . ' wich is not activated on your shop ' . $context->getIdShop());
-        }
-
-        // Create Customer
-        $context = $this->initCustomer($orderReverb, $context, $idCron);
-
-        // Create an Address for Customer
-        $id_address = $this->initAddress($orderReverb, $context);
-
         // Create Cart with products
-        $this->logInfoCrons('## Try to find product = ' . $orderReverb['sku']);
-        $reverbSync = new ReverbSync($this->module);
-        $product = $reverbSync->getProductByReference($orderReverb['sku']);
-        $this->logInfoCrons('## product: ' . var_export($product, true));
-        if (empty($product)) {
-            throw new Exception('Product "' . $orderReverb['sku'] . '" not found on Prestashop !');
-        } elseif (count($product) > 1) {
-            throw new Exception('More than one product "' . $orderReverb['sku'] . '" found on Prestashop !');
-        }
+        $cart = $this->initCart($this->customerAddressId, $id_currency, $product, $orderReverb);
 
-        $product = $product[0];
-        $id_cart = $this->initCart($context, $id_address, $id_currency, $product);
-
-        $this->module->getContext()->cart = new Cart((int)$id_cart);
-        $this->module->customer = new Customer($context->getIdCustomer());
+        $this->module->getContext()->cart = $cart;
+        $this->module->customer = new Customer($this->context->getIdCustomer());
         $this->module->currency = new Currency((int)$this->module->getContext()->cart->id_currency);
         $this->module->language = new Language((int)$this->module->getContext()->customer->id_lang);
-        $shop = new Shop($context->getIdShop());
-        Shop::setContext(Shop::CONTEXT_SHOP, $context->getIdShop());
+        $shop = new Shop($this->context->getIdShop());
+        Shop::setContext(Shop::CONTEXT_SHOP, $this->context->getIdShop());
 
         $payment_module = new \ReverbPayment();
 
@@ -394,20 +625,22 @@ class OrdersSyncEngine
         // Check if product is synced with Reverb
         if (!$product['reverb_enabled']) {
             $messages[] = 'Warning ! This product is not synced to Reverb !';
-            $this->logInfoCrons('Product "' . $orderReverb['sku'] . '" is not synced to Reverb !');
+            $this->logInfoCrons('## Product "' . $orderReverb['sku'] . '" is not synced to Reverb !');
         }
 
         // Check inventory
-        $productFull = $reverbSync->getProductWithStatus($product['id_product'], $product['id_product_attribute']);
+        $productFull = $this->reverbSync->getProductWithStatus($product['id_product'], $product['id_product_attribute']);
         $this->logInfoCrons('## product inventory = ' . $productFull['quantity_stock']);
         if ($productFull['quantity_stock'] < 1) {
             $id_order_state = Configuration::get('PS_OS_OUTOFSTOCK_PAID');
             $this->logInfoCrons('## Product "' . $orderReverb['sku'] . '" has no more inventory on Prestashop !');
             $messages[] = 'Warning ! This product is out of stock !';
-        } elseif($orderReverb['status'] == 'unpaid') {
-            $id_order_state = Configuration::get('PS_OS_PENDING_PAYMENT');
         } else {
-            $id_order_state = Configuration::get('PS_OS_PAYMENT');
+            $id_order_state = ReverbOrders::getPsStateAccordingReverbStatus($orderReverb['status']);
+            if (!$id_order_state) {
+                throw new \Exception('Status ' . $orderReverb['status'] . ' not implemented');
+            }
+            $this->logInfoCrons('## Order state set to ' . $id_order_state);
         }
 
         if (!empty($messages)) {
@@ -415,11 +648,15 @@ class OrdersSyncEngine
         }
 
         // Validate order with amount paid without shipping cost
-        $this->logInfoCrons('# validateOrder');
-        $amount_without_shipping = (float)$orderReverb['amount_product']['amount'];
+        $this->logInfoCrons('## validateOrder');
+        $amount_without_shipping = (float)$orderReverb['amount_product_subtotal']['amount'];
         Configuration::set('PS_TAX',0);
+
+        $cart_delivery_option = $cart->getDeliveryOption();
+        $this->logInfoCrons(var_export(array_keys($cart_delivery_option), true));
+
         $payment_module->validateOrder(
-            $this->module->getContext()->cart->id,
+            $cart->id,
             (int)$id_order_state,
             $amount_without_shipping,
             $payment_method,
@@ -431,22 +668,48 @@ class OrdersSyncEngine
             $shop
         );
 
-        $this->logInfoCrons('# validateOrder finished');
+        $this->logInfoCrons('## validateOrder finished');
 
         // Update order object with real amounts paid (product price + shipping)
-        $this->logInfoCrons('# Update order');
+        $this->logInfoCrons('## Update order');
         $order = new Order((int)$payment_module->currentOrder);
+
+        if (in_array($orderReverb['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
+            $this->updatePsOrderAmounts($order, $orderReverb);
+        } else {
+            $this->logInfoCrons('## Order amounts / invoices / payment not changed by Reverb status : ' . $orderReverb['status']);
+        }
+
+        // Update shipping amounts
+        $this->logInfoCrons('## Update order shipping cost');
+        $orderShippings = $order->getShipping();
+        foreach ($orderShippings as $orderShipping) {
+            $orderCarrier = new OrderCarrier($orderShipping['id_order_carrier']);
+            $orderCarrier->shipping_cost_tax_excl = (float)$orderReverb['shipping']['amount'];
+            $orderCarrier->shipping_cost_tax_incl = (float)$orderReverb['shipping']['amount'];
+            $orderCarrier->update();
+        }
+        Configuration::set('PS_TAX',1);
+
+        $this->logInfoCrons('## Order ' . $order->reference . ' : ' . $orderReverb['order_number'] . ' is now synced');
+
+        return $order->id;
+    }
+
+    public function updatePsOrderAmounts(Order $order, array $orderReverb)
+    {
+        // Update order amounts
+        $this->logInfoCrons('## Update order amounts');
         $order->total_shipping = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
         $order->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
         $order->total_shipping_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
         $order->total_paid_real = (float)$orderReverb['total']['amount'];
         $order->total_paid_tax_incl = (float)$orderReverb['total']['amount'];
         $order->total_paid = (float)$orderReverb['total']['amount'];
-        $order->current_state = (int)Configuration::get('PS_OS_PAYMENT');
         $order->update();
 
         // Update invoice amounts
-        $this->logInfoCrons('# Update order invoice');
+        $this->logInfoCrons('## Update order invoices amounts');
         /** @var OrderInvoice[] $orderInvoices */
         $orderInvoices = $order->getInvoicesCollection();
         foreach ($orderInvoices as $orderInvoice) {
@@ -457,29 +720,14 @@ class OrdersSyncEngine
             $orderInvoice->update();
         }
 
-        // Update payment amounts
-        $this->logInfoCrons('# Update order payment');
+        // Update payments amount
+        $this->logInfoCrons('## Update payments amount');
         /** @var OrderPayment[] $orderPayments */
         $orderPayments = $order->getOrderPayments();
         foreach ($orderPayments as $orderPayment) {
             $orderPayment->amount = (float)$orderReverb['total']['amount'];
             $orderPayment->update();
         }
-
-        // Update shipping amounts
-        $this->logInfoCrons('# Update order shipping cost');
-        $orderShippings = $order->getShipping();
-        foreach ($orderShippings as $orderShipping) {
-            $orderCarrier = new OrderCarrier($orderShipping['id_order_carrier']);
-            $orderCarrier->shipping_cost_tax_excl = (float)$orderReverb['shipping']['amount'];
-            $orderCarrier->shipping_cost_tax_incl = (float)$orderReverb['shipping']['amount'];
-            $orderCarrier->update();
-        }
-        Configuration::set('PS_TAX',1);
-
-        $this->logInfoCrons('Order ' . $order->reference . ' : ' . $orderReverb['order_number'] . ' is now synced');
-
-        return $order->id;
     }
 
     /**
@@ -490,5 +738,130 @@ class OrdersSyncEngine
     private function logInfoCrons($message)
     {
         $this->module->logs->cronLogs($message);
+    }
+
+    /**
+     * @param array $order
+     * @return array|bool|null|object
+     * @throws Exception
+     */
+    private function findProductByReverbOrder(array $order)
+    {
+        $this->logInfoCrons('## Try to find product = ' . $order['sku']);
+        $product = $this->reverbSync->getProductByReference($order['sku']);
+        $this->logInfoCrons('## product: ' . var_export($product, true));
+        if (empty($product)) {
+            throw new Exception('Product "' . $order['sku'] . '" not found on Prestashop !');
+        } elseif (count($product) > 1) {
+            throw new Exception('More than one product "' . $order['sku'] . '" found on Prestashop !');
+        }
+
+        $product = $product[0];
+        $this->id_product = $product['id_product'];
+        $this->id_product_attribute = $product['id_product_attribute'];
+        return $product;
+    }
+
+    /**
+     * @param $order
+     * @return bool|Customer
+     */
+    private function findCustomerByReverbOrder($order)
+    {
+
+        $this->customerAddressId = false;
+
+        // Find customer by address, name, lastname
+        $resAddress = $this->findAddressByReverbOrder($order);
+
+        if (!empty($resAddress) && count($resAddress) && count($resAddress) == 1) {
+            $this->logInfoCrons('### Customer already exists : ' . $resAddress[0]['id_customer'] . ' with address: ' . $resAddress[0]['id_address']);
+            $customer = new Customer($resAddress[0]['id_customer']);
+            $this->customerAddressId = $resAddress[0]['id_address'];
+            return $customer;
+        }
+
+        // Find customer by fake email
+        $fakeEmail = $order['buyer_id'] . self::EMAIL_GENERIC_CUSTOMER;
+        $this->logInfoCrons('### Customer not found on database, try to find by fake email : ' . $fakeEmail);
+
+        $resCustomer = $this->findCustomerByEmail($fakeEmail);
+        if (!empty($resCustomer) && count($resCustomer) && count($resCustomer) == 1) {
+            $this->logInfoCrons('### Customer found by email : ' . $fakeEmail . ' - id: ' . $resCustomer[0]['id_customer']);
+            $customer = new Customer($resCustomer[0]['id_customer']);
+
+            // Check if an address matches
+            foreach ($customer->getAddresses($this->module->getContext()->customer->id_lang) as $address) {
+                if (
+                $address['address1'] == $order['shipping_address']['street_address']
+                && $address['address2'] == $order['shipping_address']['extended_address']
+                && $address['postcode'] == $order['shipping_address']['postal_code']
+                && $address['city'] == $order['shipping_address']['locality']
+                && $address['id_state'] == State::getIdByName($order['shipping_address']['region'])
+                && $address['id_country'] == Country::getByIso($order['shipping_address']['country_code'])
+                ) {
+                    $this->logInfoCrons('### Address ok : ' . $address['id_address']);
+                    $this->customerAddressId = $address['id_address'];
+                    return $customer;
+                }
+            }
+
+            // Create a new Address for Customer
+            $this->logInfoCrons('### Address nok : we create it');
+            $address = $this->initAddress($order, $customer);
+            $this->customerAddressId = $address->id;
+        }
+
+        return false;
+    }
+
+    private function findAddressByReverbOrder($order)
+    {
+        $this->logInfoCrons('### Try to found customer');
+
+        $sql = new DbQuery();
+        $sql->select('a.*')
+            ->from('address', 'a')
+            ->where('a.`firstname` = "' . $order['buyer_first_name'] . '"')
+            ->where('a.`lastname` = "' . $order['buyer_last_name'] . '"');
+
+        $this->logInfoCrons('### with firstname: ' . $order['buyer_first_name'] . ', lastname: ' . $order['buyer_last_name']);
+
+        if (isset($order['shipping_method'])
+            && $order['shipping_method'] == 'shipped'
+            && array_key_exists('shipping_address', $order)
+            && !empty($order['shipping_address'])
+        ) {
+            $sql->where('a.`address1` = "' . $order['shipping_address']['street_address'] . '"')
+                ->where('a.`address2` = "' . $order['shipping_address']['extended_address'] . '"')
+                ->where('a.`postcode` = "' . $order['shipping_address']['postal_code'] . '"')
+                ->where('a.`city` = "' . $order['shipping_address']['locality'] . '"')
+                ->where('a.`id_state` = "' . State::getIdByName($order['shipping_address']['region']) . '"')
+                ->where('a.`id_country` = "' . Country::getByIso($order['shipping_address']['country_code']) . '"')
+            ;
+            $this->logInfoCrons('### with shipping_address :' . json_encode($order['shipping_address']));
+        } else {
+            $sql->where('a.`address1` = "' . Configuration::get('PS_SHOP_ADDR1') . '"')
+                ->where('a.`address2` = "' . Configuration::get('PS_SHOP_ADDR2') . '"')
+                ->where('a.`city` = "' . Configuration::get('PS_SHOP_CITY') . '"')
+                ->where('a.`id_state` = "' . Configuration::get('PS_SHOP_STATE_ID') . '"')
+                ->where('a.`id_country` = "' . Configuration::get('PS_SHOP_COUNTRY_ID') . '"')
+            ;
+            $this->logInfoCrons('### without shipping_address');
+        }
+
+        $res = Db::getInstance()->executeS($sql);
+        return $res;
+    }
+
+    private function findCustomerByEmail($email)
+    {
+        $sql = new DbQuery();
+        $sql->select('c.*')
+            ->from('customer', 'c')
+            ->where('c.`email` = "' . $email . '"');
+
+        $res = Db::getInstance()->executeS($sql);
+        return $res;
     }
 }

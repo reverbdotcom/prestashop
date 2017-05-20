@@ -181,6 +181,7 @@ class Reverb extends Module
             `id_reverb_orders` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_order` int(10) unsigned,
             `id_product` int(10) unsigned,
+            `id_product_attribute` int(10) unsigned,
             `id_shop` int(11) unsigned,
             `id_shop_group` int(11) unsigned,
             `reverb_order_number` varchar(32),
@@ -188,7 +189,8 @@ class Reverb extends Module
             `reverb_product_title` text,
             `status` varchar(32) NOT NULL,
             `details` text,
-            `date` datetime,
+            `created_at` datetime NOT NULL DEFAULT NOW(),
+            `updated_at` datetime NOT NULL DEFAULT NOW(),
             `shipping_method` varchar(32),
             `shipping_tracker` text,
             PRIMARY KEY  (`id_reverb_orders`)
@@ -200,27 +202,7 @@ class Reverb extends Module
             }
         }
 
-        $query = 'INSERT INTO ' . _DB_PREFIX_ . 'order_state (unremovable, module_name, color) VALUES (0, \'reverb\', \'#FF8C00\');';
-        if (Db::getInstance()->execute($query) == false) {
-            return false;
-        }
-        $idOrderState = Db::getInstance()->Insert_ID();
-
-        $query = 'INSERT INTO ' . _DB_PREFIX_ . 'order_state_lang (id_order_state, id_lang, name, template) 
-            VALUES (' . $idOrderState . ', 1, \'Pending payment\', \'payment\');';
-        if (Db::getInstance()->execute($query) == false) {
-            return false;
-        }
-
-        // Copy status icon
-        $statusFileSrc = dirname(__FILE__) . '/status_pending.gif';
-        $statusFileDst = dirname(__FILE__) . '/../../img/os/15.gif';
-        if (file_exists($statusFileSrc)) {
-            copy($statusFileSrc, $statusFileDst);
-        }
-
-        // Add status to config
-        Configuration::updateValue('PS_OS_PENDING_PAYMENT', $idOrderState);
+        $this->updateReverbOrderState();
 
         return parent::install() &&
             $this->registerHook('backOfficeHeader') &&
@@ -242,9 +224,6 @@ class Reverb extends Module
     {
         Configuration::deleteByName(self::KEY_REVERB_CONFIG);
 
-        $idOrderState = Configuration::get('PS_OS_PENDING_PAYMENT');
-        Configuration::deleteByName('PS_OS_PENDING_PAYMENT');
-
         $sql = array();
 
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_sync`;';
@@ -254,8 +233,6 @@ class Reverb extends Module
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_sync_history`;';
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_crons`';
         $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'reverb_orders`';
-        $sql[] = 'DELETE FROM  `' . _DB_PREFIX_ . 'order_state_lang` WHERE id_order_state = ' . $idOrderState;
-        $sql[] = 'DELETE FROM  `' . _DB_PREFIX_ . 'order_state` WHERE id_order_state = ' . $idOrderState;
 
         foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
@@ -963,7 +940,7 @@ class Reverb extends Module
                 if (!empty($trackingNumber)) {
                     $this->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
                         'shipping_tracker' => $trackingNumber,
-                        'status' => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT
+                        'status' => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPED
                     ));
                     $reverbOrders = new \Reverb\ReverbOrders($this);
 
@@ -1003,7 +980,9 @@ class Reverb extends Module
             $this->logs->infoLogs(' - Order state = ' . $orderState->name . ' delivery = ' . $orderState->delivery);
             if ($orderState->delivery) {
                 $reverbOrder = $this->reverbOrders->getOrderByPsId($id_order);
-                if (!empty($reverbOrder) && $reverbOrder['status'] == ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED) {
+                if (!empty($reverbOrder) && in_array($reverbOrder['status'], array(
+                    ReverbOrders::REVERB_ORDERS_STATUS_PAID,
+                ))) {
                     $this->logs->infoLogs(' - Order ' . $id_order . ' : ' . $order->reference . ' comes from Reverb and not sent yet !');
 
                     if ($reverbOrder['shipping_method'] == ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL) {
@@ -1013,7 +992,7 @@ class Reverb extends Module
 
                         $this->logs->infoLogs(' - Update reverb_orders');
                         $this->reverbOrders->update($id_order, array(
-                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT
+                            'status' => ReverbOrders::REVERB_ORDERS_STATUS_PICKED_UP
                         ));
                     } else {
                         $this->logs->infoLogs(' - Order shipping method is not local (shipping_method=' . $reverbOrder['shipping_method'] . ')');
@@ -1179,7 +1158,7 @@ class Reverb extends Module
      */
     public function hookActionProductUpdate()
     {
-        Tools::getValue('id_product');
+        $this->logs->infoLogs(__METHOD__);
     }
 
     /**
@@ -1189,8 +1168,7 @@ class Reverb extends Module
      */
     public function hookActionOrderEdited()
     {
-        $id_order = Tools::getValue('id_order');
-        $this->logs->infoLogs('UPDATE order ' . $id_order);
+        $this->logs->infoLogs(__METHOD__);
     }
 
     /**
@@ -1335,12 +1313,6 @@ class Reverb extends Module
                 'type' => 'text',
                 'filter_key' => 'reverb_product_sku'
             ),
-            'reverb_product_title' => array(
-                'title' => $this->l('Name'),
-                'width' => 140,
-                'type' => 'text',
-                'filter_key' => 'reverb_product_title'
-            ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
                 'width' => 50,
@@ -1349,15 +1321,7 @@ class Reverb extends Module
                 'orderby' => true,
                 'filter_key' => 'status',
                 'badge_success' => true,
-                'list' => array(
-                    ReverbOrders::REVERB_ORDERS_STATUS_ERROR => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
-                    ReverbOrders::REVERB_ORDERS_STATUS_IGNORED => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
-                    ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED => ReverbOrders::REVERB_ORDERS_STATUS_ORDER_SAVED,
-                    ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPING_SENT,
-                    ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL => ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_LOCAL,
-                    ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_SHIPPED => ReverbOrders::REVERB_ORDERS_SHIPPING_METHOD_SHIPPED,
-                    ReverbOrders::REVERB_ORDERS_STATUS_PAID => ReverbOrders::REVERB_ORDERS_STATUS_PAID,
-                )
+                'list' => ReverbOrders::getAllStatuses()
             ),
             'details' => array(
                 'title' => $this->l('Sync Detail'),
@@ -1367,11 +1331,11 @@ class Reverb extends Module
                 'orderby' => 'true',
                 'filter_key' => 'details'
             ),
-            'date' => array(
+            'updated_at' => array(
                 'title' => $this->l('Last synced'),
                 'width' => 140,
                 'type' => 'datetime',
-                'filter_key' => 'date'
+                'filter_key' => 'updated_at'
             ),
             'reverb_slug' => array(
                 'title' => '',
@@ -1519,6 +1483,81 @@ class Reverb extends Module
             if (array_key_exists(self::KEY_API_TOKEN, $this->reverbConfig)) {
                 return $this->reverbConfig[self::KEY_API_TOKEN];
             }
+        }
+        return false;
+    }
+
+    private function updateReverbOrderState()
+    {
+        $pending_payment_state_names = $blocked_state_names = $partially_paid_state_names = array();
+        $setup = array(
+            'delivery' => false,
+            'hidden' => false,
+            'invoice' => false,
+            'logable' => false,
+            'module_name' => $this->name,
+            'send_email' => false,
+        );
+        foreach (Language::getLanguages(false) as $language) {
+            if (Tools::strtolower($language['iso_code']) == 'fr') {
+                $pending_payment_state_names[(int)$language['id_lang']] = 'Reverb - En attente de paiement';
+                $blocked_state_names[(int)$language['id_lang']] = utf8_encode('Reverb - Bloqué');
+                $partially_paid_state_names[(int)$language['id_lang']] = 'Reverb - Paiement partiel';
+            } else {
+                $pending_payment_state_names[(int)$language['id_lang']] = 'Reverb - Waiting for payment';
+                $blocked_state_names[(int)$language['id_lang']] = 'Reverb - Blocked';
+                $partially_paid_state_names[(int)$language['id_lang']] = 'Reverb - Partially paid';
+            }
+        }
+
+        $statuses = array(
+            array(
+                'config' => 'REVERB_OS_PENDING_PAYMENT',
+                'color' => '#FF8C00',
+                'names' => $pending_payment_state_names,
+            ),
+            array(
+                'config' => 'REVERB_OS_BLOCKED',
+                'color' => '#FF8C00',
+                'names' => $blocked_state_names,
+            ),
+            array(
+                'config' => 'REVERB_OS_PARTIALLY_PAID',
+                'color' => '#FF8C00',
+                'names' => $partially_paid_state_names,
+            ),
+        );
+
+        foreach ($statuses as $status) {
+            $this->saveOrderState($status['config'], $status['color'], $status['names'], $setup);
+        }
+
+        return true;
+    }
+
+    private function saveOrderState($config, $color, $names, $setup)
+    {
+        $state_id = Configuration::get($config);
+        if ((bool)$state_id == true) {
+            $order_state = new OrderState($state_id);
+        } else {
+            $order_state = new OrderState();
+        }
+        $order_state->name = $names;
+        $order_state->color = $color;
+        foreach ($setup as $param => $value) {
+            $order_state->{$param} = $value;
+        }
+        if ((bool)$state_id == true) {
+            return $order_state->save();
+        } elseif ($order_state->add() == true) {
+            Configuration::updateValue($config, $order_state->id);
+
+            // Copy status icon
+            if (file_exists($this->local_path . 'status_pending.gif')) {
+                @copy($this->local_path . 'status_pending.gif', _PS_ORDER_STATE_IMG_DIR_ . (int)$order_state->id . '.gif');
+            }
+            return true;
         }
         return false;
     }
