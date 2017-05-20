@@ -85,9 +85,13 @@ class Reverb extends Module
         $this->reverbConfig = $this->getReverbConfig();
 
         $this->_infos[] = $this->l('The following cron tasks must be configured in your hosting:');
-        $this->_infos[] = '*/5 * * * *  php '.dirname(__FILE__).'/cron.php products  > /var/log/cron.log';
-        $this->_infos[] = '*/8 * * * *  php '.dirname(__FILE__).'/cron.php orders > /var/log/cron.log';
-        $this->_infos[] = '0 8 * * *  php '.dirname(__FILE__).'/cron.php orders-reconciliation > /var/log/cron.log';
+        $this->_infos[] = ' -   */5 * * * *  php '.dirname(__FILE__).'/cron.php products  > /var/log/cron.log';
+        $this->_infos[] = ' -   */8 * * * *  php '.dirname(__FILE__).'/cron.php orders > /var/log/cron.log';
+        $this->_infos[] = ' -   0 8 * * *  php '.dirname(__FILE__).'/cron.php orders-reconciliation > /var/log/cron.log';
+        $this->_infos[] = $this->l('It is possible to launch manually in you browser:');
+        $this->_infos[] = ' -   '.Tools::getHttpHost(true).__PS_BASE_URI__.'/modules/'.$this->name.'/cron.php?code=products';
+        $this->_infos[] = ' -   '.Tools::getHttpHost(true).__PS_BASE_URI__.'/modules/'.$this->name.'/cron.php?code=orders';
+        $this->_infos[] = ' -   '.Tools::getHttpHost(true).__PS_BASE_URI__.'/modules/'.$this->name.'/cron.php?code=orders-reconciliation';
     }
 
     /**
