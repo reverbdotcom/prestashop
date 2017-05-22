@@ -10,6 +10,8 @@
 
 class ProductMapper
 {
+    const MAX_CHAR = 255;
+
     protected $request;
 
     protected $module;
@@ -31,13 +33,42 @@ class ProductMapper
      * @param $product_ps
      * @throws Exception
      */
-    private function validateProductForSync($product_ps){
+    private function validateProductForSync($product_ps)
+    {
         if (empty($product_ps['manufacturer_name'])) {
             throw new Exception('Manufacturer is empty.', 1);
         }
 
         if (empty($product_ps['description'])) {
             throw new Exception('Description is empty.', 1);
+        }
+
+        if (strlen($product_ps['manufacturer_name']) > self::MAX_CHAR) {
+            throw new Exception('Manufacturer is too long (' . self::MAX_CHAR . ' characters max).', 1);
+        }
+
+        if (strlen($product_ps['description']) > self::MAX_CHAR) {
+            throw new Exception('Description is too long (' . self::MAX_CHAR . ' characters max).', 1);
+        }
+
+        if (strlen($product_ps['model']) > self::MAX_CHAR) {
+            throw new Exception('Model is too long (' . self::MAX_CHAR . ' characters max).', 1);
+        }
+
+        if (strlen($product_ps['reference']) > self::MAX_CHAR) {
+            throw new Exception('Reference is too long (' . self::MAX_CHAR . ' characters max).', 1);
+        }
+
+        if (strlen($product_ps['name']) > self::MAX_CHAR) {
+            throw new Exception('Name is too long (' . self::MAX_CHAR . ' characters max).', 1);
+        }
+
+        if (strlen($product_ps['finish']) > self::MAX_CHAR) {
+            throw new Exception('Finish is too long (' . self::MAX_CHAR . ' characters max).', 1);
+        }
+
+        if (!is_int($product_ps['year']) || (int)$product_ps['year'] != $product_ps['year'] || strlen($product_ps['year']) != 4) {
+            throw new Exception('Year is incorrect', 1);
         }
     }
 
