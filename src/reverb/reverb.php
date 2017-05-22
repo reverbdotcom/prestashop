@@ -193,8 +193,8 @@ class Reverb extends Module
             `reverb_product_title` text,
             `status` varchar(32) NOT NULL,
             `details` text,
-            `created_at` datetime NOT NULL DEFAULT NOW(),
-            `updated_at` datetime NOT NULL DEFAULT NOW(),
+            `created_at` datetime,
+            `updated_at` datetime,
             `shipping_method` varchar(32),
             `shipping_tracker` text,
             PRIMARY KEY  (`id_reverb_orders`)

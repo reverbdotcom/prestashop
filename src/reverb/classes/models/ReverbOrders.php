@@ -382,6 +382,7 @@ class ReverbOrders
             'reverb_product_sku' => pSQL($sku),
             'shipping_method' => $shippingMethod,
             'shipping_tracker' => $shippingTracker,
+            'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
         );
 
         if ($idOrder) {
@@ -414,8 +415,9 @@ class ReverbOrders
      * @param integer $id_reverb_orders
      * @param array $params
      */
-    public function update($id_reverb_orders, $params)
+    public function update($id_reverb_orders, $params = array())
     {
+        $params['updated_at'] = (new \DateTime())->format('Y-m-d H:i:s');
         $this->module->logs->infoLogs('Update reverb_orders = ' . $id_reverb_orders . ' with params :' . var_export($params, true));
 
         Db::getInstance()->update(
