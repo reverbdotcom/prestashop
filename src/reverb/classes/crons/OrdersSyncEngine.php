@@ -247,7 +247,6 @@ class OrdersSyncEngine
                 $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
                     'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
                     'details' => $message,
-                    'updated_at' => $this->currentDate,
                 ));
                 return array(
                     'status' => ReverbOrders::REVERB_ORDERS_STATUS_IGNORED,
@@ -314,7 +313,6 @@ class OrdersSyncEngine
             $this->module->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
                 'status' => ReverbOrders::REVERB_ORDERS_STATUS_ERROR,
                 'details' => pSQL($e->getMessage()),
-                'updated_at' => $this->currentDate,
                 'shipping_method' => isset($distReverbOrder['shipping_method']) ? $distReverbOrder['shipping_method'] : null,
             ));
             return array(
@@ -356,9 +354,7 @@ class OrdersSyncEngine
         if ($localReverbOrder['status'] == $distReverbOrder['status']) {
             $this->nbOrdersIgnored++;
             $this->logInfoCrons('# Order ' . $localReverbOrder['reverb_order_number'] . ' status has not changed : ' . $localReverbOrder['status'] . ' =  ' . $distReverbOrder['status']);
-            $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
-                'updated_at' => $this->currentDate,
-            ));
+            $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders']);
             return array(
                 'status' => $localReverbOrder['status'],
                 'message' => $localReverbOrder['details'],
@@ -371,9 +367,7 @@ class OrdersSyncEngine
         if (in_array($localReverbOrder['status'], ReverbOrders::getFinalStatuses())) {
             $this->nbOrdersIgnored++;
             $this->logInfoCrons('# Order ' . $localReverbOrder['reverb_order_number'] . ' in final status : ' . $localReverbOrder['status']);
-            $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
-                'updated_at' => $this->currentDate,
-            ));
+            $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders']);
 
             // Update quantity if needed
             $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
@@ -400,7 +394,6 @@ class OrdersSyncEngine
         $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
             'status' => $distReverbOrder['status'],
             'details' => $message,
-            'updated_at' => $this->currentDate,
         ));
 
         // Update quantity if needed
