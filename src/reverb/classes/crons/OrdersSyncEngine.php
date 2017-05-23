@@ -373,7 +373,10 @@ class OrdersSyncEngine
             $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
 
             // Update PS order address
-            $this->updateOrderAddress($localReverbOrder, $distReverbOrder);
+            $this->updateOrderAddress($psOrder, $distReverbOrder);
+            if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
+                $this->updatePsOrderAmounts($psOrder, $distReverbOrder);
+            }
 
             return array(
                 'status' => $localReverbOrder['status'],
@@ -393,7 +396,10 @@ class OrdersSyncEngine
         $order_history->add();
 
         // Update PS order address
-        $this->updateOrderAddress($localReverbOrder, $distReverbOrder);
+        $this->updateOrderAddress($psOrder, $distReverbOrder);
+        if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
+            $this->updatePsOrderAmounts($psOrder, $distReverbOrder);
+        }
 
         $message = 'Order ' . $distReverbOrder['order_number'] . ' sync updated : ' . $distReverbOrder['status'];
         $this->nbOrdersSynced++;
@@ -457,11 +463,11 @@ class OrdersSyncEngine
      * @param array $localReverbOrder
      * @param array $distReverbOrder
      */
-    public function updateOrderAddress($localReverbOrder, $distReverbOrder)
+    public function updateOrderAddress($psOrder, $distReverbOrder)
     {
         $this->logInfoCrons('### Update shipping address if needed');
-        $order = new Order($localReverbOrder['id_order']);
-        $address = new Address($order->id_address_delivery);
+
+        $address = new Address($psOrder->id_address_delivery);
         if (
             isset($distReverbOrder['shipping_method'])
             && $distReverbOrder['shipping_method'] == 'shipped'
