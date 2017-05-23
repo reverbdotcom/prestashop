@@ -372,6 +372,9 @@ class OrdersSyncEngine
             // Update quantity if needed
             $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
 
+            // Update PS order address
+            $this->updateOrderAddress($localReverbOrder, $distReverbOrder);
+
             return array(
                 'status' => $localReverbOrder['status'],
                 'message' => $localReverbOrder['details'],
@@ -387,6 +390,10 @@ class OrdersSyncEngine
         $order_history->id_order = $psOrder->id;
         $order_history->id_order_state = $id_order_state;
         $order_history->changeIdOrderState($id_order_state, $psOrder->id);
+        $order_history->add();
+
+        // Update PS order address
+        $this->updateOrderAddress($localReverbOrder, $distReverbOrder);
 
         $message = 'Order ' . $distReverbOrder['order_number'] . ' sync updated : ' . $distReverbOrder['status'];
         $this->nbOrdersSynced++;
@@ -444,6 +451,53 @@ class OrdersSyncEngine
         }
 
         return false;
+    }
+
+    /**
+     * @param array $localReverbOrder
+     * @param array $distReverbOrder
+     */
+    public function updateOrderAddress($localReverbOrder, $distReverbOrder)
+    {
+        $this->logInfoCrons('### Update shipping address if needed');
+        $order = new Order($localReverbOrder['id_order']);
+        $address = new Address($order->id_address_delivery);
+        if (
+            isset($distReverbOrder['shipping_method'])
+            && $distReverbOrder['shipping_method'] == 'shipped'
+            && array_key_exists('shipping_address', $distReverbOrder)
+            && !empty($distReverbOrder['shipping_address'])
+        ) {
+            $shipping = $distReverbOrder['shipping_address'];
+
+            $this->logInfoCrons('## Update buyer shipping address : ' . json_encode($shipping));
+
+            $address->address1 = $shipping['street_address'];
+            $address->address2 = $shipping['extended_address'];
+            $address->postcode = $shipping['postal_code'];
+            $address->id_state = State::getIdByName($shipping['region']);
+            $address->city = $shipping['locality'];
+            $address->id_country = Country::getByIso($shipping['country_code']);
+        } else {
+            $this->logInfoCrons('## Local shipping => update shipping with seller address');
+            $country = Configuration::get('PS_SHOP_COUNTRY_ID');
+            if (!$country) {
+                throw new Exception('Unable to find configuration PS_SHOP_COUNTRY_ID : Please fill your address in prestashop');
+            }
+            $address->id_country = $country;
+
+            $address1 = Configuration::get('PS_SHOP_ADDR1');
+            if (!$address1) {
+                throw new Exception('Unable to find configuration PS_SHOP_ADDR1');
+            }
+            $address->address1 = $address1;
+
+            $address->address2 = Configuration::get('PS_SHOP_ADDR2');
+            $address->city = Configuration::get('PS_SHOP_CITY');
+            $address->id_state = Configuration::get('PS_SHOP_STATE_ID');
+        }
+
+        $address->save();
     }
 
     /**
