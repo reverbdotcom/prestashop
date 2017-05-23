@@ -683,14 +683,20 @@ class Reverb extends Module
                 if (!empty($value) && (!$this->reverbConfig[self::KEY_SANDBOX_MODE] && $key == self::KEY_API_TOKEN ||
                         ($this->reverbConfig[self::    KEY_SANDBOX_MODE] && $key == self::KEY_API_TOKEN_SANDBOX))
                 ) {
-                    $reverbClient = new \Reverb\ReverbAuth($this, $value);
-                    $shop = $reverbClient->getListFromEndpoint(null, null, false);
                     $mode = 'PRODUCTION';
                     if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||
                         !array_key_exists(self::KEY_SANDBOX_MODE, $this->reverbConfig)
                     ) {
                         $mode = 'SANDBOX';
                     }
+
+                    $reverbClient = new \Reverb\ReverbAuth($this, $value);
+                    try {
+                        $shop = $reverbClient->getListFromEndpoint(null, null, false);
+                    } catch (\Exception $e) {
+                        $shop = false;
+                    }
+
 
                     if (!is_array($shop) || (!array_key_exists('shop', $shop) && empty($shop['shop']))) {
                         $value = '';

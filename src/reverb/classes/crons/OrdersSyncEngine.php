@@ -762,55 +762,11 @@ class OrdersSyncEngine
     private function findCustomerByReverbOrder($order)
     {
 
-        $this->customerAddressId = false;
-
         // Find customer by address, name, lastname
-        $resAddress = $this->findAddressByReverbOrder($order);
-
-        if (!empty($resAddress) && count($resAddress) && count($resAddress) == 1) {
-            $this->logInfoCrons('### Customer already exists : ' . $resAddress[0]['id_customer'] . ' with address: ' . $resAddress[0]['id_address']);
-            $customer = new Customer($resAddress[0]['id_customer']);
-            $this->customerAddressId = $resAddress[0]['id_address'];
-            return $customer;
-        }
-
-        // Find customer by fake email
-        $fakeEmail = $order['buyer_id'] . self::EMAIL_GENERIC_CUSTOMER;
-        $this->logInfoCrons('### Customer not found on database, try to find by fake email : ' . $fakeEmail);
-
-        $resCustomer = $this->findCustomerByEmail($fakeEmail);
-        if (!empty($resCustomer) && count($resCustomer) && count($resCustomer) == 1) {
-            $this->logInfoCrons('### Customer found by email : ' . $fakeEmail . ' - id: ' . $resCustomer[0]['id_customer']);
-            $customer = new Customer($resCustomer[0]['id_customer']);
-
-            // Check if an address matches
-            foreach ($customer->getAddresses($this->module->getContext()->customer->id_lang) as $address) {
-                if (
-                $address['address1'] == $order['shipping_address']['street_address']
-                && $address['address2'] == $order['shipping_address']['extended_address']
-                && $address['postcode'] == $order['shipping_address']['postal_code']
-                && $address['city'] == $order['shipping_address']['locality']
-                && $address['id_state'] == State::getIdByName($order['shipping_address']['region'])
-                && $address['id_country'] == Country::getByIso($order['shipping_address']['country_code'])
-                ) {
-                    $this->logInfoCrons('### Address ok : ' . $address['id_address']);
-                    $this->customerAddressId = $address['id_address'];
-                    return $customer;
-                }
-            }
-
-            // Create a new Address for Customer
-            $this->logInfoCrons('### Address nok : we create it');
-            $address = $this->initAddress($order, $customer);
-            $this->customerAddressId = $address->id;
-        }
-
-        return false;
-    }
-
-    private function findAddressByReverbOrder($order)
-    {
         $this->logInfoCrons('### Try to found customer');
+
+        $state = State::getIdByName($order['shipping_address']['region']);
+        $country = Country::getByIso($order['shipping_address']['country_code']);
 
         $sql = new DbQuery();
         $sql->select('a.*')
@@ -819,36 +775,78 @@ class OrdersSyncEngine
             ->where('a.`lastname` = "' . $order['buyer_last_name'] . '"');
 
         $this->logInfoCrons('### with firstname: ' . $order['buyer_first_name'] . ', lastname: ' . $order['buyer_last_name']);
-
-        if (isset($order['shipping_method'])
-            && $order['shipping_method'] == 'shipped'
-            && array_key_exists('shipping_address', $order)
-            && !empty($order['shipping_address'])
-        ) {
-            $sql->where('a.`address1` = "' . $order['shipping_address']['street_address'] . '"')
-                ->where('a.`address2` = "' . $order['shipping_address']['extended_address'] . '"')
-                ->where('a.`postcode` = "' . $order['shipping_address']['postal_code'] . '"')
-                ->where('a.`city` = "' . $order['shipping_address']['locality'] . '"')
-                ->where('a.`id_state` = "' . State::getIdByName($order['shipping_address']['region']) . '"')
-                ->where('a.`id_country` = "' . Country::getByIso($order['shipping_address']['country_code']) . '"')
-            ;
-            $this->logInfoCrons('### with shipping_address :' . json_encode($order['shipping_address']));
-        } else {
-            $sql->where('a.`address1` = "' . Configuration::get('PS_SHOP_ADDR1') . '"')
-                ->where('a.`address2` = "' . Configuration::get('PS_SHOP_ADDR2') . '"')
-                ->where('a.`city` = "' . Configuration::get('PS_SHOP_CITY') . '"')
-                ->where('a.`id_state` = "' . Configuration::get('PS_SHOP_STATE_ID') . '"')
-                ->where('a.`id_country` = "' . Configuration::get('PS_SHOP_COUNTRY_ID') . '"')
-            ;
-            $this->logInfoCrons('### without shipping_address');
-        }
-
+        $this->logInfoCrons($sql);
         $res = Db::getInstance()->executeS($sql);
-        return $res;
+        $this->logInfoCrons($res);
+
+        $customerIds = array();
+
+        // check if an address matches
+        if (count($res)) {
+            foreach ($res as $row) {
+
+                if (isset($order['shipping_method'])
+                    && $order['shipping_method'] == 'shipped'
+                    && array_key_exists('shipping_address', $order)
+                    && !empty($order['shipping_address'])
+                ) {
+                    $address1 = $order['shipping_address']['street_address'];
+                    $address2 = $order['shipping_address']['extended_address'];
+                    $postcode = $order['shipping_address']['postal_code'];
+                    $city = $order['shipping_address']['locality'];
+                } else {
+                    $address1 = Configuration::get('PS_SHOP_ADDR1');
+                    $address2 = Configuration::get('PS_SHOP_ADDR2');
+                    $postcode = '';
+                    $city = Configuration::get('PS_SHOP_CITY');
+                }
+
+                // checks address match
+                if (
+                    $row['address1'] == $address1 &&
+                    $row['address2'] == $address2 &&
+                    $row['postcode'] == $postcode &&
+                    $row['city'] == $city &&
+                    //$row['id_state'] == $state &&
+                    $row['id_country'] == $country
+                ) {
+                    // Firstname, lastname and address OK
+                    $this->logInfoCrons('### Customer found by firstname, lastname and address : ' . json_encode($row));
+                    $this->customerAddressId = $row['id_address'];
+                    return new Customer($row['id_customer']);
+
+                }
+                // Stock customers ID
+                $customerIds[] = $row['id_customer'];
+            }
+
+            // Firstname, lastname OK - address KO => Check email
+            $resCustomer = $this->findCustomerByEmail($order['buyer_id']);
+            if (!empty($resCustomer) && count($resCustomer)) {
+                foreach ($resCustomer as $customerEmail) {
+                    if (in_array($customerEmail['id_customer'], $customerIds)) {
+                        $customer = new Customer($customerEmail['id_customer']);
+                        // Create a new Address for Customer
+                        $this->logInfoCrons('### Customer found by firstname, lastname and email : we create address');
+                        $address = $this->initAddress($order, $customer);
+                        $this->customerAddressId = $address->id;
+                        return $customer;
+                    }
+                }
+            }
+        }
+        $this->logInfoCrons('### No Customer found with firstname, lastname');
+
+        return false;
     }
 
-    private function findCustomerByEmail($email)
+    /**
+     * @param $reverbBuyerId
+     * @return array|false|mysqli_result|null|PDOStatement|resource
+     */
+    private function findCustomerByEmail($reverbBuyerId)
     {
+        $email = $reverbBuyerId . self::EMAIL_GENERIC_CUSTOMER;
         $sql = new DbQuery();
         $sql->select('c.*')
             ->from('customer', 'c')
