@@ -47,10 +47,6 @@ class ProductMapper
             throw new Exception('Manufacturer is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if (strlen($product_ps['description']) > self::MAX_CHAR) {
-            throw new Exception('Description is too long (' . self::MAX_CHAR . ' characters max).', 1);
-        }
-
         if (strlen($product_ps['model']) > self::MAX_CHAR) {
             throw new Exception('Model is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
@@ -67,8 +63,8 @@ class ProductMapper
             throw new Exception('Finish is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if (!is_int($product_ps['year']) || (int)$product_ps['year'] != $product_ps['year'] || strlen($product_ps['year']) != 4) {
-            throw new Exception('Year is incorrect', 1);
+        if ((int)$product_ps['year'] != $product_ps['year'] || strlen($product_ps['year']) != 4) {
+            throw new Exception('Year is incorrect : ' . $product_ps['year'], 1);
         }
     }
 
