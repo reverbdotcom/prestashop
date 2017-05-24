@@ -95,7 +95,7 @@ class ReverbSync
             CONCAT(p.id_product, \'-\', \'0\'), 
             CONCAT(pa.id_product, \'-\', pa.id_product_attribute)) as identifier,  ' .
             'p.id_product as id_product,' .
-            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, pa.reference) as reference,' .
             'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name,' .
             'rs.status as status,' .
             'rs.reverb_id as reverb_id,' .
@@ -417,7 +417,7 @@ class ReverbSync
             's.quantity AS quantity_stock, ' .
             'rs.id_sync, rs.reverb_id, rs.reverb_slug, ' .
             'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
-            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, pa.reference) as reference,' .
             'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name'
         );
 
@@ -451,13 +451,13 @@ class ReverbSync
         $sql->select(
             'distinct(p.id_product), ' .
             'pa.id_product_attribute, ' .
-            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference, ' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, pa.reference) as reference, ' .
             'ra.`reverb_enabled`'
         )
             ->from('product', 'p')
             ->leftJoin('product_attribute', 'pa', 'pa.`id_product` = p.`id_product`')
             ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`')
-            ->where('p.`reference` = "' . $reference . '" OR CONCAT(p.reference, \'-\', pa.id_product_attribute) = "' . $reference . '"');
+            ->where('p.`reference` = "' . $reference . '" OR pa.reference = "' . $reference . '"');
 
         //$result = Db::getInstance()->getRow($sql);
         $result = Db::getInstance()->executeS($sql);
@@ -500,7 +500,7 @@ class ReverbSync
             's.quantity AS quantity_stock, ' .
             'rs.id_sync, rs.reverb_id, rs.reverb_slug, ' .
             'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
-            'IF (pa.id_product_attribute IS NULL, p.reference, CONCAT(p.reference, \'-\', pa.id_product_attribute)) as reference,' .
+            'IF (pa.id_product_attribute IS NULL, p.reference, pa.reference) as reference,' .
             'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name'
         );
 
