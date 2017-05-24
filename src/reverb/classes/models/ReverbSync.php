@@ -509,7 +509,7 @@ class ReverbSync
         $sql->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
             ->leftJoin('stock_available', 's', 's.`id_product` = p.`id_product`')
             ->where('rs.`status` = \'' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . '\'')
-            ->where('(pa.`id_product_attribute` IS NULL AND s.`id_product_attribute`) = 0 OR (pa.`id_product_attribute` = s.`id_product_attribute`)');
+            ->where('(pa.`id_product_attribute` IS NULL AND s.`id_product_attribute` = 0) OR pa.`id_product_attribute` = s.`id_product_attribute`');
 
         $result = Db::getInstance()->executeS($sql);
 
