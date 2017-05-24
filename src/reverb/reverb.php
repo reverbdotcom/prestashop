@@ -1457,7 +1457,7 @@ class Reverb extends Module
      */
     private function getReverbProductPreviewUrl()
     {
-        return $this->getReverbUrl() . '/preview/';
+        return $this->getReverbUrl() . '/item/';
     }
 
     /**
