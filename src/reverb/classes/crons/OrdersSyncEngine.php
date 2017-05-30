@@ -406,6 +406,9 @@ class OrdersSyncEngine
             $this->updatePsOrderAmounts($psOrder, $distReverbOrder);
         }
 
+        // Update PS order details amounts
+        $this->updatePsOrderDetailsAmounts($psOrder, $distReverbOrder);
+
         $message = 'Order ' . $distReverbOrder['order_number'] . ' sync updated : ' . $distReverbOrder['status'];
         $this->nbOrdersSynced++;
         $this->logInfoCrons('# ' . $message);
@@ -737,6 +740,9 @@ class OrdersSyncEngine
         } else {
             $this->logInfoCrons('## Order amounts / invoices / payment not changed by Reverb status : ' . $orderReverb['status']);
         }
+
+        // Update PS order details amounts
+        $this->updatePsOrderDetailsAmounts($order, $orderReverb);
 
         // Update shipping amounts
         $this->logInfoCrons('## Update order shipping cost');
