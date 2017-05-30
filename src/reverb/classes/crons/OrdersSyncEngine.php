@@ -765,10 +765,9 @@ class OrdersSyncEngine
         // Find customer by address, name, lastname
         $this->logInfoCrons('### Try to found customer');
 
-        $state = State::getIdByName($order['shipping_address']['region']);
-        $country = Country::getByIso($order['shipping_address']['country_code']);
-
         $sql = new DbQuery();
+        $this->logInfoCrons('### init dbsql');
+
         $sql->select('a.*')
             ->from('address', 'a')
             ->where('a.`firstname` = "' . $order['buyer_first_name'] . '"')
@@ -783,43 +782,47 @@ class OrdersSyncEngine
 
         // check if an address matches
         if (count($res)) {
-            foreach ($res as $row) {
+            if (isset($order['shipping_address'])) {
+                
+                $country = Country::getByIso($order['shipping_address']['country_code']);
 
-                if (isset($order['shipping_method'])
-                    && $order['shipping_method'] == 'shipped'
-                    && array_key_exists('shipping_address', $order)
-                    && !empty($order['shipping_address'])
-                ) {
-                    $address1 = $order['shipping_address']['street_address'];
-                    $address2 = $order['shipping_address']['extended_address'];
-                    $postcode = $order['shipping_address']['postal_code'];
-                    $city = $order['shipping_address']['locality'];
-                } else {
-                    $address1 = Configuration::get('PS_SHOP_ADDR1');
-                    $address2 = Configuration::get('PS_SHOP_ADDR2');
-                    $postcode = '';
-                    $city = Configuration::get('PS_SHOP_CITY');
+                foreach ($res as $row) {
+
+                    if (isset($order['shipping_method'])
+                        && $order['shipping_method'] == 'shipped'
+                        && array_key_exists('shipping_address', $order)
+                        && !empty($order['shipping_address'])
+                    ) {
+                        $address1 = $order['shipping_address']['street_address'];
+                        $address2 = $order['shipping_address']['extended_address'];
+                        $postcode = $order['shipping_address']['postal_code'];
+                        $city = $order['shipping_address']['locality'];
+                    } else {
+                        $address1 = Configuration::get('PS_SHOP_ADDR1');
+                        $address2 = Configuration::get('PS_SHOP_ADDR2');
+                        $postcode = '';
+                        $city = Configuration::get('PS_SHOP_CITY');
+                    }
+
+                    // checks address match
+                    if (
+                        $row['address1'] == $address1 &&
+                        $row['address2'] == $address2 &&
+                        $row['postcode'] == $postcode &&
+                        $row['city'] == $city &&
+                        //$row['id_state'] == $state &&
+                        $row['id_country'] == $country
+                    ) {
+                        // Firstname, lastname and address OK
+                        $this->logInfoCrons('### Customer found by firstname, lastname and address : ' . json_encode($row));
+                        $this->customerAddressId = $row['id_address'];
+                        return new Customer($row['id_customer']);
+
+                    }
+                    // Stock customers ID
+                    $customerIds[] = $row['id_customer'];
                 }
-
-                // checks address match
-                if (
-                    $row['address1'] == $address1 &&
-                    $row['address2'] == $address2 &&
-                    $row['postcode'] == $postcode &&
-                    $row['city'] == $city &&
-                    //$row['id_state'] == $state &&
-                    $row['id_country'] == $country
-                ) {
-                    // Firstname, lastname and address OK
-                    $this->logInfoCrons('### Customer found by firstname, lastname and address : ' . json_encode($row));
-                    $this->customerAddressId = $row['id_address'];
-                    return new Customer($row['id_customer']);
-
-                }
-                // Stock customers ID
-                $customerIds[] = $row['id_customer'];
             }
-
             // Firstname, lastname OK - address KO => Check email
             $resCustomer = $this->findCustomerByEmail($order['buyer_id']);
             if (!empty($resCustomer) && count($resCustomer)) {
