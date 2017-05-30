@@ -118,6 +118,7 @@ class ReverbOrders
     public static function getReverbStatusesForInvoiceCreation()
     {
         return array(
+            self::REVERB_ORDERS_STATUS_UNPAID,
             self::REVERB_ORDERS_STATUS_PAID,
             self::REVERB_ORDERS_STATUS_PARTIALLY_PAID,
             self::REVERB_ORDERS_STATUS_PICKED_UP,
