@@ -400,6 +400,9 @@ class OrdersSyncEngine
         $order_history->changeIdOrderState($id_order_state, $psOrder->id);
         $order_history->add();
 
+        $psOrder->current_state = $id_order_state;
+        $psOrder->update();
+
         // Update PS order address
         $this->updateOrderAddress($psOrder, $distReverbOrder);
         if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
@@ -762,34 +765,54 @@ class OrdersSyncEngine
 
     public function updatePsOrderAmounts(Order $order, array $orderReverb)
     {
+        if (isset($orderReverb['total'])) {
+            $total = $orderReverb['total']['amount'];
+        } else {
+            $total = $orderReverb['amount_product_subtotal']['amount']+$orderReverb['shipping']['amount'];
+        }
+
         // Update order amounts
         $this->logInfoCrons('## Update order amounts');
         $order->total_shipping = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
         $order->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
         $order->total_shipping_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
-        $order->total_paid_real = (float)$orderReverb['total']['amount'];
-        $order->total_paid_tax_incl = (float)$orderReverb['total']['amount'];
-        $order->total_paid = (float)$orderReverb['total']['amount'];
+        if (isset($orderReverb['total'])) {
+            $order->total_paid_real = (float)$orderReverb['total']['amount'];
+        } else {
+            $order->total_paid_real = 0;
+        }
+        $order->total_paid_tax_incl = (float)$total;
+        $order->total_paid = (float)$total;
+        $order->total_products = (float)$orderReverb['amount_product_subtotal']['amount'];
+        $order->total_products_wt = (float)$orderReverb['amount_product_subtotal']['amount'];
         $order->update();
 
         // Update invoice amounts
         $this->logInfoCrons('## Update order invoices amounts');
         /** @var OrderInvoice[] $orderInvoices */
         $orderInvoices = $order->getInvoicesCollection();
+        $id_invoice = 0;
         foreach ($orderInvoices as $orderInvoice) {
             $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
             $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
-            $orderInvoice->total_paid_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['total']['amount']);
-            $orderInvoice->total_paid_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['total']['amount']);
+            $orderInvoice->total_paid_tax_incl = str_replace(array(',', ' '), array('.', ''), $total);
+            $orderInvoice->total_paid_tax_excl = str_replace(array(',', ' '), array('.', ''), $total);
             $orderInvoice->update();
+
+            $id_invoice =  $orderInvoice->id;
         }
+
+        //update order with invoice id and valid order
+        $order->invoice_number = $id_invoice;
+        $order->valid = 1;
+        $order->update();
 
         // Update payments amount
         $this->logInfoCrons('## Update payments amount');
         /** @var OrderPayment[] $orderPayments */
         $orderPayments = $order->getOrderPayments();
         foreach ($orderPayments as $orderPayment) {
-            $orderPayment->amount = (float)$orderReverb['total']['amount'];
+            $orderPayment->amount = (float)$total;
             $orderPayment->update();
         }
     }
