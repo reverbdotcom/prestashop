@@ -375,12 +375,12 @@ class OrdersSyncEngine
             // Update PS order address
             $this->updateOrderAddress($psOrder, $distReverbOrder);
 
-            // Update PS order amouts
+            // Update PS order amounts
             if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
                 $this->updatePsOrderAmounts($psOrder, $distReverbOrder);
             }
 
-            // Update PS order details amouts
+            // Update PS order details amounts
             $this->updatePsOrderDetailsAmounts($psOrder, $distReverbOrder);
 
             return array(
