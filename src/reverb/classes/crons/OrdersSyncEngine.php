@@ -374,9 +374,14 @@ class OrdersSyncEngine
 
             // Update PS order address
             $this->updateOrderAddress($psOrder, $distReverbOrder);
+
+            // Update PS order amouts
             if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
                 $this->updatePsOrderAmounts($psOrder, $distReverbOrder);
             }
+
+            // Update PS order details amouts
+            $this->updatePsOrderDetailsAmounts($psOrder, $distReverbOrder);
 
             return array(
                 'status' => $localReverbOrder['status'],
@@ -780,6 +785,23 @@ class OrdersSyncEngine
         foreach ($orderPayments as $orderPayment) {
             $orderPayment->amount = (float)$orderReverb['total']['amount'];
             $orderPayment->update();
+        }
+    }
+
+    public function updatePsOrderDetailsAmounts(Order $order, array $orderReverb)
+    {
+        // Update order details amounts
+        $this->logInfoCrons('## Update order details amounts');
+
+        $orderDetails = $order->getOrderDetailList();
+        foreach ($orderDetails as $orderDetail) {
+            $orderDetailObject = new OrderDetail($orderDetail['id_order_detail']);
+            $orderDetailObject->product_price = (float)$orderReverb['amount_product']['amount'];
+            $orderDetailObject->total_price_tax_incl = (float)$orderReverb['amount_product_subtotal']['amount'];
+            $orderDetailObject->total_price_tax_excl = (float)$orderReverb['amount_product_subtotal']['amount'];
+            $orderDetailObject->unit_price_tax_incl = (float)$orderReverb['amount_product']['amount'];
+            $orderDetailObject->unit_price_tax_excl = (float)$orderReverb['amount_product']['amount'];
+            $orderDetailObject->update();
         }
     }
 
