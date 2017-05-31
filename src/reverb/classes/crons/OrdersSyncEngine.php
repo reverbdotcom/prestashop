@@ -807,7 +807,10 @@ class OrdersSyncEngine
             $order->invoice_number = $id_invoice;
             $order->valid = 1;
             $order->update();
-        }        
+        }  else {
+            $order->valid = 0;
+            $order->update();
+        }      
 
         // Update payments amount
         $this->logInfoCrons('## Update payments amount');
