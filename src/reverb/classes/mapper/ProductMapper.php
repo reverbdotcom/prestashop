@@ -63,7 +63,13 @@ class ProductMapper
             throw new Exception('Finish is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if ((int)$product_ps['year'] != $product_ps['year'] || strlen($product_ps['year']) != 4) {
+        if (
+            $product_ps['year'] != ''
+            && (
+                (int)$product_ps['year'] != $product_ps['year']
+                || strlen($product_ps['year']) != 4
+            )
+        ) {
             throw new Exception('Year is incorrect : ' . $product_ps['year'], 1);
         }
     }
