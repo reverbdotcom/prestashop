@@ -802,10 +802,12 @@ class OrdersSyncEngine
             $id_invoice =  $orderInvoice->id;
         }
 
-        //update order with invoice id and valid order
-        $order->invoice_number = $id_invoice;
-        $order->valid = 1;
-        $order->update();
+        if ($id_invoice > 0) {
+            //update order with invoice id and valid order
+            $order->invoice_number = $id_invoice;
+            $order->valid = 1;
+            $order->update();
+        }        
 
         // Update payments amount
         $this->logInfoCrons('## Update payments amount');
