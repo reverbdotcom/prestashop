@@ -713,7 +713,8 @@ class OrdersSyncEngine
 
         // Validate order with amount paid without shipping cost
         $this->logInfoCrons('## validateOrder');
-        $amount_without_shipping = (float)$orderReverb['amount_product_subtotal']['amount'];
+        $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
+        $amount_without_shipping = (float)$orderReverb['amount_product_subtotal']['amount']+$amount_tax;
         Configuration::set('PS_TAX',0);
 
         $cart_delivery_option = $cart->getDeliveryOption();
@@ -783,7 +784,8 @@ class OrdersSyncEngine
         }
         $order->total_paid_tax_incl = (float)$total;
         $order->total_paid = (float)$total;
-        $order->total_products = (float)$orderReverb['amount_product_subtotal']['amount'];
+        $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
+        $order->total_products = (float)$orderReverb['amount_product_subtotal']['amount']+$amount_tax;
         $order->total_products_wt = (float)$orderReverb['amount_product_subtotal']['amount'];
         $order->update();
 
@@ -824,13 +826,16 @@ class OrdersSyncEngine
         // Update order details amounts
         $this->logInfoCrons('## Update order details amounts');
 
+        // get is exist amount_tax
+        $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
+
         $orderDetails = $order->getOrderDetailList();
         foreach ($orderDetails as $orderDetail) {
             $orderDetailObject = new OrderDetail($orderDetail['id_order_detail']);
             $orderDetailObject->product_price = (float)$orderReverb['amount_product']['amount'];
-            $orderDetailObject->total_price_tax_incl = (float)$orderReverb['amount_product_subtotal']['amount'];
+            $orderDetailObject->total_price_tax_incl = (float)$orderReverb['amount_product_subtotal']['amount']+(float)$amount_tax;
             $orderDetailObject->total_price_tax_excl = (float)$orderReverb['amount_product_subtotal']['amount'];
-            $orderDetailObject->unit_price_tax_incl = (float)$orderReverb['amount_product']['amount'];
+            $orderDetailObject->unit_price_tax_incl = (float)$orderReverb['amount_product']['amount']+(float)$amount_tax;
             $orderDetailObject->unit_price_tax_excl = (float)$orderReverb['amount_product']['amount'];
             $orderDetailObject->update();
         }
