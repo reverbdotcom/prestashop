@@ -10,7 +10,7 @@
 
 class ReverbMapping
 {
-    const DEFAULT_PAGINATION = 20;
+    const DEFAULT_PAGINATION = 50;
     protected $module = false;
 
     public function __construct(Module $module_instance)
@@ -42,7 +42,6 @@ class ReverbMapping
         //          PAGINATION
         //=========================================
         $page = (int)Tools::getValue('submitFilterps_mapping_category');
-
         if ($page > 1) {
             $sql->limit(Tools::getValue('selected_pagination'), ($page - 1) * Tools::getValue('selected_pagination'));
         } else {
