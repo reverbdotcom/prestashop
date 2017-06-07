@@ -1,16 +1,20 @@
 # Reverb.com
-[![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/jprotin/reverb-prestashop/develop/LICENSE.md)  
+[![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/jprotin/reverb-prestashop/develop/LICENSE.md)
 [![CircleCI](https://circleci.com/gh/jprotin/reverb-prestashop/tree/develop.svg?style=svg)](https://circleci.com/gh/jprotin/reverb-prestashop/tree/develop)
 
-## Getting started
+## Installation
+
+To install this module, find the latest release in the releases tab and download the attached `reverb.zip` file. Follow Prestashop's instructions for manually installing here: [http://www.prestatoolbox.com/content/21-to-install-a-new-prestashop-module](http://www.prestatoolbox.com/content/21-to-install-a-new-prestashop-module).
+
+## Documentation
 
 Read the **[project documentation][doc-home-fr] in French** for comprehensive information about the requirements, general workflow and installation procedure.
 
-Read the **[project documentation][doc-home-en] in English** for comprehensive information about the requirements, general workflow and installation procedure.  
+Read the **[project documentation][doc-home-en] in English** for comprehensive information about the requirements, general workflow and installation procedure.
 
 ## Resources
 - [Full project documentation][doc-home-fr] — To have a comprehensive understanding of the workflow and get the installation procedure in french
-- [Full project documentation][doc-home-fr] — To have a comprehensive understanding of the workflow and get the installation procedure in english
+- [Full project documentation][doc-home-en] — To have a comprehensive understanding of the workflow and get the installation procedure in english
 - [Reverb Support Center][reverb-help] — To get technical help from Reverb
 - [Issues][project-issues] — To report issues, submit pull requests and get involved (see [Apache 2.0 License][project-license])
 - [Change log][project-changelog] — To check the changes of the latest versions
