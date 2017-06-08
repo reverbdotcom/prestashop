@@ -947,12 +947,23 @@ class Reverb extends Module
                 $this->logs->infoLogs(' - Order ' . $id_order . ' : ' . $order->reference . ' comes from Reverb !');
 
                 if (version_compare(_PS_VERSION_, '1.7', '<')) {
+                    $this->logs->infoLogs('PS 1.6');
                     $trackingNumber = Tools::getValue('tracking_number');
-                    $idCarrier = Tools::getValue('id_order_carrier');
+                    $this->logs->infoLogs('tracking = ' . var_export($trackingNumber, true));
+                    $idOrderCarrier = Tools::getValue('id_order_carrier');
+                    $this->logs->infoLogs('idOrderCarrier = ' . var_export($idOrderCarrier, true));
+                    $orderCarrier = new OrderCarrier((int)$idOrderCarrier, $this->language_id);
+                    $this->logs->infoLogs('idCarrier = ' . $orderCarrier->id_carrier);
+                    $carrier = new Carrier((int)$orderCarrier->id_carrier, $this->language_id);
                 } else {
+                    $this->logs->infoLogs('PS 1.7');
                     $trackingNumber = Tools::getValue('shipping_tracking_number');
+                    $this->logs->infoLogs('tracking = ' . var_export($trackingNumber, true));
                     $idCarrier = Tools::getValue('shipping_carrier');
+                    $this->logs->infoLogs('idCarrier = ' . var_export($idCarrier, true));
+                    $carrier = new Carrier((int)$idCarrier, $this->language_id);
                 }
+
                 if (!empty($trackingNumber)) {
                     $this->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
                         'shipping_tracker' => $trackingNumber,
@@ -960,7 +971,8 @@ class Reverb extends Module
                     ));
                     $reverbOrders = new \Reverb\ReverbOrders($this);
 
-                    $carrier = new Carrier((int)$idCarrier, $this->language_id);
+
+
                     $provider = $carrier->name;
                     $reverbOrders->setOrderShip($reverbOrder['reverb_order_number'], $provider, $trackingNumber);
                 } else {
