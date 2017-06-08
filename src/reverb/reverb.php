@@ -954,7 +954,7 @@ class Reverb extends Module
                 if (!empty($trackingNumber)) {
                     $this->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
                         'shipping_tracker' => $trackingNumber,
-                        'status' => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPED
+                        //'status' => ReverbOrders::REVERB_ORDERS_STATUS_SHIPPED
                     ));
                     $reverbOrders = new \Reverb\ReverbOrders($this);
 

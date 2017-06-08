@@ -242,7 +242,7 @@ class OrdersSyncEngine
     {
         $order = new Order($idOrder);
         $reverbOrder = $this->checkIfOrderAlreadySync($distReverbOrder);
-        $this->updatePsOrderByReverbOrder($order, $reverbOrder, $distReverbOrder, false);
+        $this->updatePsOrderByReverbOrder($order, $reverbOrder, $distReverbOrder);
     }
 
     /**
@@ -370,7 +370,7 @@ class OrdersSyncEngine
      * @param array $localReverbOrder
      * @param array $distReverbOrder
      */
-    public function updatePsOrderByReverbOrder(Order $psOrder, $localReverbOrder, $distReverbOrder, $updateQty = true)
+    public function updatePsOrderByReverbOrder(Order $psOrder, $localReverbOrder, $distReverbOrder)
     {
         // if Reverb status has no changed, we do nothing
         if ($localReverbOrder['status'] == $distReverbOrder['status']
@@ -427,9 +427,7 @@ class OrdersSyncEngine
         $this->updatePsOrderDetailsAmounts($psOrder, $distReverbOrder);
 
         // Update quantity if needed
-        if ($updateQty) {
-            $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
-        }
+        $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
 
         $message = 'Order ' . $distReverbOrder['order_number'] . ' sync updated : ' . $distReverbOrder['status'];
         $this->nbOrdersSynced++;
