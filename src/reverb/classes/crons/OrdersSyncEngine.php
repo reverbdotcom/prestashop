@@ -373,7 +373,8 @@ class OrdersSyncEngine
     public function updatePsOrderByReverbOrder(Order $psOrder, $localReverbOrder, $distReverbOrder, $updateQty = true)
     {
         // if Reverb status has no changed, we do nothing
-        if ($localReverbOrder['status'] == $distReverbOrder['status']) {
+        if ($localReverbOrder['status'] == $distReverbOrder['status']
+            && !$this->playUpdate) {
             $this->nbOrdersIgnored++;
             $this->logInfoCrons('# Order ' . $localReverbOrder['reverb_order_number'] . ' status has not changed : ' . $localReverbOrder['status'] . ' =  ' . $distReverbOrder['status']);
             $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders']);
