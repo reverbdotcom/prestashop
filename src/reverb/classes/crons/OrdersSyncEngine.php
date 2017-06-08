@@ -58,6 +58,8 @@ class OrdersSyncEngine
     /** @var ReverbSync */
     public $reverbSync;
 
+    public $playUpdate = false;
+
     /**
      * OrdersSyncEngine constructor.
      * @param $module
@@ -199,6 +201,11 @@ class OrdersSyncEngine
             );
             $this->nbOrdersSynced++;
             $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is now synced with id : ' . $idOrder);
+
+            if ($this->playUpdate) {
+                $this->updatePaidOrder($idOrder, $distReverbOrder);
+            }
+
             return array(
                 'status' => $distReverbOrder['status'],
                 'message' => 'Reverb order synced',
@@ -229,6 +236,13 @@ class OrdersSyncEngine
                 'reverb-id' => $distReverbOrder['order_number'],
             );
         }
+    }
+
+    public function updatePaidOrder($idOrder, $distReverbOrder)
+    {
+        $order = new Order($idOrder);
+        $reverbOrder = $this->checkIfOrderAlreadySync($distReverbOrder);
+        $this->updatePsOrderByReverbOrder($order, $reverbOrder, $distReverbOrder, false);
     }
 
     /**
@@ -296,6 +310,11 @@ class OrdersSyncEngine
                 ));
                 $this->nbOrdersSynced++;
                 $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is now synced with id : ' . $idOrder);
+
+                if ($this->playUpdate) {
+                    $this->updatePaidOrder($idOrder, $distReverbOrder);
+                }
+
                 return array(
                     'status' => $distReverbOrder['status'],
                     'message' => 'Reverb order synced',
@@ -351,7 +370,7 @@ class OrdersSyncEngine
      * @param array $localReverbOrder
      * @param array $distReverbOrder
      */
-    public function updatePsOrderByReverbOrder(Order $psOrder, $localReverbOrder, $distReverbOrder)
+    public function updatePsOrderByReverbOrder(Order $psOrder, $localReverbOrder, $distReverbOrder, $updateQty = true)
     {
         // if Reverb status has no changed, we do nothing
         if ($localReverbOrder['status'] == $distReverbOrder['status']) {
@@ -394,6 +413,46 @@ class OrdersSyncEngine
             );
         }
 
+        $this->updateOrderStatus($psOrder, $distReverbOrder);
+
+        // Update PS order address
+        $this->updateOrderAddress($psOrder, $distReverbOrder);
+
+        if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
+            $this->updatePsOrderAmounts($psOrder, $distReverbOrder);
+        }
+
+        // Update PS order details amounts
+        $this->updatePsOrderDetailsAmounts($psOrder, $distReverbOrder);
+
+        // Update quantity if needed
+        if ($updateQty) {
+            $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
+        }
+
+        $message = 'Order ' . $distReverbOrder['order_number'] . ' sync updated : ' . $distReverbOrder['status'];
+        $this->nbOrdersSynced++;
+        $this->logInfoCrons('# ' . $message);
+        $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
+            'status' => $distReverbOrder['status'],
+            'details' => $message,
+        ));
+
+        return array(
+            'status' => $distReverbOrder['status'],
+            'message' => $message,
+            'last-synced' => $this->currentDate,
+            'reverb-id' => $distReverbOrder['order_number'],
+        );
+    }
+
+    /**
+     * Update PS order status according reverb order status
+     * @param Order $psOrder
+     * @param $distReverbOrder
+     */
+    public function updateOrderStatus(Order $psOrder, $distReverbOrder)
+    {
         // Update PS order according reverb order status
         $id_order_state = ReverbOrders::getPsStateAccordingReverbStatus($distReverbOrder['status']);
 
@@ -405,33 +464,6 @@ class OrdersSyncEngine
 
         $psOrder->current_state = $id_order_state;
         $psOrder->update();
-
-        // Update PS order address
-        $this->updateOrderAddress($psOrder, $distReverbOrder);
-        if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
-            $this->updatePsOrderAmounts($psOrder, $distReverbOrder);
-        }
-
-        // Update PS order details amounts
-        $this->updatePsOrderDetailsAmounts($psOrder, $distReverbOrder);
-
-        $message = 'Order ' . $distReverbOrder['order_number'] . ' sync updated : ' . $distReverbOrder['status'];
-        $this->nbOrdersSynced++;
-        $this->logInfoCrons('# ' . $message);
-        $this->module->reverbOrders->update($localReverbOrder['id_reverb_orders'], array(
-            'status' => $distReverbOrder['status'],
-            'details' => $message,
-        ));
-
-        // Update quantity if needed
-        $this->updateOrderQuantity($localReverbOrder, $distReverbOrder);
-
-        return array(
-            'status' => $distReverbOrder['status'],
-            'message' => $message,
-            'last-synced' => $this->currentDate,
-            'reverb-id' => $distReverbOrder['order_number'],
-        );
     }
 
     /**
@@ -648,6 +680,8 @@ class OrdersSyncEngine
      */
     public function createPrestashopOrder($orderReverb)
     {
+        $this->playUpdate = false;
+
         // Check if currency exists and is active
         $extra_vars = array('reverb_order_number' => Tools::safeOutput($orderReverb['order_number']));
         $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product_subtotal']['currency'], $this->context->getIdShop());
@@ -714,6 +748,12 @@ class OrdersSyncEngine
             $message['message'] = implode('<br />', $messages);
         }
 
+        // Exception for paid status => pending payment anyway
+        if ($orderReverb['status'] == ReverbOrders::REVERB_ORDERS_STATUS_PAID) {
+            $id_order_state = Configuration::get('REVERB_OS_PENDING_PAYMENT');
+            $this->playUpdate = true;
+        }
+
         // Validate order with amount paid without shipping cost
         $this->logInfoCrons('## validateOrder');
         $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
@@ -741,20 +781,6 @@ class OrdersSyncEngine
         // Update order object with real amounts paid (product price + shipping)
         $this->logInfoCrons('## Update order');
         $order = new Order((int)$payment_module->currentOrder);
-
-        // Override Order status to avoid payment error
-        if ($orderReverb['status'] == ReverbOrders::REVERB_ORDERS_STATUS_PAID) {
-            $id_order_state = Configuration::get('PS_OS_PAYMENT');
-            $order_history = new OrderHistory();
-            $order_history->id_order = $order->id;
-            $order_history->id_order_state = $id_order_state;
-            $order_history->changeIdOrderState($id_order_state, $order->id);
-            $order_history->add();
-
-            $order->id_cart = $cart->id;
-            $order->current_state = $id_order_state;
-            $order->update();
-        }
 
         if (in_array($orderReverb['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
             $this->updatePsOrderAmounts($order, $orderReverb);
