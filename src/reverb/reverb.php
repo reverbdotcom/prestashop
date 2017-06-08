@@ -948,8 +948,10 @@ class Reverb extends Module
 
                 if (version_compare(_PS_VERSION_, '1.7', '<')) {
                     $trackingNumber = Tools::getValue('tracking_number');
+                    $idCarrier = Tools::getValue('id_order_carrier');
                 } else {
                     $trackingNumber = Tools::getValue('shipping_tracking_number');
+                    $idCarrier = Tools::getValue('shipping_carrier');
                 }
                 if (!empty($trackingNumber)) {
                     $this->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
@@ -958,7 +960,7 @@ class Reverb extends Module
                     ));
                     $reverbOrders = new \Reverb\ReverbOrders($this);
 
-                    $carrier = new Carrier((int)Tools::getValue('shipping_carrier'), $this->language_id);
+                    $carrier = new Carrier((int)$idCarrier, $this->language_id);
                     $provider = $carrier->name;
                     $reverbOrders->setOrderShip($reverbOrder['reverb_order_number'], $provider, $trackingNumber);
                 } else {
