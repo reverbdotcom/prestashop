@@ -1,12 +1,68 @@
-# Reverb.com
-[![GitHub license](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://raw.githubusercontent.com/jprotin/reverb-prestashop/develop/LICENSE.md)
-[![CircleCI](https://circleci.com/gh/jprotin/reverb-prestashop/tree/develop.svg?style=svg)](https://circleci.com/gh/jprotin/reverb-prestashop/tree/develop)
+# Reverb.com PrestaShop Plugin
+This is a PrestaShop app for integrating with Reverb's API including product sync (PrestaShop->Reverb) and order sync (Reverb->PrestaShop).
+
+Please read this entire README prior to installing the application.
+
+## Features
+* Create new draft listings on Reverb from PrestaShop products, including image & category sync
+* Control whether price/title/inventory syncs individually.
+* Sync updates for inventory from PrestaShop to Reverb.
+* Sync orders from Reverb to PrestaShop
+* Sync shipping tracking information from PrestaShop to Reverb
+* Configurable products - children are synced as individual listings on Reverb
+* Make/model/price/finish/year/shipping_profile_name can be mapped to attributes in your magento installation
+
 
 ## Installation
 
 To install this module, find the latest release in the releases tab and download the attached `reverb.zip` file. Follow Prestashop's instructions for manually installing here: [http://www.prestatoolbox.com/content/21-to-install-a-new-prestashop-module](http://www.prestatoolbox.com/content/21-to-install-a-new-prestashop-module).
 
-## Documentation
+
+## Connecting your account
+Visit Reverb.com and log in to your seller account. Then, navigate to your account settings and access the 'API & Integration' tab.
+
+Generate a new Personal Access Token. Name it 'Prestashop' (or any name you choose), and give it every oauth scope by checking every box on the page. Once the token is generated, copy and paste it into the Login tab of the Reverb module in PrestaShop. Validate your entry to log in.
+
+## Syncing your products
+
+### 1. Ensure your products have unique SKUs
+### 2. Map your product categories
+
+The Reverb module allows you to select your product category and associate it with a Reverb category. You must go to the Reverb module configuration and the Product type mapping tab.
+
+### 3. Set up your products
+
+So that your product catalog or certain products are visible on the Reverb.com, you must complete the information required to edit your product. It presupposes to go on Catalog > Products > edit your product. If you are on PrestaShop 1.6 then you have to edit the Reverb tab. Otherwise you are on PrestaShop 1.7, so go to the Module Options tab > Select the Reverb module
+
+## Setup CRON
+
+CRON Tasks is a program that allows users of Unix systems to automatically run scripts, commands, or software at a specified date and time or in a pre-defined cycle. Go to the administrative panel of your hosting in order to learn how to set up the ordering of your CRON, otherwise get closer to your host.
+
+The following cron Tasks must be configured:
+
+`*/5 * * * * php /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log`
+
+`*/8 * * * * php /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log`
+
+The first cron is a script executed every 5 minutes about the product sync - PrestaShop to Reverb. The second cron is a script executed every 8 minutes about the order sync - Reverb to PrestaShop.
+
+## Product sync management
+
+In the Reverb module configuration in PrestaShop, you need to go to Sync Status tab. You can filter your search results and you can see the status of sync (Success, error, to_sync) with a message. 3 actions are available: Sync a product manually, a PrestaShop product link, and a Reverb product link.
+
+## FAQ
+
+### Q: Why aren't things synced in real time, or failing to sync at all?
+Check if the token is valid
+
+Check that each eligible product in Reverb is setup correctly
+
+Check the logs in the Logs tab
+
+If the problem persists, contact Reverb support at integrations@reverb.com
+
+
+## Additional documentation
 
 Read the **[project documentation][doc-home-fr] in French** for comprehensive information about the requirements, general workflow and installation procedure.
 
