@@ -14,6 +14,7 @@ require_once dirname(__FILE__) . '/../../classes/helper/ContextCron.php';
 require_once dirname(__FILE__) . '/../../classes/ReverbOrders.php';
 require_once dirname(__FILE__) . '/../../classes/models/ReverbSync.php';
 require_once dirname(__FILE__) . '/../../classes/ReverbProduct.php';
+require_once dirname(__FILE__) . '/../../classes/models/ReverbCart.php';
 require_once dirname(__FILE__) . '/../../reverb.php';
 require_once dirname(__FILE__) . '/ReverbPayment.php';
 
@@ -31,6 +32,8 @@ class OrdersSyncEngine
     const ADDRESS_GENERIC = 'pickup';
 
     const ERROR_IGNORED = 2;
+
+    const DEBUG_MODE = true;
 
     /** @var  Reverb */
     protected $module;
@@ -659,7 +662,6 @@ class OrdersSyncEngine
         $customer = $this->initCustomer($orderReverb);
 
         $this->context->setIdCustomer($customer->id);
-
         // Add customer to Context if empty
         if (!Context::getContext()->customer) {
             Context::getContext()->customer = $customer;
@@ -672,6 +674,7 @@ class OrdersSyncEngine
         $this->module->customer = new Customer($this->context->getIdCustomer());
         $this->module->currency = new Currency((int)$this->module->getContext()->cart->id_currency);
         $this->module->language = new Language((int)$this->module->getContext()->customer->id_lang);
+
         $shop = new Shop($this->context->getIdShop());
         Shop::setContext(Shop::CONTEXT_SHOP, $this->context->getIdShop());
 
@@ -739,6 +742,20 @@ class OrdersSyncEngine
         $this->logInfoCrons('## Update order');
         $order = new Order((int)$payment_module->currentOrder);
 
+        // Override Order status to avoid payment error
+        if ($orderReverb['status'] == ReverbOrders::REVERB_ORDERS_STATUS_PAID) {
+            $id_order_state = Configuration::get('PS_OS_PAYMENT');
+            $order_history = new OrderHistory();
+            $order_history->id_order = $order->id;
+            $order_history->id_order_state = $id_order_state;
+            $order_history->changeIdOrderState($id_order_state, $order->id);
+            $order_history->add();
+
+            $order->id_cart = $cart->id;
+            $order->current_state = $id_order_state;
+            $order->update();
+        }
+
         if (in_array($orderReverb['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
             $this->updatePsOrderAmounts($order, $orderReverb);
         } else {
@@ -751,11 +768,14 @@ class OrdersSyncEngine
         // Update shipping amounts
         $this->logInfoCrons('## Update order shipping cost');
         $orderShippings = $order->getShipping();
+        $this->logInfoCrons(var_export($orderShippings,true));
         foreach ($orderShippings as $orderShipping) {
-            $orderCarrier = new OrderCarrier($orderShipping['id_order_carrier']);
-            $orderCarrier->shipping_cost_tax_excl = (float)$orderReverb['shipping']['amount'];
-            $orderCarrier->shipping_cost_tax_incl = (float)$orderReverb['shipping']['amount'];
-            $orderCarrier->update();
+            if ($orderShipping['id_order_carrier']) {
+                $orderCarrier = new OrderCarrier($orderShipping['id_order_carrier']);
+                $orderCarrier->shipping_cost_tax_excl = (float)$orderReverb['shipping']['amount'];
+                $orderCarrier->shipping_cost_tax_incl = (float)$orderReverb['shipping']['amount'];
+                $orderCarrier->update();
+            }
         }
         Configuration::set('PS_TAX',1);
 
@@ -976,4 +996,6 @@ class OrdersSyncEngine
         $res = Db::getInstance()->executeS($sql);
         return $res;
     }
-}
+
+
+ }
