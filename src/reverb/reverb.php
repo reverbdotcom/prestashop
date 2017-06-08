@@ -946,7 +946,11 @@ class Reverb extends Module
             if (!empty($reverbOrder)) {
                 $this->logs->infoLogs(' - Order ' . $id_order . ' : ' . $order->reference . ' comes from Reverb !');
 
-                $trackingNumber = Tools::getValue('shipping_tracking_number');
+                if (version_compare(_PS_VERSION_, '1.7', '<')) {
+                    $trackingNumber = Tools::getValue('tracking_number');
+                } else {
+                    $trackingNumber = Tools::getValue('shipping_tracking_number');
+                }
                 if (!empty($trackingNumber)) {
                     $this->reverbOrders->update($reverbOrder['id_reverb_orders'], array(
                         'shipping_tracker' => $trackingNumber,
