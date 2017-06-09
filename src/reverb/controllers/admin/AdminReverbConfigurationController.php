@@ -91,7 +91,6 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $reverbId = Tools::getValue('reverb-id');
 
         if (!empty($reverbId)) {
-
             // Call and getting an order from reverb
             $reverbOrders = new \Reverb\ReverbOrders($this->module);
             $distReverbOrder = $reverbOrders->getOrder($reverbId);

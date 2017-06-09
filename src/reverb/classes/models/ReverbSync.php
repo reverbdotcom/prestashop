@@ -170,13 +170,12 @@ class ReverbSync
 
         foreach ($values as $key => $params) {
             if (preg_match('/' . Reverb::LIST_ID . 'Filter_/', $key) && !empty($params)) {
-
                 $fieldWithPrefix = preg_replace('/ps_product_reverbFilter_/', '', $key);
                 $field = preg_replace('/pl!/', '', $fieldWithPrefix);
                 $field = preg_replace('/rs!/', '', $field);
                 $field = preg_replace('/p!/', '', $field);
                 $filterKey = $fieldWithPrefix;
-                if (isset($list_field[$field])){
+                if (isset($list_field[$field])) {
                     if (isset($list_field[$field]['filter_key'])) {
                         $filterKey = preg_replace('/!/', '.',$list_field[$field]['filter_key']);
                     }

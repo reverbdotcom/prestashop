@@ -165,7 +165,8 @@ class ReverbOrders
                 return Configuration::get('PS_OS_CANCELED');
                 break;
 
-            default: return false;
+            default:
+                return false;
         }
     }
 
@@ -202,8 +203,7 @@ class ReverbOrders
         $sql->select('ro.*, ro.reverb_order_number AS reverb_slug')
             ->from('reverb_orders', 'ro');
 
-        if (
-            Tools::isSubmit('submitFilterps_reverb_orders')
+        if (Tools::isSubmit('submitFilterps_reverb_orders')
             && !Tools::isSubmit('submitResetps_reverb_orders')
         ) {
             $this->processFilter($fields_list, $sql);
@@ -246,7 +246,7 @@ class ReverbOrders
             if (preg_match('/' . Reverb::LIST_ORDERS_ID . 'Filter_/', $key) && !empty($params)) {
                 $field = preg_replace('/' . Reverb::LIST_ORDERS_ID . 'Filter_/', '', $key);
                 $filterKey = $field;
-                if (isset($list_field[$field])){
+                if (isset($list_field[$field])) {
                     if (isset($list_field[$field]['filter_key'])) {
                         $filterKey = preg_replace('/!/', '.',$list_field[$field]['filter_key']);
                     }

@@ -1,5 +1,4 @@
 <?php
-
 /**
  *  Reverb Cart
  *
@@ -9,8 +8,8 @@
  * @package Reverb
  */
 
-class ReverbCart extends CartCore {
-
+class ReverbCart extends CartCore
+{
     /**
      *  Override PS17
      *

@@ -11,12 +11,12 @@
         <div class="col-md-12 col-xs-12">
             <div class="col-md-2 col-xs-2">
                 <span id="orders_sync_action" class="button btn btn-default ">
-                  <span>{l s='Launch Orders Sync'}</span>
+                  <span>{l s='Launch Orders Sync' mod='reverb'}</span>
                 </span><br />
-                <span class="pending-order " style="display:none;">{l s='Pending Orders Sync...'}</span>
+                <span class="pending-order " style="display:none;">{l s='Pending Orders Sync...' mod='reverb'}</span>
             </div>
             <div class="col-md-10 col-xs-10">
-                <span>{l s='This manual action starts the cron job.'}</span>
+                <span>{l s='This manual action starts the cron job.' mod='reverb'}</span>
             </div>
         </div>
     </div>

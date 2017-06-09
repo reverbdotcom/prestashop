@@ -122,7 +122,6 @@ class OrdersSyncEngine
                 $this->nbOrdersTotal,
                 $this->nbOrdersSynced
             );
-
         } catch (\Exception $e) {
             $error = '/!\ Error in cron ' . CODE_CRON_ORDERS . $e->getTraceAsString();
             $this->logInfoCrons($e->getMessage());
@@ -144,8 +143,7 @@ class OrdersSyncEngine
         if (empty($reverbOrder)) {
             $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is not synced yet => insert');
             return $this->createOrderSync($distReverbOrder);
-        }
-        else {
+        } else {
             $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' already synced before => update');
             return $this->updateOrderSync($distReverbOrder, $reverbOrder);
         }
@@ -255,7 +253,6 @@ class OrdersSyncEngine
     public function updateOrderSync($distReverbOrder, $reverbOrder)
     {
         try {
-
             // Reverb status unknown
             if (!in_array($distReverbOrder['status'], ReverbOrders::getAllReverbStatuses())) {
                 $message = 'Order ' . $distReverbOrder['order_number'] . ' status not synced : ' . $distReverbOrder['status'];
@@ -275,7 +272,6 @@ class OrdersSyncEngine
 
             // PS order does not exist yet
             if (empty($reverbOrder['id_order'])) {
-
                 // If status is ignored, we do not create PS order !
                 if (in_array($distReverbOrder['status'], ReverbOrders::getReverbStatusesIgnoredForOrderCreation())) {
                     $message = 'Order ' . $distReverbOrder['order_number'] . ' status not synced : ' . $distReverbOrder['status'];
@@ -327,7 +323,6 @@ class OrdersSyncEngine
             $this->logInfoCrons('# Prestashop order already saved : ' . $reverbOrder['id_order'] . ' - ' . $reverbOrder['status'] . ' => update');
             $psOrder = new Order($reverbOrder['id_order']);
             return $this->updatePsOrderByReverbOrder($psOrder, $reverbOrder, $distReverbOrder);
-
         } catch (Exception $e) {
             $this->logInfoCrons('/!\ Error saving order : ' . $e->getMessage());
             $this->logInfoCrons($e->getTraceAsString());
@@ -497,10 +492,8 @@ class OrdersSyncEngine
                 ($quantity + $qty),
                 $this->context->getIdShop()
             );
-
             return true;
         }
-
         return false;
     }
 
@@ -513,8 +506,7 @@ class OrdersSyncEngine
         $this->logInfoCrons('### Update shipping address if needed');
 
         $address = new Address($psOrder->id_address_delivery);
-        if (
-            isset($distReverbOrder['shipping_method'])
+        if (isset($distReverbOrder['shipping_method'])
             && $distReverbOrder['shipping_method'] == 'shipped'
             && array_key_exists('shipping_address', $distReverbOrder)
             && !empty($distReverbOrder['shipping_address'])
@@ -599,8 +591,7 @@ class OrdersSyncEngine
         $address->lastname = $order['buyer_last_name'];
         $address->alias = $order['buyer_last_name'];
 
-        if (
-            isset($order['shipping_method'])
+        if (isset($order['shipping_method'])
             && $order['shipping_method'] == 'shipped'
             && array_key_exists('shipping_address', $order)
             && !empty($order['shipping_address'])
@@ -758,10 +749,8 @@ class OrdersSyncEngine
         $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
         $amount_without_shipping = (float)$orderReverb['amount_product_subtotal']['amount']+$amount_tax;
         Configuration::set('PS_TAX',0);
-
         $cart_delivery_option = $cart->getDeliveryOption();
         $this->logInfoCrons(var_export(array_keys($cart_delivery_option), true));
-
         $payment_module->validateOrder(
             $cart->id,
             (int)$id_order_state,
@@ -803,7 +792,6 @@ class OrdersSyncEngine
             }
         }
         Configuration::set('PS_TAX',1);
-
         $this->logInfoCrons('## Order ' . $order->reference . ' : ' . $orderReverb['order_number'] . ' is now synced');
 
         return $order->id;
@@ -946,11 +934,9 @@ class OrdersSyncEngine
         // check if an address matches
         if (count($res)) {
             if (isset($order['shipping_address'])) {
-                
                 $country = Country::getByIso($order['shipping_address']['country_code']);
 
                 foreach ($res as $row) {
-
                     if (isset($order['shipping_method'])
                         && $order['shipping_method'] == 'shipped'
                         && array_key_exists('shipping_address', $order)
@@ -968,8 +954,7 @@ class OrdersSyncEngine
                     }
 
                     // checks address match
-                    if (
-                        $row['address1'] == $address1 &&
+                    if ($row['address1'] == $address1 &&
                         $row['address2'] == $address2 &&
                         $row['postcode'] == $postcode &&
                         $row['city'] == $city &&
@@ -980,7 +965,6 @@ class OrdersSyncEngine
                         $this->logInfoCrons('### Customer found by firstname, lastname and address : ' . json_encode($row));
                         $this->customerAddressId = $row['id_address'];
                         return new Customer($row['id_customer']);
-
                     }
                     // Stock customers ID
                     $customerIds[] = $row['id_customer'];
@@ -1021,6 +1005,5 @@ class OrdersSyncEngine
         $res = Db::getInstance()->executeS($sql);
         return $res;
     }
-
-
  }
+ 

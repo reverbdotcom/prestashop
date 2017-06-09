@@ -801,7 +801,7 @@ class Reverb extends Module
         $filters = $this->context->cookie->getFamily($prefix.$list_id.'Filter_');
         foreach ($filters as $cookie_key => $filter) {
             if (strncmp($cookie_key, $prefix.$list_id.'Filter_', 7 + Tools::strlen($prefix.$list_id)) == 0) {
-                $key = substr($cookie_key, 7 + Tools::strlen($prefix.$list_id));
+                $key =  Tools::substr($cookie_key, 7 + Tools::strlen($prefix.$list_id));
                 if (is_array($this->fields_list) && array_key_exists($key, $this->fields_list)) {
                     $this->context->cookie->$cookie_key = null;
                 }
@@ -1582,8 +1582,8 @@ class Reverb extends Module
             Configuration::updateValue($config, $order_state->id);
 
             // Copy status icon
-            if (file_exists($this->local_path . 'status_pending.gif')) {
-                @copy($this->local_path . 'status_pending.gif', _PS_ORDER_STATE_IMG_DIR_ . (int)$order_state->id . '.gif');
+            if (file_exists($this->local_path . 'views/img/status_pending.gif')) {
+                @copy($this->local_path . 'views/img/status_pending.gif', _PS_ORDER_STATE_IMG_DIR_ . (int)$order_state->id . '.gif');
             }
             return true;
         }

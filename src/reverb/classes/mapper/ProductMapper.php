@@ -43,31 +43,30 @@ class ProductMapper
             throw new Exception('Description is empty.', 1);
         }
 
-        if (strlen($product_ps['manufacturer_name']) > self::MAX_CHAR) {
+        if (Tools::strlen($product_ps['manufacturer_name']) > self::MAX_CHAR) {
             throw new Exception('Manufacturer is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if (strlen($product_ps['model']) > self::MAX_CHAR) {
+        if (Tools::strlen($product_ps['model']) > self::MAX_CHAR) {
             throw new Exception('Model is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if (strlen($product_ps['reference']) > self::MAX_CHAR) {
+        if (Tools::strlen($product_ps['reference']) > self::MAX_CHAR) {
             throw new Exception('Reference is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if (strlen($product_ps['name']) > self::MAX_CHAR) {
+        if (Tools::strlen($product_ps['name']) > self::MAX_CHAR) {
             throw new Exception('Name is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if (strlen($product_ps['finish']) > self::MAX_CHAR) {
+        if (Tools::strlen($product_ps['finish']) > self::MAX_CHAR) {
             throw new Exception('Finish is too long (' . self::MAX_CHAR . ' characters max).', 1);
         }
 
-        if (
-            $product_ps['year'] != ''
+        if ($product_ps['year'] != ''
             && (
                 (int)$product_ps['year'] != $product_ps['year']
-                || strlen($product_ps['year']) != 4
+                || Tools::strlen($product_ps['year']) != 4
             )
         ) {
             throw new Exception('Year is incorrect : ' . $product_ps['year'], 1);
