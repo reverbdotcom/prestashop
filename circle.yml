@@ -3,8 +3,8 @@ machine:
     - docker
 test:
   pre:
-    - docker-compose build
-    - docker-compose up -d
+    - ./prestashop.sh init
   override:
-    - sleep 50
-    - curl --retry 10 --retry-delay 20 -v http://localhost:8082
+    - sleep 240
+    - curl --retry 10 --retry-delay 20 -v http://localhost:8016
+    - curl --retry 10 --retry-delay 20 -v http://localhost:8017
