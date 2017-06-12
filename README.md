@@ -10,13 +10,11 @@ Please read this entire README prior to installing the application.
 * Sync orders from Reverb to PrestaShop
 * Sync shipping tracking information from PrestaShop to Reverb
 * Configurable products - children are synced as individual listings on Reverb
-* Make/model/price/finish/year/shipping_profile_name can be mapped to attributes in your magento installation
-
+* Make/model/price/finish/year/shipping_profile_name can all be synced
 
 ## Installation
 
 To install this module, find the latest release in the releases tab and download the attached `reverb.zip` file. Follow Prestashop's instructions for manually installing here: [http://www.prestatoolbox.com/content/21-to-install-a-new-prestashop-module](http://www.prestatoolbox.com/content/21-to-install-a-new-prestashop-module).
-
 
 ## Connecting your account
 Visit Reverb.com and log in to your seller account. Then, navigate to your account settings and access the 'API & Integration' tab.
@@ -28,15 +26,17 @@ Generate a new Personal Access Token. Name it 'Prestashop' (or any name you choo
 ### 1. Ensure your products have unique SKUs
 ### 2. Map your product categories
 
-The Reverb module allows you to select your product category and associate it with a Reverb category. You must go to the Reverb module configuration and the Product type mapping tab.
+The Reverb module allows you to select your product category and associate it with a Reverb category. You can find this in the Reverb module configuration within the Product type mapping tab.
 
 ### 3. Set up your products
 
-So that your product catalog or certain products are visible on the Reverb.com, you must complete the information required to edit your product. It presupposes to go on Catalog > Products > edit your product. If you are on PrestaShop 1.6 then you have to edit the Reverb tab. Otherwise you are on PrestaShop 1.7, so go to the Module Options tab > Select the Reverb module
+You can edit your products and activate product sync by editing an individual product (Catalog -> Product Settings -> Click on a product) and going to the Modules tab.  Then, click on the Configure button for Reverb to access the product information that will be sent to Reverb.  Ensure that the syncronization is activated, and fill in any applicable product information here.
 
 ## Setup CRON
 
-CRON Tasks is a program that allows users of Unix systems to automatically run scripts, commands, or software at a specified date and time or in a pre-defined cycle. Go to the administrative panel of your hosting in order to learn how to set up the ordering of your CRON, otherwise get closer to your host.
+CRON Tasks is a program that allows users of Unix systems to automatically run scripts, commands, or software at a specified date and time or in a pre-defined cycle. The CRON allows you to set an automatic sync between PrestaShop and Reverb, so that you don't have to manually bulk-sync your products. 
+
+Go to the administrative panel of your hosting in order to learn how to set up the ordering of your CRON, otherwise you may have to ask your host how to setup 
 
 The following cron Tasks must be configured:
 
@@ -51,13 +51,14 @@ The first cron is a script executed every 5 minutes about the product sync - Pre
 In the Reverb module configuration in PrestaShop, you need to go to Sync Status tab. You can filter your search results and you can see the status of sync (Success, error, to_sync) with a message. 3 actions are available: Sync a product manually, a PrestaShop product link, and a Reverb product link.
 
 ## FAQ
+### Q: Why aren't things synced in real time, or failing to sync at all?
 
 ### Q: Why aren't things synced in real time, or failing to sync at all?
-Check if the token is valid
+-Check if the API token is valid
 
-Check that each eligible product in Reverb is setup correctly
+-Check that each eligible product in Reverb is setup correctly
 
-Check the logs in the Logs tab
+-Check the logs in the Logs tab
 
 If the problem persists, contact Reverb support at integrations@reverb.com
 
