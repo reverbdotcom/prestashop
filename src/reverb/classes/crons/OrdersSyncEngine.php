@@ -60,6 +60,8 @@ class OrdersSyncEngine
 
     public $playUpdate = false;
 
+    private $result_tax;
+
     /**
      * OrdersSyncEngine constructor.
      * @param $module
@@ -380,6 +382,9 @@ class OrdersSyncEngine
                 'reverb-id' => $distReverbOrder['order_number'],
             );
         }
+
+        // check and get tax informations
+        $this->checkTaxReverb($psOrder, $distReverbOrder);
 
         // if Reverb order is in a final status, we do nothing
         if (in_array($localReverbOrder['status'], ReverbOrders::getFinalStatuses())) {
@@ -770,6 +775,9 @@ class OrdersSyncEngine
         $this->logInfoCrons('## Update order');
         $order = new Order((int)$payment_module->currentOrder);
 
+        // check and get tax informations
+        $this->checkTaxReverb($order, $orderReverb);
+
         if (in_array($orderReverb['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
             $this->updatePsOrderAmounts($order, $orderReverb);
         } else {
@@ -799,27 +807,24 @@ class OrdersSyncEngine
 
     public function updatePsOrderAmounts(Order $order, array $orderReverb)
     {
-        if (isset($orderReverb['total'])) {
-            $total = $orderReverb['total']['amount'];
-        } else {
-            $total = $orderReverb['amount_product_subtotal']['amount']+$orderReverb['shipping']['amount'];
-        }
-
+        $total = $this->result_tax['total'];
         // Update order amounts
         $this->logInfoCrons('## Update order amounts');
-        $order->total_shipping = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
-        $order->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
-        $order->total_shipping_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
+        $order->total_shipping = $this->result_tax['total_shipping_tax_incl'];
+        $order->total_shipping_tax_excl = $this->result_tax['total_shipping_tax_excl'];
+        $order->total_shipping_tax_incl = $this->result_tax['total_shipping_tax_incl'];
         if (isset($orderReverb['total'])) {
             $order->total_paid_real = (float)$orderReverb['total']['amount'];
         } else {
             $order->total_paid_real = 0;
         }
-        $order->total_paid_tax_incl = (float)$total;
-        $order->total_paid = (float)$total;
+        $order->total_paid_tax_incl = (float)$this->result_tax['total_paid_tax_incl'];
+        $order->total_paid_tax_excl = (float)$this->result_tax['total_paid_tax_excl'];
+        $order->total_paid = (float)$this->result_tax['total_paid_tax_incl'];
         $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
-        $order->total_products = (float)$orderReverb['amount_product_subtotal']['amount']+$amount_tax;
+        $order->total_products = (float)$orderReverb['amount_product_subtotal']['amount']+(float)$this->result_tax['product_tax'];
         $order->total_products_wt = (float)$orderReverb['amount_product_subtotal']['amount'];
+        $order->carrier_tax_rate = $this->result_tax['carrier_tax_rate'];
         $order->update();
 
         // Update invoice amounts
@@ -828,13 +833,18 @@ class OrdersSyncEngine
         $orderInvoices = $order->getInvoicesCollection();
         $id_invoice = 0;
         foreach ($orderInvoices as $orderInvoice) {
-            $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
-            $orderInvoice->total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
-            $orderInvoice->total_paid_tax_incl = str_replace(array(',', ' '), array('.', ''), $total);
-            $orderInvoice->total_paid_tax_excl = str_replace(array(',', ' '), array('.', ''), $total);
+            $orderInvoice->total_shipping_tax_incl = (float)$this->result_tax['total_shipping_tax_incl'];
+            $orderInvoice->total_shipping_tax_excl = (float)$this->result_tax['total_shipping_tax_excl'];
+            $orderInvoice->total_paid_tax_incl = (float)$this->result_tax['total_paid_tax_incl'];
+            $orderInvoice->total_paid_tax_excl = (float)$this->result_tax['total_paid_tax_excl'];
+            $orderInvoice->total_products = (float)$orderReverb['amount_product_subtotal']['amount'];
             $orderInvoice->update();
 
             $id_invoice =  $orderInvoice->id;
+
+            $sql = 'UPDATE `'._DB_PREFIX_.'order_invoice_tax` SET `id_tax`='.$this->result_tax['id_tax'].', `amount`='.$this->result_tax['carrier_tax'].')
+                    WHERE `type` = \'shipping\' AND `id_order_invoice`='.(int)$id_invoice;
+            Db::getInstance()->execute($sql);
         }
 
         if ($id_invoice > 0) {
@@ -859,18 +869,25 @@ class OrdersSyncEngine
         // Update order details amounts
         $this->logInfoCrons('## Update order details amounts');
 
-        // get is exist amount_tax
-        $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
-
         $orderDetails = $order->getOrderDetailList();
         foreach ($orderDetails as $orderDetail) {
             $orderDetailObject = new OrderDetail($orderDetail['id_order_detail']);
-            $orderDetailObject->product_price = (float)$orderReverb['amount_product']['amount'];
-            $orderDetailObject->total_price_tax_incl = (float)$orderReverb['amount_product_subtotal']['amount']+(float)$amount_tax;
+            $orderDetailObject->product_price = (float)$orderReverb['amount_product']['amount']+(float)$this->result_tax['product_unit_tax'];
+            $orderDetailObject->total_price_tax_incl = (float)$orderReverb['amount_product_subtotal']['amount']+(float)$this->result_tax['product_tax'];
             $orderDetailObject->total_price_tax_excl = (float)$orderReverb['amount_product_subtotal']['amount'];
-            $orderDetailObject->unit_price_tax_incl = (float)$orderReverb['amount_product']['amount']+(float)$amount_tax;
+            $orderDetailObject->unit_price_tax_incl = (float)$orderReverb['amount_product']['amount']+(float)$this->result_tax['product_unit_tax'];
             $orderDetailObject->unit_price_tax_excl = (float)$orderReverb['amount_product']['amount'];
+            $orderDetailObject->id_tax_rules_group = (int)$this->result_tax['id_tax_rules_group'];
+            $orderDetailObject->tax_rate = $this->result_tax['rate'];
+            $orderDetailObject->tax_name = 'reverb_tax';
+            $orderDetailObject->total_shipping_price_tax_incl = (float)$this->result_tax['total_shipping_tax_incl'];
+            $orderDetailObject->total_shipping_price_tax_excl = (float)$this->result_tax['total_shipping_tax_excl'];
             $orderDetailObject->update();
+
+            Db::getInstance()->execute('DELETE FROM `'._DB_PREFIX_.'order_detail_tax` WHERE id_order_detail='.(int)$orderDetail['id_order_detail']);
+            $sql = 'INSERT INTO `'._DB_PREFIX_.'order_detail_tax` (id_order_detail, id_tax, unit_amount, total_amount)
+                VALUES ('.$orderDetail['id_order_detail'].','.$this->result_tax['id_tax'].','.$this->result_tax['product_unit_tax'].','.$this->result_tax['product_tax'].')';
+            Db::getInstance()->execute($sql);
         }
     }
 
@@ -1004,6 +1021,75 @@ class OrdersSyncEngine
 
         $res = Db::getInstance()->executeS($sql);
         return $res;
+    }
+
+    /**
+     *
+     */
+    private function checkTaxReverb(Order $order, array $orderReverb, $total)
+    {
+        if (isset($orderReverb['total'])) {
+            $total = $orderReverb['total']['amount'];
+        } else {
+            $total = $orderReverb['amount_product_subtotal']['amount']+$orderReverb['shipping']['amount'];
+        }
+
+        $productReverb  = $this->findProductByReverbOrder($orderReverb);
+        $product        = new Product($this->id_product);
+        $address        = new Address($order->id_address_delivery);
+        $rate           = $product->getTaxesRate($address);
+        $id_tax_rules_group = Product::getIdTaxRulesGroupByIdProduct($this->id_product);
+
+        $sql = 'SELECT id_tax FROM '._DB_PREFIX_.'tax_rule WHERE id_country='. $address->id_country . ' AND id_tax_rules_group = '.$id_tax_rules_group;
+        $id_tax = Db::getInstance()->getValue($sql);
+
+        $shipping_tax = (float)Tools::ps_round(($orderReverb['shipping']['amount'] * (abs($rate) / 100)), _PS_PRICE_COMPUTE_PRECISION_);
+        $amount_tax = (float)Tools::ps_round(($orderReverb['amount_product_subtotal']['amount'] * (abs($rate) / 100)), _PS_PRICE_COMPUTE_PRECISION_);
+        $shipping_rate = 0;
+        $rate_product = 0;
+
+        $this->logInfoCrons('### amount_tax = '.$amount_tax);
+        $this->logInfoCrons('### shipping_tax = '.$shipping_tax);
+        $this->logInfoCrons('### rate = '.$rate);
+
+        if ($orderReverb['amount_tax']['amount'] != ($amount_tax+$shipping_tax)) {
+            $this->logInfoCrons('### amount_tax != amount+shipping:'.($amount_tax+$shipping_tax));
+            $shipping_tax = 0;
+            if ($orderReverb['amount_tax']['amount'] != $amount_tax) {
+                $this->logInfoCrons('### amount_tax != amount:'.$amount_tax);
+                $amount_tax = $orderReverb['amount_tax']['amount'];
+                $rate_product = (abs($amount_tax) * 100) / $total;
+            }
+        } else {
+            $shipping_rate = $rate;
+            $rate_product = $rate;
+        }
+
+        $qty = isset($orderReverb['quantity']) ? (int) $orderReverb['quantity'] : 1;
+
+        $total_shipping_tax_incl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']) + $shipping_tax;
+        $total_shipping_tax_excl = str_replace(array(',', ' '), array('.', ''), $orderReverb['shipping']['amount']);
+        $total_paid_tax_incl = $total;
+        $total_paid_tax_excl = $total-($amount_tax + $shipping_tax);
+        $product_unit_tax = $amount_tax/$qty;
+
+        $this->result_tax = array (
+            'id_tax' => $id_tax,
+            'id_tax_rules_group' => $id_tax_rules_group,
+            'rate' => $rate,
+            'carrier_tax' => $shipping_tax,
+            'carrier_tax_rate' => $shipping_rate,
+            'product_tax' => $amount_tax,
+            'product_unit_tax' => $product_unit_tax,
+            'product_tax_rate' => $rate_product,
+            'total_shipping_tax_incl' => $total_shipping_tax_incl,
+            'total_shipping_tax_excl' => $total_shipping_tax_excl,
+            'total_paid_tax_incl' => $total_paid_tax_incl,
+            'total_paid_tax_excl' => $total_paid_tax_excl,
+            'total' => $total,
+        );
+        $this->logInfoCrons('### Result Tax');
+        $this->logInfoCrons(print_r($this->result_tax,true));
     }
  }
  
