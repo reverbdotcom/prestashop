@@ -822,8 +822,8 @@ class OrdersSyncEngine
         $order->total_paid_tax_excl = (float)$this->result_tax['total_paid_tax_excl'];
         $order->total_paid = (float)$this->result_tax['total_paid_tax_incl'];
         $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
-        $order->total_products = (float)$orderReverb['amount_product_subtotal']['amount']+(float)$this->result_tax['product_tax'];
-        $order->total_products_wt = (float)$orderReverb['amount_product_subtotal']['amount'];
+        $order->total_products = (float)$orderReverb['amount_product_subtotal']['amount'];
+        $order->total_products_wt = (float)$orderReverb['amount_product_subtotal']['amount']+(float)$this->result_tax['product_tax'];
         $order->carrier_tax_rate = $this->result_tax['carrier_tax_rate'];
         $order->update();
 
