@@ -85,8 +85,8 @@ class HelperCron
             array(
                 'date' => (new \DateTime())->format('Y-m-d H:i:s'),
                 'code' => $code,
-                'number_to_sync' => $nbToSync,
-                'number_sync' => $nbSync,
+                'number_to_sync' => (int)$nbToSync,
+                'number_sync' => (int)$nbSync,
                 'details' => $details,
                 'status' => $status
             ),
@@ -114,8 +114,8 @@ class HelperCron
             array(
                 'date' => (new \DateTime())->format('Y-m-d H:i:s'),
                 'code' => $code,
-                'number_to_sync' => $nbToSync,
-                'number_sync' => $nbSync,
+                'number_to_sync' => (int)$nbToSync,
+                'number_sync' => (int)$nbSync,
                 'details' => $details,
                 'status' => $status
             )
