@@ -58,7 +58,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.0.2';
+        $this->version = '1.0.3';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -903,6 +903,7 @@ class Reverb extends Module
                 'currency' => $this->getContext()->currency->getSign(),
                 'admin_css' => _PS_CSS_DIR_,
                 'admin_css' => _PS_ADMIN_DIR_,
+                'old16_prestashop' => version_compare(_PS_VERSION_, '1.6.1', '<') ? 0:1,
             ));
         } else {
             $this->logs->errorLogs('hookDisplayAdminProductsExtra does not found idProduct ! __PS_VERSION__ = ' . _PS_VERSION_);
