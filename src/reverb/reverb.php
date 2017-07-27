@@ -1407,6 +1407,8 @@ class Reverb extends Module
      */
     public function getViewMappingCategories()
     {
+        $id_shop = (int)$this->context->shop->id;
+
         //=========================================
         //         PREPARE VIEW
         //=========================================
@@ -1428,14 +1430,14 @@ class Reverb extends Module
         //=========================================
         //         GET DATAS FOR LIST
         //=========================================
-        $datas = ReverbMapping::getFormattedPsCategories($this->context->language->id);
+        $datas = ReverbMapping::getFormattedPsCategories($this->context->language->id,$id_shop);
 
         $helper->override_folder = 'ReverbMapping/';
         $helper->table = self::LIST_CATEGORY_ID;
         $helper->allow_export = true;
         $helper->shopLinkType = '';
         $helper->default_pagination = ReverbMapping::DEFAULT_PAGINATION;
-        $helper->listTotal = ReverbMapping::countPsCategories($this->context->language->id);
+        $helper->listTotal = ReverbMapping::countPsCategories($this->context->language->id,$id_shop);
         $helper->module = $this;
         $helper->no_link = true;
         $helper->show_filters = false;
