@@ -329,8 +329,8 @@
     </div>
     <div class="panel-footer">
         <a href="{$link->getAdminLink('AdminProducts')|escape:'htmlall':'UTF-8'}:'html':'UTF-8'}{if isset($smarty.request.page) && $smarty.request.page > 1}&amp;submitFilterproduct={$smarty.request.page|intval}{/if}" class="btn btn-default"><i class="process-icon-cancel"></i> {l s='Cancel' mod='reverb'}</a>
-        <button type="submit" name="submitAddproduct" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save' mod='reverb'}</button>
-        <button type="submit" name="submitAddproductAndStay" class="btn btn-default pull-right" disabled="disabled"><i class="process-icon-loading"></i> {l s='Save and stay' mod='reverb'}</button>
+        <button type="submit" name="submitAddproduct" class="btn btn-default pull-right" {if isset($old16_prestashop) && $old16_prestashop>0}disabled="disabled"{/if}><i class="process-icon-{if isset($old16_prestashop) && $old16_prestashop>0}loading{else}save{/if}"></i> {l s='Save' mod='reverb'}</button>
+        <button type="submit" name="submitAddproductAndStay" class="btn btn-default pull-right" {if isset($old16_prestashop) && $old16_prestashop>0}disabled="disabled"{/if}><i class="process-icon-{if isset($old16_prestashop) && $old16_prestashop>0}loading{else}save{/if}"></i> {l s='Save and stay' mod='reverb'}</button>
     </div>
 </div>
 

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 FROM prestashop/prestashop:1.6.1.4
+=======
+FROM prestashop/prestashop:1.6.1.15
+>>>>>>> master
 
 MAINTAINER Johan PROTIN <jprotin@boutiquedubio.fr>
 

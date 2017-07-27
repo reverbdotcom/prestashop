@@ -14,7 +14,6 @@ require_once dirname(__FILE__) . '/../../classes/helper/ContextCron.php';
 require_once dirname(__FILE__) . '/../../classes/ReverbOrders.php';
 require_once dirname(__FILE__) . '/../../classes/models/ReverbSync.php';
 require_once dirname(__FILE__) . '/../../classes/ReverbProduct.php';
-require_once dirname(__FILE__) . '/../../classes/models/ReverbCart.php';
 require_once dirname(__FILE__) . '/../../reverb.php';
 require_once dirname(__FILE__) . '/ReverbPayment.php';
 
@@ -754,7 +753,7 @@ class OrdersSyncEngine
         $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
         $amount_without_shipping = (float)$orderReverb['amount_product_subtotal']['amount']+$amount_tax;
         Configuration::set('PS_TAX',0);
-        $cart_delivery_option = $cart->getDeliveryOption();
+        $cart_delivery_option = false;
         $this->logInfoCrons(var_export(array_keys($cart_delivery_option), true));
         $payment_module->validateOrder(
             $cart->id,
