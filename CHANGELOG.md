@@ -1,3 +1,7 @@
+# Version 1.0.4
+
+- Fix Category Mapping with multi-store
+
 # Version 1.0.3
 
 - Fix Error CRON in the Prestashop < 1.6.1

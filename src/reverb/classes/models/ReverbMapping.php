@@ -24,7 +24,7 @@ class ReverbMapping
      * @param int $languageId
      * @return array
      */
-    public static function getFormattedPsCategories($languageId)
+    public static function getFormattedPsCategories($languageId,$id_shop)
     {
         $sql = new DbQuery();
         $sql->select('c.id_category as id_category,  ' .
@@ -34,8 +34,9 @@ class ReverbMapping
             'rm.id_mapping as id_mapping')
             ->from('category', 'c')
             ->leftJoin('category_lang', 'cl', 'cl.`id_category` = c.`id_category`')
+            ->leftJoin('category_shop', 'cs', 'cs.`id_category` = c.`id_category`')
             ->leftJoin('reverb_mapping', 'rm', 'rm.`id_category` = c.`id_category`')
-            ->where('c.`id_parent` != 0 AND `id_lang` = ' . (int)$languageId)
+            ->where('c.`id_parent` != 0 AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId)
             ->orderBy('c.`id_parent` ASC, cl.`name` ASC');
 
         //=========================================
@@ -73,14 +74,15 @@ class ReverbMapping
      * @param int $languageId
      * @return int
      */
-    public static function countPsCategories($languageId)
+    public static function countPsCategories($languageId,$id_shop)
     {
         $sql = new DbQuery();
         $sql->select('count(*) as totals')
             ->from('category', 'c')
             ->leftJoin('category_lang', 'cl', 'cl.`id_category` = c.`id_category`')
+            ->leftJoin('category_shop', 'cs', 'cs.`id_category` = c.`id_category`')
             ->leftJoin('reverb_mapping', 'rm', 'rm.`id_category` = c.`id_category`')
-            ->where('c.`id_parent` != 0 AND `id_lang` = ' . (int)$languageId);
+            ->where('c.`id_parent` != 0 AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId);
 
         $result = Db::getInstance()->getRow($sql);
 
