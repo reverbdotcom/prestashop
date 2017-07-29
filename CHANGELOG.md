@@ -1,3 +1,8 @@
+# Version 1.0.5
+
+- Fix a bug to the bulk sync button (sync status)
+- New: add a new button to launch cron manually (sync status)
+
 # Version 1.0.4
 
 - Fix Category Mapping with multi-store
