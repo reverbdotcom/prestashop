@@ -841,9 +841,11 @@ class OrdersSyncEngine
 
             $id_invoice =  $orderInvoice->id;
 
-            $sql = 'UPDATE `'._DB_PREFIX_.'order_invoice_tax` SET `id_tax`='.$this->result_tax['id_tax'].', `amount`='.$this->result_tax['carrier_tax'].')
-                    WHERE `type` = \'shipping\' AND `id_order_invoice`='.(int)$id_invoice;
-            Db::getInstance()->execute($sql);
+            if((int)$this->result_tax['id_tax'] > 0){
+                $sql = 'UPDATE `'._DB_PREFIX_.'order_invoice_tax` SET `id_tax`=\''.(int)$this->result_tax['id_tax'].'\', `amount`=\''.$this->result_tax['carrier_tax'].'\')
+                    WHERE `type` = \'shipping\' AND `id_order_invoice`=\''.(int)$id_invoice.'\'';
+                Db::getInstance()->execute($sql);
+            }
         }
 
         if ($id_invoice > 0) {
@@ -885,7 +887,7 @@ class OrdersSyncEngine
 
             Db::getInstance()->execute('DELETE FROM `'._DB_PREFIX_.'order_detail_tax` WHERE id_order_detail='.(int)$orderDetail['id_order_detail']);
             $sql = 'INSERT INTO `'._DB_PREFIX_.'order_detail_tax` (id_order_detail, id_tax, unit_amount, total_amount)
-                VALUES ('.$orderDetail['id_order_detail'].','.$this->result_tax['id_tax'].','.$this->result_tax['product_unit_tax'].','.$this->result_tax['product_tax'].')';
+                VALUES (\''.$orderDetail['id_order_detail'].'\',\''.$this->result_tax['id_tax'].'\',\''.$this->result_tax['product_unit_tax'].'\',\''.$this->result_tax['product_tax'].'\')';
             Db::getInstance()->execute($sql);
         }
     }
