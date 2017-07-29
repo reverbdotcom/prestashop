@@ -755,8 +755,9 @@ class Reverb extends Module
         }
 
         // Bulk sync all
-        if (Tools::isSubmit('submitFilterps_product')) {
-            $identifiers = Tools::getValue('ps_productBox');
+        //if (Tools::isSubmit('submitFilterps_product')) {
+        if (Tools::isSubmit('submitBulkSyncronizeps_product_reverb')) {
+            $identifiers = Tools::getValue('ps_product_reverbBox');
             if (!empty($identifiers)) {
                 foreach ($identifiers as $identifier) {
                     $ids = explode('-', $identifier);
