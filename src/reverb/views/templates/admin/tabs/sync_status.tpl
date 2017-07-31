@@ -37,7 +37,7 @@
                     function (response) {
                         showSuccessMessage("{l s='Listing Synced with success' mod='reverb'}");
                         $('.pending-listing').hide();
-                        $(location).attr('href','{$module_url}');
+                        location.reload(true);
                     }
                 )
                 .fail(function() {
