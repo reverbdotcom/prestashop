@@ -5,3 +5,4 @@ src/reverb/logs/*
 !src/reverb/logs/.htaccess
 !src/reverb/logs/index.php
 vendor
+config.xml

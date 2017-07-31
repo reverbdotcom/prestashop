@@ -36,6 +36,7 @@
                     function (response) {
                         showSuccessMessage("{l s='Orders Synced with success' mod='reverb'}");
                         $('.pending-order').hide();
+                        location.reload(true);
                 }
                 )
                 .fail(function() {

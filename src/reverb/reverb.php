@@ -58,7 +58,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.0.4';
+        $this->version = '1.0.5';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -755,8 +755,9 @@ class Reverb extends Module
         }
 
         // Bulk sync all
-        if (Tools::isSubmit('submitFilterps_product')) {
-            $identifiers = Tools::getValue('ps_productBox');
+        //if (Tools::isSubmit('submitFilterps_product')) {
+        if (Tools::isSubmit('submitBulkSyncronizeps_product_reverb')) {
+            $identifiers = Tools::getValue('ps_product_reverbBox');
             if (!empty($identifiers)) {
                 foreach ($identifiers as $identifier) {
                     $ids = explode('-', $identifier);
