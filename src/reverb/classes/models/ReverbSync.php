@@ -46,7 +46,7 @@ class ReverbSync
             ->leftJoin('attribute_group_lang', 'agl', 'agl.`id_attribute_group` = ag.`id_attribute_group` AND agl.`id_lang` = ' . $this->module->language_id)
             ->where('ra.`reverb_enabled` = 1')
             ->where('pl.`id_lang` = ' . (int)$this->module->language_id)
-            ->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date, pa.id_product_attribute, pa.upc');
+            ->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date, pa.id_product_attribute, pa.upc, pa.ean13');
 
         //=========================================
         //          WHERE CLAUSE
@@ -97,6 +97,7 @@ class ReverbSync
             'p.id_product as id_product,' .
             'IF (pa.id_product_attribute IS NULL, p.reference, pa.reference) as reference,' .
             'IF (pa.upc IS NULL, p.upc, pa.upc) as upc,' .
+            'IF (pa.ean13 IS NULL, p.ean13, pa.ean13) as ean13,' .
             'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name,' .
             'rs.status as status,' .
             'rs.reverb_id as reverb_id,' .
@@ -419,6 +420,7 @@ class ReverbSync
             'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
             'IF (pa.id_product_attribute IS NULL, p.reference, pa.reference) as reference,' .
             'IF (pa.upc IS NULL, p.upc, pa.upc) as upc,' .
+            'IF (pa.ean13 IS NULL, p.ean13, pa.ean13) as ean13,' .
             'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name'
         );
 
@@ -503,6 +505,7 @@ class ReverbSync
             'pa.id_product_attribute, agl.name as attribute_group_name, al.name as attribute_name, ' .
             'IF (pa.id_product_attribute IS NULL, p.reference, pa.reference) as reference,' .
             'IF (pa.upc IS NULL, p.upc, pa.upc) as upc,' .
+            'IF (pa.ean13 IS NULL, p.ean13, pa.ean13) as ean13,' .
             'IF (pa.id_product_attribute IS NULL, pl.name, CONCAT(pl.name, \' \', GROUP_CONCAT(CONCAT (agl.name, \' \', al.name) SEPARATOR \', \'))) as name'
         );
 

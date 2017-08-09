@@ -91,7 +91,7 @@ class ProductMapper
         $product->has_inventory = $product_ps['quantity_stock'] > 0 ? 1 : false;
         $product->inventory = $product_ps['quantity_stock'];
         $product->sku = $product_ps['reference'];
-        $product->upc = $product_ps['upc'];
+        $product->upc = !empty($product_ps['upc']) ? $product_ps['upc'] : $product_ps['ean13'] ;
         $product->publish = false;
         $product->title = $product_ps['name'];
         $product->categories = $this->mapCategories($product_ps);

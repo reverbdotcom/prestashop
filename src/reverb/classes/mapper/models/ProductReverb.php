@@ -43,6 +43,8 @@ class ProductReverb
 
     public $upc;
 
+    public $ean13;
+
     public $offers_enabled;
 
     public $shipping_profile_id;
