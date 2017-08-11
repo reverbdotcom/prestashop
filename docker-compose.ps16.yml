@@ -6,7 +6,7 @@ web16:
     - "8016:80"
   links:
     - smtp
-    - mysql
+    - mysql-reverb
   env_file:
     - ./conf/env/PRESTASHOP.env
     - ./conf/env/PRESTASHOP-16.env

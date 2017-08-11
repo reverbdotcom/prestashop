@@ -49,6 +49,10 @@ For PrestaShop 1.7, you need to edit the file /conf/env/PRESTASHOP-17.env
     DB_NAME=prestashop16
     DB_SERVER=mysql'
 
+Caution: If you are launching the Reverb project with Docker for the first time, consider changing the environment variable PS_ERASE_DB = 0 to 1.
+To change this variable, go to conf > env > PRESTASHOP.env
+PS_ERASE_DB: Only with PS_INSTALL_AUTO=1. Drop and create the mysql database. All previous mysql data will be lost (default value: 0).
+
 You can change the PS_DOMAIN variable with the domain name you want, we recommend in the local environment to stay on the localhost domain.
 
 
