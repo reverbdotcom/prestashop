@@ -1,3 +1,8 @@
+# Version 1.1.1
+
+- Fix: add new help tooltip under the Model field in the product detail about Model is mandatory.
+- Fix: add in the documentation a description about the Model field.
+
 # Version 1.1.0
 
 - New: If upc is empty and ean not empty, ean code is synced in Reverb API in the upc field

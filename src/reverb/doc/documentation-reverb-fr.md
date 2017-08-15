@@ -177,6 +177,8 @@ Pour accéder à cette configuration : Catalog > Products > Edit your product > 
 
 Lorsque le produit est éligible à la synchronisation, votre produit sera disponible sur le prochain écran _Gestion des synchronisations de vos produits_.
 
+** Attention **: Le champ 'Model' est obligatoire pour l'API de Reverb, s'il n'est pas renseigné, Reverb retourne une message d'erreur pour le produit.
+
 ### Gestion des synchronisations de vos produits
 
 Lorsque vous avez configuré vos produits du catalogue PrestaShop avec les informations nécessaire pour être éligible à la synchronisation Reverb, vous pourrez accéder la gestion de la synchronisation de produits manuellement ou par tâche automatique CRON.

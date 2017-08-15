@@ -79,6 +79,12 @@
             <div class="col-lg-9">
                 <input type="text" name="reverb_model" class="form-control reverb-model"
                        value="{$reverb_model|escape:'htmlall':'UTF-8'}"/>
+                <div class="alert alert-info" role="alert">
+                    <i class="material-icons">help</i>
+                    <p class="alert-text">
+                        {l s='Please check the model field and ensure it is filled out' mod='reverb'}
+                    </p>
+                </div>
             </div>
         </div>
     </div>
