@@ -7,17 +7,14 @@
  * @license Apache License Version 2.0, January 2004
  * @package Reverb
  */
-
 class ReverbMapping
 {
     const DEFAULT_PAGINATION = 50;
     protected $module = false;
-
     public function __construct(Module $module_instance)
     {
         $this->module = $module_instance;
     }
-
     /**
      * Return formatted PS categories for mapping select form
      *
@@ -38,24 +35,26 @@ class ReverbMapping
             ->leftJoin('reverb_mapping', 'rm', 'rm.`id_category` = c.`id_category`')
             ->where('c.`id_parent` != 0 AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId)
             ->orderBy('c.`id_parent` ASC, cl.`name` ASC');
-
         //=========================================
         //          PAGINATION
         //=========================================
         $page = (int)Tools::getValue('submitFilterps_mapping_category');
-        if ($page > 1) {
-            $sql->limit(Tools::getValue('selected_pagination'), ($page - 1) * Tools::getValue('selected_pagination'));
-        } else {
-            $sql->limit(self::DEFAULT_PAGINATION);
+        $nbByPage = self::DEFAULT_PAGINATION;
+        if (Tools::getValue('ps_mapping_category_pagination')) {
+            $nbByPage = Tools::getValue('ps_mapping_category_pagination');
+        } elseif (Tools::getValue('selected_pagination')) {
+            $nbByPage = Tools::getValue('selected_pagination');
         }
-
+        if ($page > 1) {
+            $sql->limit($nbByPage, ($page - 1) * $nbByPage);
+        } else {
+            $sql->limit($nbByPage);
+        }
         $result = Db::getInstance()->executeS($sql);
-
         $indexedCategories = $categories = array();
         foreach ($result as $row) {
             $indexedCategories[$row['id_category']] = $row;
         }
-
         foreach ($indexedCategories as $categoryId => $category) {
             $categories[$categoryId] = array(
                 'ps_category_id' => $categoryId,
@@ -64,10 +63,8 @@ class ReverbMapping
                 'id_mapping' => $category['id_mapping'],
             );
         }
-
         return $categories;
     }
-
     /**
      * Return number of PS categories for mapping
      *
@@ -83,12 +80,9 @@ class ReverbMapping
             ->leftJoin('category_shop', 'cs', 'cs.`id_category` = c.`id_category`')
             ->leftJoin('reverb_mapping', 'rm', 'rm.`id_category` = c.`id_category`')
             ->where('c.`id_parent` != 0 AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId);
-
         $result = Db::getInstance()->getRow($sql);
-
         return $result['totals'];
     }
-
     /**
      * Return the full name category included parent name
      *
@@ -105,9 +99,8 @@ class ReverbMapping
             $indexedCategories[$category['id_parent']],
             $indexedCategories
         )
-            . ' / ' . $category['name'];
+        . ' / ' . $category['name'];
     }
-
     /**
      * Create or update a mapping on DB
      *
@@ -123,7 +116,6 @@ class ReverbMapping
         }
         return $this->updateMapping($mappingId, $psCategoryId, $reverbCode);
     }
-
     /**
      * Return the mapping ID from PS category
      *
@@ -139,7 +131,6 @@ class ReverbMapping
         $result = Db::getInstance()->getValue($sql);
         return $result;
     }
-
     /**
      * Return the Reverb code from PS category
      *
@@ -152,11 +143,9 @@ class ReverbMapping
         $sql->select('rm.reverb_code')
             ->from('reverb_mapping', 'rm')
             ->where('rm.`id_category` = ' . $psCategoryId);
-
         $result = Db::getInstance()->getValue($sql);
         return $result;
     }
-
     /**
      * Update a mapping
      *
@@ -168,7 +157,6 @@ class ReverbMapping
     private function updateMapping($mappingId, $psCategoryId, $reverbCode)
     {
         $return = false;
-
         $exec = Db::getInstance()->update(
             'reverb_mapping',
             array('reverb_code' => $reverbCode),
@@ -177,14 +165,11 @@ class ReverbMapping
         if ($exec) {
             $return = $mappingId;
         }
-
         $this->module->logs->infoLogs(
             'Update mapping ' . $mappingId . ' for category ' . $psCategoryId . ' => ' . $reverbCode . ' : ' . var_export($return, true)
         );
-
         return $return;
     }
-
     /**
      * Insert new mapping
      *
@@ -195,21 +180,18 @@ class ReverbMapping
     private function insertMapping($psCategoryId, $reverbCode)
     {
         $return = false;
-
         $exec = Db::getInstance()->insert(
             'reverb_mapping',
             array(
                 'id_category' => $psCategoryId,
                 'reverb_code' => $reverbCode,)
         );
-
         if ($exec) {
             $return = Db::getInstance()->Insert_ID();
         }
         $this->module->logs->infoLogs(
             'Insert mapping for category ' . $psCategoryId . ' => ' . $reverbCode . ' : result = ' . var_export($return, true)
         );
-
         return $return;
     }
 }
