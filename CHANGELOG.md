@@ -1,3 +1,8 @@
+# Version 1.1.2
+
+- Fix: Correct pagination on PS <1.6.1
+- Fix: add ZIP Package for OVH cron system with 3 files
+
 # Version 1.1.1
 
 - Fix: add new help tooltip under the Model field in the product detail about Model is mandatory.
