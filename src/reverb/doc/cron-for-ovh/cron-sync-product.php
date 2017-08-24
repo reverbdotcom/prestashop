@@ -6,7 +6,7 @@ curl_setopt_array(
     $curl,
     array(
         CURLOPT_RETURNTRANSFER => 1,
-        CURLOPT_URL => 'http://leshop-lyon.fr/modules/reverb/cron.php?code=products',
+        CURLOPT_URL => '[ADD YOUR DOMAIN URL]/modules/reverb/cron.php?code=products',
         CURLOPT_USERAGENT => 'CRON OVH'
     )
 );
