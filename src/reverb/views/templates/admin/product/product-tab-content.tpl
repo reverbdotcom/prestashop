@@ -385,7 +385,7 @@
                 var newTr = lastTr.clone();
                 newTr.find('td select.reverb-shipping-region').val('');
                 newTr.find('td input.reverb-shipping-rate').val('');
-                newTr.find('td').last().html('<button onclick="removeShippingMethod(this);" type="button" class="btn btn-invisible btn-block delete p-l-0 p-r-0 btn-delete-shipping-method"><i class="icon-trash">delete</i></button>');
+                newTr.find('td').last().html('<button onclick="removeShippingMethod(this);" type="button" class="btn btn-invisible btn-block delete p-l-0 p-r-0 btn-delete-shipping-method"><i class="icon-trash"></i></button>');
                 newTr.appendTo('#shipping-methods-table');
             }
             return false;

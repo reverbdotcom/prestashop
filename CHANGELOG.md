@@ -1,3 +1,7 @@
+# Version 1.2.0
+
+- New: Feature Mass-edit
+
 # Version 1.1.2
 
 - Fix: Correct pagination on PS <1.6.1
