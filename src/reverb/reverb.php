@@ -38,6 +38,7 @@ class Reverb extends Module
     public $reverbConfig;
     public $reverbSync;
     public $reverbOrders;
+    public $reverbAttributes;
     public $logs;
     public $active_tab;
     public $language_id;
@@ -58,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.1.2';
+        $this->version = '1.2.0';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -74,6 +75,7 @@ class Reverb extends Module
 
         $this->reverbSync = new \ReverbSync($this);
         $this->reverbOrders = new \ReverbOrders($this);
+        $this->reverbAttributes = new \ReverbAttributes($this);
 
         $this->displayName = $this->l('Reverb');
         $this->description = $this->l('Reverb is the best place anywhere to sell your guitar, amp, drums, bass, or other music gear.Built for and by musicians, our marketplace offers a broad variety of tools to help buy and sell, and has the lowest transaction fees of any online marketplace.');
@@ -295,6 +297,12 @@ class Reverb extends Module
 
         if ($this->isApiTokenAvailable()) {
             $reverbCategories = new \Reverb\ReverbCategories($this);
+            $reverbShop = new \Reverb\ReverbShop($this);
+            $reverbShippingRegions = new \Reverb\ReverbShippingRegions($this);
+            $reverbConditions = new \Reverb\ReverbConditions($this);
+
+            $products = $this->reverbSync->getAllProductsPagination();
+            //dump($products); exit;
 
             $this->context->smarty->assign(array(
                 'reverb_categories' => $reverbCategories->getFormattedCategories(),
@@ -305,6 +313,13 @@ class Reverb extends Module
                 'ps_product_preview_base_url' => _PS_BASE_URL_,
                 'ps_order_preview_base_url' => $this->context->link->getAdminLink('AdminOrders', true),
                 'module_url' => $module_url,
+                'reverb_list_country' => Country::getCountries($this->context->language->id),
+                'reverb_shipping_profiles' => $reverbShop->getShoppingProfiles(),
+                'reverb_url' => $this->getReverbUrl(),
+                'reverb_regions' => $reverbShippingRegions->getFormattedShippingRegions(),
+                'currency' => $this->getContext()->currency->getSign(),
+                'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
+                'products_mass_edit' => $products,
             ));
             if (!$this->active_tab) {
                 $this->active_tab = 'sync_status';
@@ -855,6 +870,8 @@ class Reverb extends Module
         if (Tools::getValue('controller') == 'AdminProducts' || Tools::getValue('configure') == $this->name) {
             $this->context->controller->addJS($this->_path . 'views/js/back.js');
             $this->context->controller->addCSS($this->_path . 'views/css/back.css', 'all');
+            $this->context->controller->addJqueryUi('ui.widget');
+            $this->context->controller->addJqueryPlugin('tagify');
         }
     }
 
@@ -1165,9 +1182,9 @@ class Reverb extends Module
     }
 
     /**
-     * Get Attributes from product
+     * Get Attribute ID from product
      *
-     * @param int $psCategoryId
+     * @param int $idProduct
      * @return int|false
      */
     public function getAttributesId($idProduct)
@@ -1178,6 +1195,23 @@ class Reverb extends Module
             ->where('ra.`id_product` = ' . $idProduct)
             ->where('ra.`id_lang` = ' . $this->language_id);
         $result = Db::getInstance()->getValue($sql);
+        return $result;
+    }
+
+    /**
+     * Get Attributes from product
+     *
+     * @param int $idProduct
+     * @return array
+     */
+    public function getAttribute($idProduct)
+    {
+        $sql = new DbQuery();
+        $sql->select('ra.*')
+            ->from('reverb_attributes', 'ra')
+            ->where('ra.`id_product` = ' . $idProduct)
+            ->where('ra.`id_lang` = ' . $this->language_id);
+        $result = Db::getInstance()->getRow($sql);
         return $result;
     }
 

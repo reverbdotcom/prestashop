@@ -71,6 +71,12 @@
 					<span class="icon icon-cogs"></span> {l s='Settings' mod='reverb'}
 				</a>
 			</li>
+			<li role="presentation"
+				class="{if (!$is_logged)}disabled{elseif (isset($active_tab) && ($active_tab == 'mass_edit'))}active{/if}">
+				<a href="#mass_edit" aria-controls="mass_edit" role="tab" {if ($is_logged)}data-toggle="tab"{/if}>
+					<span class="icon icon-list"></span> {l s='Mass edit' mod='reverb'}
+				</a>
+			</li>
 			<li role="presentation">
 				<a href="#faq" aria-controls="faq" role="tab" data-toggle="tab">
 					<span class="icon icon-question-sign"></span> {l s='FAQ' mod='reverb'}
@@ -116,6 +122,13 @@
 					 id="settings">
                     {if ($is_logged)}
 						{include file='./tabs/settings.tpl'}
+                    {/if}
+				</div>
+				<div role="tabpanel"
+					 class="tab-pane {if ((isset($active_tab) == true) && ($active_tab == 'mass_edit'))} active{/if}"
+					 id="mass_edit">
+                    {if ($is_logged)}
+						{include file='./tabs/mass_edit.tpl'}
                     {/if}
 				</div>
             {/if}

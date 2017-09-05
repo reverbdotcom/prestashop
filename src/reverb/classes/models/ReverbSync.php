@@ -615,4 +615,175 @@ class ReverbSync
             $this->module->logs->infoLogs('Insert reverb sync history skip because of null value(s) !');
         }
     }
+
+
+
+    /**
+     *
+     * Load list of products for mass edit
+     *
+     * @param array $search
+     * @param string $orderBy
+     * @param string $orderWay
+     * @return DbQuery
+     */
+    public function getAllProductsQuery($search = array(), $orderBy = 'reference', $orderWay = 'ASC')
+    {
+        //=========================================
+        //          SELECT CLAUSE
+        //=========================================
+        $sql = new DbQuery();
+        $sql->from('product', 'p')
+            ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
+            ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`')
+            ->where('pl.`id_lang` = ' . (int)$this->module->language_id);
+            //->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date');
+
+        //=========================================
+        //         SEARCH CLAUSE(only sku and name)
+        //=========================================
+        if (!empty($search)) {
+            $where = '';
+            foreach($search as $key=>$value) {
+                $where .= empty($where) ? '':' OR ';
+                $where .= 'LOWER(pl.name) LIKE "%'.Tools::strtolower($value).'%"';
+                $where .= ' OR LOWER(p.reference) LIKE "%'.Tools::strtolower($value).'%"';
+            }
+            $sql->where($where);
+        }
+
+        //=========================================
+        //          ORDER CLAUSE
+        //=========================================
+        $sql->orderBy($orderBy . ' ' . $orderWay);
+
+        return $sql;
+    }
+
+    /**
+     *
+     * Load list of products for mass edit
+     *
+     * @param array $search
+     * @param string $orderBy
+     * @param string $orderWay
+     * @return array|false|mysqli_result|null|PDOStatement|resource
+     */
+    public function getAllProductsNb($search = array(), $orderBy = 'reference', $orderWay = 'ASC')
+    {
+        /** @var DbQuery $sql */
+        $sql = $this->getAllProductsQuery($search, $orderBy, $orderWay);
+        $sql->select('COUNT(p.id_product) as count');
+
+        $result = Db::getInstance()->getRow($sql);
+        return $result;
+    }
+
+    /**
+     *
+     * Load list of products for mass edit
+     *
+     * @param array $search
+     * @param string $orderBy
+     * @param string $orderWay
+     * @param integer $page
+     * @return array
+     */
+    public function getAllProductsPagination($search = array(), $orderBy = 'reference', $orderWay = 'ASC', $page = 1, $nbPerPage = 20)
+    {
+        $count = $this->getAllProductsNb($search, $orderBy, $orderWay);
+
+        /** @var DbQuery $sql */
+        $sql = $this->getAllProductsQuery($search, $orderBy, $orderWay);
+        $sql->leftJoin('reverb_shipping_methods', 'rsm', 'ra.`id_attribute` = rsm.`id_attribute`')
+            ->select(
+            'p.id_product, ' .
+            'p.reference as reference,' .
+            'pl.name as name,' .
+            'ra.reverb_enabled as reverb_enabled, ' .
+            'ra.model, ' .
+            'ra.offers_enabled, ' .
+            'ra.finish, ' .
+            'ra.origin_country_code, ' .
+            'ra.year, ' .
+            'ra.id_condition, ' .
+            'ra.id_shipping_profile, ' .
+            'ra.shipping_local, ' .
+            'GROUP_CONCAT(CONCAT (rsm.region_code, \':\', rsm.rate) SEPARATOR \'|\') AS shippings'
+        )
+            ->groupBy(
+                'p.id_product, ' .
+                'p.reference,' .
+                'pl.name,' .
+                'ra.reverb_enabled, ' .
+                'ra.model, ' .
+                'ra.offers_enabled, ' .
+                'ra.finish, ' .
+                'ra.origin_country_code, ' .
+                'ra.year, ' .
+                'ra.id_condition, ' .
+                'ra.id_shipping_profile, ' .
+                'ra.shipping_local'
+            );
+
+        //=========================================
+        //          PAGINATION
+        //=========================================
+        $sql->limit($nbPerPage, ($page-1) * $nbPerPage);
+        //print_r($sql->__toString());exit();
+        $result = Db::getInstance()->executeS($sql);
+
+        $nbPage = ceil((int) $count['count'] / $nbPerPage);
+
+        return array_merge($count, array('products' => $result, 'page' => $page, 'nbPage' => $nbPage));
+    }
+
+    /**
+     *
+     * Load list of products updated by ids
+     *
+     * @param array $ids
+     * @return array
+     */
+    public function getProductsByIds($ids)
+    {
+        //=========================================
+        //          SELECT CLAUSE
+        //=========================================
+        /** @var DbQuery $sql */
+        $sql = $this->getAllProductsQuery();
+        $sql->leftJoin('reverb_shipping_methods', 'rsm', 'ra.`id_attribute` = rsm.`id_attribute`')
+            ->select(
+                'p.id_product, ' .
+                'p.reference as reference,' .
+                'pl.name as name,' .
+                'ra.reverb_enabled as reverb_enabled, ' .
+                'ra.model, ' .
+                'ra.offers_enabled, ' .
+                'ra.finish, ' .
+                'ra.origin_country_code, ' .
+                'ra.year, ' .
+                'ra.id_condition, ' .
+                'ra.id_shipping_profile, ' .
+                'ra.shipping_local, ' .
+                'GROUP_CONCAT(CONCAT (rsm.region_code, \':\', rsm.rate) SEPARATOR \'|\') AS shippings'
+            )
+            ->groupBy(
+                'p.id_product, ' .
+                'p.reference,' .
+                'pl.name,' .
+                'ra.reverb_enabled, ' .
+                'ra.model, ' .
+                'ra.offers_enabled, ' .
+                'ra.finish, ' .
+                'ra.origin_country_code, ' .
+                'ra.year, ' .
+                'ra.id_condition, ' .
+                'ra.id_shipping_profile, ' .
+                'ra.shipping_local'
+            )
+            ->where('p.id_product IN (' . implode(', ', $ids) . ')');
+
+        return Db::getInstance()->executeS($sql);
+    }
 }
