@@ -267,7 +267,7 @@ _il faut remplacer la valeur avec les crochets par le chemin de votre espace._
 
 ##### Comment configurer votre module avec l'hébergeur OVH ?
 
-OVH a un configuration restrictive sur leur hébergement mutualisé pour le système de CRON. Les URLs qui doivent être ajoutée ne doivent pas contenir de paramètres (clé=valeur).
+OVH a une configuration restrictive sur leur hébergement mutualisé pour le système de CRON. Les URLs qui doivent être ajoutées ne doivent pas contenir de paramètres (clé=valeur).
 
 Nous proposons une configuration qui s'adapte au fonctionnement d'OVH:
 
