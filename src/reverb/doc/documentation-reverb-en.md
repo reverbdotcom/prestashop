@@ -249,16 +249,7 @@ To manage your CRON tasks on your hosting, we strongly advise you to ask your su
 
 By default, this command launches every 5 minutes, so your site is constantly updated with your Reverb.com space.
 
-For your tests it is possible to launch the cron in your browser [URL de votre site]/modules/reverb/cron.php?code=products 
-
-### Gestion des synchronisation de vos commandes et stock
-
-Pour pouvoir un fonctionnement optimal, nous vous conseillons de configurer une tâche CRON permettant de lancer en tâche de fond les synchronisations de commandes Reverb vers PrestaShop. Il faut vous renseigner auprès de votre hébergeur pour gérer l'insertion de la commande suivante :
-
-    */8 * * * * php [Racine du Projet PrestaShop]/modules/reverb/cron.php orders > /var/log/cron.log
-
-_il faut remplacer la valeur avec les crochets par le chemin de votre espace._
-
+For your tests it is possible to launch the cron in your browser [URL de votre site]/modules/reverb/cron.php?code=products
 
 ##### How to configure your Reverb module with your OVH hosting ?
 
@@ -297,7 +288,15 @@ curl_close($curl);
 
 Now your CRON system on OVH is ready for optimal operation of your automated tasks between Reverb and your PrestaShop.
 
-OVH source: http://docs.ovh.com/fr/fr/web/hosting/mutualise-taches-automatisees-cron/ 
+OVH source: http://docs.ovh.com/fr/fr/web/hosting/mutualise-taches-automatisees-cron/
+
+### Managing your order and stock synchronization
+
+For optimum performance, we recommend that you configure a CRON task to run Reverb to PrestaShop command synchronizations in the background. You must check with your host to manage the insertion of the following command:
+
+    */8 * * * * php [Racine du Projet PrestaShop]/modules/reverb/cron.php orders > /var/log/cron.log
+
+_you must replace the value with the square brackets by the path of your space._
 
 #### Un de vos produits a été vendu sur le site de Reverb.com ?
 
