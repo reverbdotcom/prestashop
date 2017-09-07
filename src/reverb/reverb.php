@@ -1204,13 +1204,17 @@ class Reverb extends Module
      * @param int $idProduct
      * @return array
      */
-    public function getAttribute($idProduct)
+    public function getAttribute($idProduct, $massEdit = false)
     {
         $sql = new DbQuery();
         $sql->select('ra.*')
             ->from('reverb_attributes', 'ra')
-            ->where('ra.`id_product` = ' . $idProduct)
-            ->where('ra.`id_lang` = ' . $this->language_id);
+            ->where('ra.`id_product` = ' . $idProduct);
+
+        if(!$massEdit) {
+            $sql->where('ra.`id_lang` = ' . $this->language_id);
+        }
+
         $result = Db::getInstance()->getRow($sql);
         return $result;
     }

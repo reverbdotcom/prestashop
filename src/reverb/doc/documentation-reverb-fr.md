@@ -169,6 +169,8 @@ L'enregistrement est automatique.
 
 ### Configurer vos produits
 
+#### Méthode standard via la fiche produit
+
 Afin d'avoir des produits disponible pour la synchronisation vers Reverb, vous devez configurer les produits avec des informations dont Rerverb à besoin.
 
 Pour accéder à cette configuration : Catalog > Products > Edit your product > Modules Tab > configure Reverb
@@ -178,6 +180,44 @@ Pour accéder à cette configuration : Catalog > Products > Edit your product > 
 Lorsque le produit est éligible à la synchronisation, votre produit sera disponible sur le prochain écran _Gestion des synchronisations de vos produits_.
 
 ** Attention **: Le champ 'Model' est obligatoire pour l'API de Reverb, s'il n'est pas renseigné, Reverb retourne une message d'erreur pour le produit.
+
+#### Méthode d'édition de masse
+
+Le module aidera à traiter en masse l'édition des informations Reverb car pour certains marchands, le catalogue produit est trop gros pour utiliser la méthode standard.
+
+Pour démarrer avec l'édition de masse, nous vous invitons à accéder à l'onglet " Mass-Edit ":
+
+![sync](img/mass-edit-button.png)
+
+L'écran se présente sur 2 colonnes.
+
+![sync](img/mass-edit-screen.png)
+
+##### Description de la première colonne:
+
+Le champ "search Sku or Name" permet d'affiner sa recherche avec précision avec des tags, exemple:
+
+![sync](img/mass-edit-search.png)
+
+On remarque que sur les tags nous n'avons pas des SKUs ou Nom de produit en entier, il est possible de mettre qu'une petite partie du SKU ou du nom afin de récupérer une liste de tous les produits commençant par XXXX par exemple.
+
+Voici un tableau explicatif des actions possible sur la première partie de cet écran:
+
+| Champs                 | description                                                                                                     |
+|------------------------|:---------------------------------------------------------------------------------------------------------------:|
+| Search Sku or name     |  Ce champ vous permet de rechercher un ou plusieurs produits dont vous voulez éditer en masse                   |
+| Actions                |  Activer / Désactiver la synchronization et bouton de chargement des infos produits dans le formulaire à droite |
+| On/Off Synchronization |  Activer / Désactiver la synchronization pour les produits sélectionnés dans le tableau des résultats           |
+| On/Off make an offer   |  Activer / Désactiver l'option de faire une offre pour les produits sélectionnés dans le tableau des résultats  |
+| On/Off local pickup    |  Activer / Désactiver le retrait sur place pour les produits sélectionnés dans le tableau des résultats         |
+| Edit products in bulk  |  Charge la liste des produits sélectionnés et sur la saisie du formulaire à droite cela enregistre en masse     |
+
+##### Description de la deuxième colonne:
+
+Le formulaire est identique à celui de la fiche produit.
+
+Lorsque le produit est chargé seul, le champ "Model" est personnalisable par contre si l'on fait une édition supérieur à 2 produits alors ce champ sera en lecture seul.
+A l'enregistrement, le système récupérera le nom du produit et lui affectera pour la synchronisation du produit.
 
 ### Gestion des synchronisations de vos produits
 
@@ -224,6 +264,43 @@ Pour pouvoir un fonctionnement optimal, nous vous conseillons de configurer une 
     */8 * * * * php [Racine du Projet PrestaShop]/modules/reverb/cron.php orders > /var/log/cron.log
 
 _il faut remplacer la valeur avec les crochets par le chemin de votre espace._
+
+##### Comment configurer avec l'hébergeur OVH ?
+
+OVH a un configuration restrictive sur leur hébergement mutualisé pour le système de CRON. Les URLs qui doivent être ajoutée ne doivent pas contenir de paramètres (clé=valeur).
+
+Nous proposons une configuration qui s'adapte au fonctionnement d'OVH:
+
+1. Copier / coller les 3 fichiers PHP dans reverb/doc/cron-for-ovh/ vers la racine du module Reverb
+2. Ouvrez chaque fichier et remplacer le tag [ADD YOUR DOMAIN URL] par l'url de votre site
+
+```php
+<?php
+// Get cURL resource
+$curl = curl_init();
+// Set some options - we are passing in a useragent too here
+curl_setopt_array(
+    $curl,
+    array(
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_URL => '[ADD YOUR DOMAIN URL]/modules/reverb/cron.php?code=orders',
+        CURLOPT_USERAGENT => 'CRON OVH'
+    )
+);
+// Send the request & save response to $resp
+$resp = curl_exec($curl);
+// Close request to clear up some resources
+curl_close($curl);
+```
+
+
+3. Enregistrer chaque fichier
+4. Paramétrer le système de CRON OVH avec les URLS suivantes:
+  * [VOTRE DOMAINE URL]/modules/reverb/cron-sync-orders.php (appel automatisé toutes les heures)
+  * [VOTRE DOMAINE URL]/modules/reverb/cron-sync-product.php (appel automatisé toutes les heures)
+  * [VOTRE DOMAINE URL]/modules/reverb/cron-sync-reconciliation.php (appel automatisé une fois par jour)
+
+Maintenant votre système de CRON sur OVH est prêt pour un fonctionnement optimal de vos tâches automatisés entre Reverb et votre site PrestaShop.
 
 #### Un de vos produits a été vendu sur le site de Reverb.com ?
 
