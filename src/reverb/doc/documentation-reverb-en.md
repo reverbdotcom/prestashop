@@ -2,35 +2,35 @@
 
 # Documentation for the Reverb module - PrestaShop 1.6 & 1.7
 
-This documentation is a guide for the merchant to install and configure the module PrestaShop.
+This documentation is a guide for the merchant to install and configure the module PrestaShop module.
 
 ## Summary
 
-### You are developer ?
+### You are developer
 
 1. Prerequisites
 2. Install your Develop environment 
 3. Contribute in GitHub
 
-### You are Merchant ?
+### You are Merchant
 
 1. Prerequisites
-2. How install the Reverb module in your PrestaShop ?
+2. How to install the Reverb module in your PrestaShop ?
 3. How do you update the Reverb module ?
 4. Login with your Reverb account
 5. Configure the settings
-6. Configure the mapping categories 
+6. Configure the category mappings 
 7. Configure your products
 8. Sync management of products
 9. Sync management of Orders and inventory
 10. FAQ
 
 
-## You are developer ?
+## You are developer
 
 ### Prerequisites
 
-To install your test environment with Docker, you need to:
+To install your test environment with Docker, you need:
 
 * Docker (https://docs.docker.com/engine/installation/)
 * Docker Compose (https://docs.docker.com/compose/)
@@ -89,9 +89,9 @@ You must wait a few minutes for the PrestaShop to install.
 
 ### Contribute in GitHub
 
-**[ Reverb must be write his rules ]**
+* Submit a PR with reasoning as to why the PR is needed
 
-## You are Merchant ?
+## You are a Merchant
 
 ### Prerequisites
 
@@ -136,7 +136,7 @@ Else via GitHub or downloading the ZIP file, apply the same methodology as the p
 
 ### Login with your Reverb account
 
-You should connect the module with Reverb via a Token that you have previously generated on your Reverb space.
+You should connect the module with Reverb via a Token that you have previously generated on your Reverb account.
 
 #### How to configure the Reverb module ?
 
@@ -155,9 +155,9 @@ Configure the different rules in the product sync :
 
 ![configure settings](img/settings.png)
 
-### Configure the mapping categories 
+### Configure the category mappings 
 
-The module proposes to associate the categories of your catalog with that of Reverb.
+You need to associate the categories of your catalog with that of Reverb.
 To do this, select one of your categories and map to a Reverb category.
 Registration is automatic.
 
@@ -175,13 +175,13 @@ To access this configuration: Catalog > Products > Edit your product > Modules T
 
 When the product is eligible for synchronization, your product will be available on the next screen _Product Synchronization Management_.
 
-** Note **: the field Model is mandatory for the Reverb API. If not informed, the Reverb API returned an error message.
+** Note **: the field Model is mandatory for the Reverb API. If not given, the Reverb API returned an error message.
 
-#### Method Mass-Edit
+#### Mass-Editing
 
-The module will help to mass-process the editing of Reverb informations because for few merchants, the product catalog is too large to use the standard method.
+The module can to mass-edit Reverb information because for some merchants, the product catalog is too large to use the standard method.
 
-To start with the Mass-Edit, we invite you to access the tab " Mass-Edit ":
+To start with the Mass-Edit, go to the the tab " Mass-Edit ":
 
 ![sync](img/mass-edit-button.png)
 
@@ -191,15 +191,15 @@ The screen appears on 2 columns.
 
 ##### Description of the first column:
 
-The field "search Sku or Name", it allows to refine its search with precision with tags, example:
+The field "search Sku or Name", allows searching with precision with tags, example:
 
 ![sync](img/mass-edit-search.png)
 
-Note that on tags we do not have SKUs or Product name in full, it is possible to put only a small part of the SKU or name in order to retrieve a list of all the products commençant par XXXX par exemple.
+Note that on tags we do not have SKUs or Product name in full, it is possible to put only a small part of the SKU or name in order to retrieve a list of all the products starting with XXXX for example.
 
-This is a table of possible actions on the first part of this screen:
+Possible actions on the first part of this screen:
 
-| Champs                 | description                                                                                                     |
+| Field                  | description                                                                                                     |
 |------------------------|:---------------------------------------------------------------------------------------------------------------:|
 | Search Sku or name     |  This field allows you to search for one or more products that you want to edit in bulk                         |
 | Actions                |  Activate / deactivate synchronization and button for loading product info in the form on the right             |
@@ -212,7 +212,7 @@ This is a table of possible actions on the first part of this screen:
 
 The form is just the same as for the product details.
 
-When the product is loaded alone, the "Model" field can be customized, if you make an edition greater than 1 product then this field will be read-only. Upon registration, the system will retrieve the product name and assign it for product synchronization.
+When the product is loaded alone, the "Model" field can be customized; if you make an edition greater than 1 product then this field will be read-only. Upon registration, the system will retrieve the product name and assign it for product synchronization.
 
 ### Sync management of products
 
@@ -243,7 +243,7 @@ _Note: Product synchronization is only functional in one direction, from PrestaS
 
 #### Automatic management
 
-To manage your CRON tasks on your hosting, we strongly advise you to ask your supplier to insert, modify a CRON task.
+To manage your CRON tasks on your hosting, we strongly advise you to ask your host to insert or modify a CRON task.
 
     */5 * * * * php [ROOT of the PrestaShop project]/modules/reverb/cron.php products > /var/log/cron.log
 
@@ -251,9 +251,9 @@ By default, this command launches every 5 minutes, so your site is constantly up
 
 For your tests it is possible to launch the cron in your browser [URL de votre site]/modules/reverb/cron.php?code=products
 
-##### How to configure your Reverb module with your OVH hosting ?
+##### How to configure your Reverb module with your OVH hosting
 
-OVH has a restrictive configuration on their shared hosting for the CRON system. The URLs to be added must not contain parameters (key = value).
+OVH has a restrictive configuration on their shared hosting CRON. The URLs to be added must not contain parameters (key = value).
 
 We propose a configuration that adapts to the functioning of OVH:
 
@@ -298,32 +298,32 @@ For optimum performance, we recommend that you configure a CRON task to run Reve
 
 _you must replace the value with the square brackets by the path of your space._
 
-#### Un de vos produits a été vendu sur le site de Reverb.com ?
+#### One of your products has been sold on Reverb.com
 
-La tâche automatique qui tourne toutes les 8 minutes appelle Reverb.com pour récupérer toutes les commandes prêtes à être expédiées.
-Elles sont ensuite contrôlées et créer dans votre PrestaShop, accessible dans _Commandes > Commandes_
+The automatic task that runs every 8 minutes calls Reverb.com to retrieve all orders ready to be shipped.
+They are then checked and created in your PrestaShop, accessible in _Commands> Commands_
 
-![list orders](img/liste-fr-order.png)
+! [list orders] (img / list-en-order.png)
 
-Votre commande est créée avec un statut _Paiement accepté_, vous pouvez ensuite traiter votre commande depuis PrestaShop.
+Your order is created with a status _Payment accepted_, you can then process your order from PrestaShop.
 
-Lorsque vous mettez votre commande au statut "_expédiée_", PrestaShop proposera d'éditer dans le bloc _Shipping_ le _Tracking number_
+When you put your command to the "dispatched" status, PrestaShop will propose to edit in the _Shipping_ block the _Tracking number_
 
-![list orders](img/order-shipping.png)
+[list orders] (img / order-shipping.png)
 
-Vous pouvez visualiser le détail du paiement avec l'information d'où vient la transaction "_Reverb_" :
+You can view the details of the payment with the information from where the transaction "_Reverb_" comes from:
 
-![list orders](img/order-payment.png)
+! [list orders] (img / order-payment.png)
 
-Dans le bloc message, le module Reverb historise quelques informations afin de pouvoir matcher entre PrestaShop et Reverb.com.
+In the message block, the Reverb module logs some information so that it can match between PrestaShop and Reverb.com.
 
-![list orders](img/order-message.png)
+! [list orders] (img / order-message.png)
 
-#### Un de vos produits a été vendu sur votre site PrestaShop ?
+#### One of your products has sold on your PrestaShop site?
 
-votre produit n'a pas été vendu sur Reverb.com mais sur votre site ecommerce. Au moment de la confirmation de la commande, le module Reverb envoit une notification à Reverb.com afin de mettre à jour le stock du produit. Seulement sur les produits ayant eu une synchronisation !
+Your product was not sold on Reverb.com but on your ecommerce site. Upon confirmation of the order, the Reverb module sends a notification to Reverb.com to update the stock of the product. Only on products that are ready for synchronization!
 
-_Remarque :  Il se peut aussi que vous ayez déjà des produits sur le site Reverb.com mais dont les produits sur PrestaShop n'ont jamais été synchronisés. Si une commande est validée sur Reverb.com, le module enregistrera la commande sur PrestaShop en précisant dans un message de la commande que le produit n'est pas synchronisé et qu'il faut faire attention à cette commande._
+_Note: You may also already have products on the Reverb.com site but whose products on PrestaShop have never been synchronized. If a command is validated on Reverb.com, the module will save the command to PrestaShop by specifying in a message of the command that the product is not synchronized and that you must pay attention to this command._
 
 ### FAQ
 
