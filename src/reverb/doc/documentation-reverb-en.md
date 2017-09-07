@@ -297,6 +297,8 @@ curl_close($curl);
 
 Now your CRON system on OVH is ready for optimal operation of your automated tasks between Reverb and your PrestaShop.
 
+OVH source: http://docs.ovh.com/fr/fr/web/hosting/mutualise-taches-automatisees-cron/ 
+
 #### Un de vos produits a été vendu sur le site de Reverb.com ?
 
 La tâche automatique qui tourne toutes les 8 minutes appelle Reverb.com pour récupérer toutes les commandes prêtes à être expédiées.
