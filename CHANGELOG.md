@@ -1,3 +1,8 @@
+# Version 1.2.1
+
+- Fix: Bulk action
+- Fix: documentations FR and EN
+
 # Version 1.2.0
 
 - New: Feature Mass-edit

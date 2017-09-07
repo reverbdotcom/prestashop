@@ -126,7 +126,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
             try {
                 $this->module->logs->infoLogs('### Toggle sync enabled for product : ' . $id_product);
 
-                $attribute = $this->module->getAttribute($id_product);
+                $attribute = $this->module->getAttribute($id_product, TRUE);
                 $db = Db::getInstance();
 
                 if (!empty($attribute)) {
@@ -338,7 +338,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
         foreach ($productIds as $productId) {
             // Get reverb attributes
-            $attribute = $this->module->getAttribute($productId);
+            $attribute = $this->module->getAttribute($productId, TRUE);
 
             $attributes['model'] = Product::getProductName($productId);
 
@@ -393,7 +393,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
         foreach ($productIds as $productId) {
             $this->module->logs->infoLogs('## Mass ' . $type . ' product: #' . $productId);
             // Get reverb attributes
-            $attribute = $this->module->getAttribute($productId);
+            $attribute = $this->module->getAttribute($productId, TRUE);
             if (!empty($attribute)) {
                 $this->module->logs->infoLogs('## Update product #' . $productId);
 
