@@ -204,7 +204,7 @@ On remarque que sur les tags nous n'avons pas des SKUs ou Nom de produit en enti
 Voici un tableau explicatif des actions possible sur la première partie de cet écran:
 
 | Champs                 | description                                                                                                     |
-|------------------------|:---------------------------------------------------------------------------------------------------------------:|
+|------------------------|:----------------------------------------------------------------------------------------------------------------|
 | Search Sku or name     |  Ce champ vous permet de rechercher un ou plusieurs produits dont vous voulez éditer en masse                   |
 | Actions                |  Activer / Désactiver la synchronization et bouton de chargement des infos produits dans le formulaire à droite |
 | On/Off Synchronization |  Activer / Désactiver la synchronization pour les produits sélectionnés dans le tableau des résultats           |
@@ -216,7 +216,7 @@ Voici un tableau explicatif des actions possible sur la première partie de cet 
 
 Le formulaire est identique à celui de la fiche produit.
 
-Lorsque le produit est chargé seul, le champ "Model" est personnalisable par contre si l'on fait une édition supérieur à 2 produits alors ce champ sera en lecture seul.
+Lorsque le produit est chargé seul, le champ "Model" est personnalisable par contre si l'on fait une édition supérieur à 1 produit alors ce champ sera en lecture seul.
 A l'enregistrement, le système récupérera le nom du produit et lui affectera pour la synchronisation du produit.
 
 ### Gestion des synchronisations de vos produits
