@@ -260,7 +260,7 @@ Pour pouvoir un fonctionnement optimal, nous vous conseillons de configurer une 
 _il faut remplacer la valeur avec les crochets par le chemin de votre espace._
 
 
-##### How to configure your OVH hosting ?
+##### How to configure your Reverb module with your OVH hosting ?
 
 OVH has a restrictive configuration on their shared hosting for the CRON system. The URLs to be added must not contain parameters (key = value).
 
