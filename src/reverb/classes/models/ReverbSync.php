@@ -689,7 +689,7 @@ class ReverbSync
      * @param integer $page
      * @return array
      */
-    public function getAllProductsPagination($search = array(), $orderBy = 'reference', $orderWay = 'ASC', $page = 1, $nbPerPage = 20)
+    public function getAllProductsPagination($search = array(), $orderBy = 'reference', $orderWay = 'ASC', $page = 1, $nbPerPage = 100)
     {
         $count = $this->getAllProductsNb($search, $orderBy, $orderWay);
 
