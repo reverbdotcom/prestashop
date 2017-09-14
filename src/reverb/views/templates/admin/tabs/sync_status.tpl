@@ -33,7 +33,7 @@
                 select.attr('disabled', 'disabled');
                 $('.pending-listing').show();
                 // Ajax call with secure token
-                $.get('{$url_site}/modules/reverb/cron.php?code=products',
+                $.get('{$url_site}modules/reverb/cron.php?code=products',
                     function (response) {
                         showSuccessMessage("{l s='Listing Synced with success' mod='reverb'}");
                         $('.pending-listing').hide();
