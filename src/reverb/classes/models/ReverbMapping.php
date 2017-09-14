@@ -15,6 +15,7 @@ class ReverbMapping
     {
         $this->module = $module_instance;
     }
+
     /**
      * Return formatted PS categories for mapping select form
      *
@@ -26,6 +27,7 @@ class ReverbMapping
         $sql = new DbQuery();
         $sql->select('c.id_category as id_category,  ' .
             'c.id_parent as id_parent,' .
+            'c.is_root_category,' .
             'cl.name as name,' .
             'rm.reverb_code as reverb_code,' .
             'rm.id_mapping as id_mapping')
@@ -33,7 +35,7 @@ class ReverbMapping
             ->leftJoin('category_lang', 'cl', 'cl.`id_category` = c.`id_category`')
             ->leftJoin('category_shop', 'cs', 'cs.`id_category` = c.`id_category`')
             ->leftJoin('reverb_mapping', 'rm', 'rm.`id_category` = c.`id_category`')
-            ->where('c.`id_parent` != 0 AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId)
+            ->where('((c.`id_parent` != 0 AND c.`id_parent`=' . (int)Category::getRootCategory()->id . ') OR (c.id_category='. (int)Category::getRootCategory()->id . ')) AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId)
             ->orderBy('c.`id_parent` ASC, cl.`name` ASC');
         //=========================================
         //          PAGINATION
@@ -56,12 +58,14 @@ class ReverbMapping
             $indexedCategories[$row['id_category']] = $row;
         }
         foreach ($indexedCategories as $categoryId => $category) {
-            $categories[$categoryId] = array(
-                'ps_category_id' => $categoryId,
-                'ps_category' => self::getPsFullName($category, $indexedCategories),
-                'reverb_code' => $category['reverb_code'],
-                'id_mapping' => $category['id_mapping'],
-            );
+            if (!$category['is_root_category']) {
+                $categories[$categoryId] = array(
+                    'ps_category_id' => $categoryId,
+                    'ps_category' => self::getPsFullName($category, $indexedCategories),
+                    'reverb_code' => $category['reverb_code'],
+                    'id_mapping' => $category['id_mapping'],
+                );
+            }
         }
         return $categories;
     }
@@ -79,7 +83,7 @@ class ReverbMapping
             ->leftJoin('category_lang', 'cl', 'cl.`id_category` = c.`id_category`')
             ->leftJoin('category_shop', 'cs', 'cs.`id_category` = c.`id_category`')
             ->leftJoin('reverb_mapping', 'rm', 'rm.`id_category` = c.`id_category`')
-            ->where('c.`id_parent` != 0 AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId);
+            ->where('((c.`id_parent` != 0 AND c.`id_parent`=' . (int)Category::getRootCategory()->id . ') OR (c.id_category='. (int)Category::getRootCategory()->id . ')) AND cs.`id_shop`= '.$id_shop.' AND `id_lang` = ' . (int)$languageId);
         $result = Db::getInstance()->getRow($sql);
         return $result['totals'];
     }
@@ -164,6 +168,9 @@ class ReverbMapping
         );
         if ($exec) {
             $return = $mappingId;
+            if ($return) {
+                $return = $this->subCategoriesManagement($psCategoryId, $reverbCode);
+            }
         }
         $this->module->logs->infoLogs(
             'Update mapping ' . $mappingId . ' for category ' . $psCategoryId . ' => ' . $reverbCode . ' : ' . var_export($return, true)
@@ -188,10 +195,69 @@ class ReverbMapping
         );
         if ($exec) {
             $return = Db::getInstance()->Insert_ID();
+            if ($return) {
+                $return = $this->subCategoriesManagement($psCategoryId, $reverbCode);
+            }
         }
         $this->module->logs->infoLogs(
             'Insert mapping for category ' . $psCategoryId . ' => ' . $reverbCode . ' : result = ' . var_export($return, true)
         );
+        return $return;
+    }
+
+    /**
+     * Delete and insert the new Reverb category
+     *
+     * @param $psCategoryId
+     * $return bool
+     */
+
+    private function subCategoriesManagement($psCategoryId, $reverbCode)
+    {
+        $return = false;
+        $delete_categories = array();
+        $insert_categories = array();
+        // load the category object
+        $cat = new Category($psCategoryId);
+        // get all category children
+        $all_cat = $cat->getAllChildren();
+        // construct array delete and inser to optimize sql request (2 requests)
+        foreach ($all_cat as $subcat) {
+            if (isset($subcat->id) && $subcat->id > 0) {
+                // delete category in the reverb_mapping
+                $delete_categories[] = $subcat->id;
+                // insert category in the reverb mapping with new Reverb Code
+                $insert_categories[] = array(
+                    'id_category' => $subcat->id,
+                    'reverb_code' => $reverbCode,);
+            }
+        }
+        // execute delete request
+        if (count($delete_categories)) {
+            $delete_exec = Db::getInstance()->delete(
+                'reverb_mapping',
+                'id_category in ('.implode(',', $delete_categories).')'
+            );
+            if ($delete_exec) {
+                // execute insert request
+                $insert_exec = Db::getInstance()->insert(
+                    'reverb_mapping',
+                    $insert_categories
+                );
+                if ($insert_exec) {
+                    $this->module->logs->infoLogs(
+                        'Insert mapping for sub-category '.implode(',', $delete_categories)
+                    );
+                    $return = true;
+                    unset($delete_categories);
+                    unset($insert_categories);
+                } else {
+                    $this->module->logs->errorLogs('error Insert Sub-Categories in reverb_mapping ('.implode(',', $delete_categories).')');
+                }
+            } else {
+                $this->module->logs->errorLogs('error Delete existing Sub-Categories in reverb_mapping ('.implode(',', $delete_categories).')');
+            }
+        }
         return $return;
     }
 }

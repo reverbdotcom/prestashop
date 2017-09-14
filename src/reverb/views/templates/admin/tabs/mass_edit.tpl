@@ -346,7 +346,6 @@
                                 {/if}
 
                                 <div class="alert alert-info" role="alert">
-                                    <i class="material-icons">help</i>
                                     <p class="alert-text">
                                         <a target="_blank" href="{$reverb_url|escape:'htmlall':'UTF-8'}/my/selling/shipping_rates">
                                             {l s='See your Reverb shipping profile' mod='reverb'}
