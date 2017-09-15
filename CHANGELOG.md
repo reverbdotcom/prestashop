@@ -1,5 +1,6 @@
 # Version 1.2.2
 
+- Fix: Do not send make or model if there is no make or model
 - Fix: Only first level categories are showed for the Category Mapping and when it's matched with Reverb Code, all children categories are update with this code.
 
 # Version 1.2.1
