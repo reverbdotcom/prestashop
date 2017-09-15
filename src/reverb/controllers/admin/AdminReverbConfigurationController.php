@@ -341,14 +341,6 @@ class AdminReverbConfigurationController extends ModuleAdminController
             $attribute = $this->module->getAttribute($productId, TRUE);
 
             if (!empty($attribute)) {
-                if (empty(Tools::getValue('reverb_model')) && empty($attribute['model'])) {
-                    $attributes['model'] = Product::getProductName($productId);
-                } elseif (empty(Tools::getValue('reverb_model')) && !empty($attribute['model'])) {
-                    $attributes['model'] = $attribute['model'];
-                } else {
-                    $attributes['model'] = Tools::getValue('reverb_model');
-                }
-
                 $idAttribute = (int)$attribute['id_attribute'];
                 $this->module->logs->infoLogs('## Update product #' . $productId);
                 $db->update(
@@ -360,9 +352,6 @@ class AdminReverbConfigurationController extends ModuleAdminController
                 $db->delete('reverb_shipping_methods', 'id_attribute = ' . (int)$attribute['id_attribute'], false);
                 $this->module->logs->infoLogs('### fin update');
             } else {
-                if (empty(Tools::getValue('reverb_model'))) {
-                    $attributes['model'] = Product::getProductName($productId);
-                }
                 $this->module->logs->infoLogs('## Insert product #' . $productId);
                 $db->insert('reverb_attributes', array_merge(
                     $attributes,

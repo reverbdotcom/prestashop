@@ -1064,9 +1064,7 @@ class Reverb extends Module
         $id_product = Tools::getValue('id_product');
 
         if (isset($id_product) && $id_product) {
-            $product_name = Product::getProductName($id_product);
-            $reverb_model= Tools::getValue('reverb_model');
-            $model = (!empty($reverb_model) ? $reverb_model : $product_name);
+            $model = Tools::getValue('reverb_model');
             $settingsReverb = Tools::getValue('reverb_enabled');
             $condition = Tools::getValue('reverb_condition');
             $finish = Tools::getValue('reverb_finish');
