@@ -86,8 +86,12 @@ class ProductMapper
 
         $this->validateProductForSync($product_ps);
 
-        $product->make = $product_ps['manufacturer_name'];
-        $product->model = $product_ps['model'];
+        if(!empty($product_ps['manufacturer_name'])) {
+            $product->make = $product_ps['manufacturer_name'];
+        }
+        if(!empty($product_ps['model'])){
+            $product->model = $product_ps['model'];
+        }
         $product->has_inventory = $product_ps['quantity_stock'] > 0 ? 1 : false;
         $product->inventory = $product_ps['quantity_stock'];
         $product->sku = $product_ps['reference'];

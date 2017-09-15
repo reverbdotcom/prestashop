@@ -231,7 +231,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
         $orderBy = Tools::getValue('order_by_reverb_search','reference');
         $orderWay = Tools::getValue('order_by_reverb_search','ASC');
-        $nbPerPage = Tools::getValue('nb_per_page_reverb_search',20);
+        $nbPerPage = Tools::getValue('nb_per_page_reverb_search',100);
 
         $reverbSync = new \ReverbSync($this->module);
         $result = $reverbSync->getAllProductsPagination($search, $orderBy, $orderWay, $page, $nbPerPage);
@@ -339,8 +339,6 @@ class AdminReverbConfigurationController extends ModuleAdminController
         foreach ($productIds as $productId) {
             // Get reverb attributes
             $attribute = $this->module->getAttribute($productId, TRUE);
-
-            $attributes['model'] = Product::getProductName($productId);
 
             if (!empty($attribute)) {
                 $idAttribute = (int)$attribute['id_attribute'];

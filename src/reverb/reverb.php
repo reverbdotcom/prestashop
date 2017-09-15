@@ -59,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.2.1';
+        $this->version = '1.2.2';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -1064,8 +1064,8 @@ class Reverb extends Module
         $id_product = Tools::getValue('id_product');
 
         if (isset($id_product) && $id_product) {
-            $settingsReverb = Tools::getValue('reverb_enabled');
             $model = Tools::getValue('reverb_model');
+            $settingsReverb = Tools::getValue('reverb_enabled');
             $condition = Tools::getValue('reverb_condition');
             $finish = Tools::getValue('reverb_finish');
             $year = Tools::getValue('reverb_year');
@@ -1076,8 +1076,7 @@ class Reverb extends Module
             $reverb_shipping_methods_region = Tools::getValue('reverb_shipping_methods_region');
             $reverb_shipping_methods_rate = Tools::getValue('reverb_shipping_methods_rate');
             $reverb_shipping_local = Tools::getValue('reverb_shipping_local');
-
-            //TODO Controle de validité ?
+            
             $values = array(
                 'reverb_enabled' => pSQL($settingsReverb),
                 'model' => pSQL($model),
