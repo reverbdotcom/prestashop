@@ -1,3 +1,7 @@
+# Version 1.2.3
+
+- Fix: No 'Access-Control-Allow-Origin' header is present on the requested resource
+
 # Version 1.2.2
 
 - Fix: Do not send make or model if there is no make or model
