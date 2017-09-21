@@ -3,4 +3,5 @@ if [ "$#" -ne 1 ]; then
   echo "Must specify a version"
   exit 1
 fi
-zip -r reverb-v"$1".zip src
+cwd=$(pwd)
+cd src; zip -r "$cwd"/reverb-v"$1".zip .
