@@ -423,6 +423,96 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $this->module->logs->infoLogs('## Mass Offers END #');
     }
 
+    /**
+     *  Ajax Listing sync
+     *
+     */
+    public function ajaxProcessProductCron()
+    {
+        if (!$this->module instanceof Reverb) {
+            die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
+        }
+
+        $this->module->logs->cronLogs('start ajax cron manually products');
+        $return = $this->curlCron('products');
+        $this->module->logs->cronLogs($return);
+        die($return);
+    }
+    /**
+     *  Ajax Order sync
+     *
+     */
+    public function ajaxProcessOrderCron()
+    {
+        if (!$this->module instanceof Reverb) {
+            die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
+        }
+
+        $this->module->logs->cronLogs('start ajax cron manually orders');
+        $return = $this->curlCron('orders');
+        $this->module->logs->cronLogs($return);
+        die($return);
+    }
+
+    /**
+     * Curl action to launch cron with a param
+     *
+     * @param $param
+     */
+    private function curlCron($param)
+    {
+        try {
+            $helper = new \HelperCron($this->module);
+            $code_cron = $param;
+
+            if (!isset($code_cron) || !in_array($code_cron, array('orders',  'products'))) {
+                throw new \Exception('No code cron corresponding. ' . $code_cron);
+            }
+
+            $this->module->logs->cronLogs('##########################');
+            $this->module->logs->cronLogs('# BEGIN ' . $code_cron . ' sync CRON');
+            $this->module->logs->cronLogs('##########################');
+            $idCron = $helper->insertOrUpdateCronStatus(null, $code_cron, $helper::CODE_CRON_STATUS_PROGRESS);
+
+            if ($this->module->isApiTokenAvailable()) {
+                $context = new \ContextCron($this->module);
+                switch ($code_cron) {
+                    case 'orders':
+                        $engine = new \OrdersSyncEngine($this->module, $helper, $context);
+                        $engine->processSyncOrder($idCron);
+                        break;
+                    case 'products':
+                        $reverbProduct = new \Reverb\ReverbProduct($this->module);
+                        $products = $this->module->reverbSync->getProductsToSync();
+                        $this->module->logs->cronLogs('# ' . count($products) . ' product(s) to sync');
+                        foreach ($products as $product) {
+                            $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_CRON);
+                            $this->module->logs->cronLogs('# ' . json_encode($res));
+                        }
+                        break;
+                }
+            } else {
+                throw new \Exception('No valid API token is defined for the shop');
+            }
+
+            $this->module->logs->cronLogs('##########################');
+            $this->module->logs->cronLogs('# END ' . $code_cron . ' sync CRON SUCCESS');
+            $this->module->logs->cronLogs('##########################');
+        } catch (\Exception $e) {
+            $error = 'Error in cron ' . (isset($code_cron) ? $code_cron . ' ' : ' ') . $e->getMessage();
+            $this->module->logs->cronLogs($error);
+            $this->module->logs->errorLogs($error);
+
+            if (isset($code_cron) && isset($idCron) && $idCron) {
+                $helper->insertOrUpdateCronStatus($idCron, $code_cron, $helper::CODE_CRON_STATUS_ERROR, $e->getMessage());
+            }
+
+            $this->module->logs->cronLogs('##########################');
+            $this->module->logs->cronLogs('# END sync CRON FAILED');
+            $this->module->logs->cronLogs('##########################');
+        }
+    }
+
     protected function sendErrorRequest($response)
     {
         http_response_code(406);
