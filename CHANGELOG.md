@@ -1,3 +1,7 @@
+# Version 1.2.4
+
+- Fix: ajax method for the listing sync button and orders sync button
+
 # Version 1.2.3
 
 - Fix: No 'Access-Control-Allow-Origin' header is present on the requested resource
