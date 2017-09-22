@@ -32,7 +32,8 @@
                 select.attr('disabled', 'disabled');
                 $('.pending-order').show();
                 // Ajax call with secure token
-                $.get(baseDir + 'modules/reverb/cron.php?code=orders',
+                //$.get(baseDir + 'modules/reverb/cron.php?code=orders',
+                $.post('{$ajax_url}&action=OrderCron&ajax=true',
                     function (response) {
                         showSuccessMessage("{l s='Orders Synced with success' mod='reverb'}");
                         $('.pending-order').hide();
