@@ -1,3 +1,7 @@
+# Version 1.2.5
+
+- Fix: Price format for the seller cost (wholesale_price)
+
 # Version 1.2.4
 
 - Fix: ajax method for the listing sync button and orders sync button
