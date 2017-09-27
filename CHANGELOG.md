@@ -1,3 +1,7 @@
+# Version 1.2.6
+
+- Fix: Redirection after submitting the listing sync manually
+
 # Version 1.2.5
 
 - Fix: Price format for the seller cost (wholesale_price)
