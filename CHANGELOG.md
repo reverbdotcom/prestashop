@@ -1,3 +1,7 @@
+# Version 1.2.7
+
+- Fix: Ps_Round with 2 decimals for the seller cost (wholesale_price)
+
 # Version 1.2.6
 
 - Fix: Redirection after submitting the listing sync manually
