@@ -104,7 +104,7 @@ class ProductMapper
         $product->finish = $product_ps['finish'];
         $product->origin_country_code = $product_ps['origin_country_code'];
         $product->year = $product_ps['year'];
-        $product->seller_cost = Tools::displayPrice($product_ps['wholesale_price']);
+        $product->seller_cost = Tools::ps_round($product_ps['wholesale_price'],2);
         $product->tax_exempt = null;
         $product = $this->mapShipping($product, $product_ps);
         $product = $this->processMappingAccordingSettings($product, $product_ps, $productExists);
