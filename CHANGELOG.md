@@ -1,3 +1,7 @@
+# Version 1.2.8
+
+- New: Add new search param category in the mass edit
+
 # Version 1.2.7
 
 - Fix: Ps_Round with 2 decimals for the seller cost (wholesale_price)

@@ -636,6 +636,9 @@ class ReverbSync
         $sql->from('product', 'p')
             ->leftJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
             ->leftJoin('reverb_attributes', 'ra', 'ra.`id_product` = p.`id_product`')
+            ->leftJoin('category_product', 'cp', 'p.`id_product` = cp.`id_product`')
+            ->leftJoin('category_lang', 'cl', 'cp.`id_category` = cl.`id_category`')
+            ->leftJoin('reverb_mapping', 'rmp', 'cp.`id_category` = rmp.`id_category`')
             ->where('pl.`id_lang` = ' . (int)$this->module->language_id);
             //->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date');
 
@@ -648,6 +651,7 @@ class ReverbSync
                 $where .= empty($where) ? '':' OR ';
                 $where .= 'LOWER(pl.name) LIKE "%'.Tools::strtolower($value).'%"';
                 $where .= ' OR LOWER(p.reference) LIKE "%'.Tools::strtolower($value).'%"';
+                $where .= ' OR LOWER(cl.name) LIKE "%'.Tools::strtolower($value).'%"';
             }
             $sql->where($where);
         }
