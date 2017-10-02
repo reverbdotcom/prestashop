@@ -35,7 +35,7 @@
                             value=""
                             style="display: none;"
                             aria-describedby="searchHelp" />
-                        <small id="emailHelp" class="form-text text-muted">{l s='Search by Sku or Name or Category' mod='reverb'}</small>
+                        <small id="emailHelp" class="form-text text-muted"><strong>{l s='Search by Sku or Name or Category' mod='reverb'}</strong></small>
                     </div>
                     <div class="col-md-2">
                         <div class="input-group-btn">
