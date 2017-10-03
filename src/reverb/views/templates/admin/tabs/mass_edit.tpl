@@ -14,7 +14,7 @@
                 <script type="text/javascript">
                     $().ready(function () {
                         var input_id = '{/literal}tags_reverb_search{literal}';
-                        $('#'+input_id).tagify({delimiters: [13,44], addTagPrompt: '{/literal}{l s='Search Sku or Name' mod='reverb'}{literal}'});
+                        $('#'+input_id).tagify({delimiters: [13,44], addTagPrompt: '{/literal}{l s='Search' mod='reverb'}{literal}'});
                         $('#btn-search-submit').click( function() {
                             $(this).find('#'+input_id).val($('#'+input_id).tagify('serialize'));
                             processSearchAjax($('#search_form').serialize(),$('#search_form').attr('action'), 1);
@@ -33,7 +33,9 @@
                             class="tagify updateCurrentText"
                             name="tags_reverb_search"
                             value=""
-                            style="display: none;" />
+                            style="display: none;"
+                            aria-describedby="searchHelp" />
+                        <small id="emailHelp" class="form-text text-muted"><strong>{l s='Search by Sku or Name or Category' mod='reverb'}</strong></small>
                     </div>
                     <div class="col-md-2">
                         <div class="input-group-btn">
