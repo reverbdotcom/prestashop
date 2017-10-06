@@ -40,7 +40,7 @@
     {include file='./alerts.tpl'}
 
 	<div role="tabpanel">
-		<ul class="nav nav-tabs" role="tablist">
+		<ul class="nav nav-tabs" role="tablist" id="myTab">
 			<li role="presentation"
 				class=" {if (!$is_logged || (isset($active_tab) && $active_tab == 'login'))} active{/if}">
 				<a href="#login" aria-controls="login" role="tab" data-toggle="tab">
@@ -141,3 +141,14 @@
 		</div>
 	</div>
 </div>
+<script type="text/javascript">
+	$(document).ready(function(){
+		$('a[data-toggle="tab"]').on('show.bs.tab', function(e) {
+			localStorage.setItem('activeTab', $(e.target).attr('href'));
+		});
+		var activeTab = localStorage.getItem('activeTab');
+		if(activeTab){
+			$('#myTab a[href="' + activeTab + '"]').tab('show');
+		}
+	});
+</script>

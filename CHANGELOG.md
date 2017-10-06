@@ -1,3 +1,8 @@
+# Version 1.2.9
+
+- Fix: Mass edit search compatible multisite
+- Fix: Add a localstorage system to stay in the Active tab after submitting
+
 # Version 1.2.8
 
 - New: Add new search param category in the mass edit
