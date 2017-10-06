@@ -639,7 +639,10 @@ class ReverbSync
             ->leftJoin('category_product', 'cp', 'p.`id_product` = cp.`id_product`')
             ->leftJoin('category_lang', 'cl', 'cp.`id_category` = cl.`id_category`')
             ->leftJoin('reverb_mapping', 'rmp', 'cp.`id_category` = rmp.`id_category`')
-            ->where('pl.`id_lang` = ' . (int)$this->module->language_id);
+            ->leftJoin('product_shop', 'prs', 'p.`id_product` = prs.`id_product`')
+            ->where('pl.`id_lang` = ' . (int)$this->module->language_id)
+            ->where('prs.`id_shop` = ' . (int)Context::getContext()->shop->id)
+            ->where('prs.`active` = 1');
             //->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date');
 
         //=========================================
