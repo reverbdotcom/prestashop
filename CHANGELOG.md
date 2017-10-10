@@ -1,3 +1,7 @@
+# Version 1.2.10
+
+- Fix: format the seller cost (wholesale_price)
+
 # Version 1.2.9
 
 - Fix: Mass edit search compatible multisite
