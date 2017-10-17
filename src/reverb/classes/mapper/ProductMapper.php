@@ -105,8 +105,8 @@ class ProductMapper
         $product->origin_country_code = $product_ps['origin_country_code'];
         $product->year = $product_ps['year'];
         $wholesaleprice = Tools::ps_round($product_ps['wholesale_price'],2);
-        $product->seller_cost = (string)Tools::str_replace_once(".",",",$wholesaleprice);
-        $product->tax_exempt = null;
+        $product->seller_cost = (string)$wholesaleprice;
+        $product->tax_exempt = $product_ps['tax_exempt'] ? 1 : false;
         $product = $this->mapShipping($product, $product_ps);
         $product = $this->processMappingAccordingSettings($product, $product_ps, $productExists);
 

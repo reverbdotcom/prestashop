@@ -31,6 +31,11 @@
         {else}
             {$smarty.block.parent}
         {/if}
+        {if $key == 'action'}
+            <button type="button" value="{$tr.ps_category_id|escape:'htmlall':'UTF-8'}" id="category-load" class="btn btn-small " onclick="loadChildCategories('{$tr.ps_category_id|escape:'htmlall':'UTF-8'}');">
+                {l s='Load'}
+            </button>
+        {/if}
     {/if}
 {/block}
 

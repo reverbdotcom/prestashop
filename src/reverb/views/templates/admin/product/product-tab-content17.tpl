@@ -142,6 +142,21 @@
                       data-toggle="tooltip"
                       data-html="true"
                       title=""
+                      data-original-title="{l s='' mod='reverb'}">{l s='Tax_exempt' mod='reverb'}
+                </span>
+            </label>
+            <div class="col-lg-9">
+                <input id="reverb_tax_exempt" data-toggle="switch" type="checkbox" name="tax_exempt" value="1" {if ($reverb_tax_exempt)}checked="checked"{/if}>
+            </div>
+        </div>
+    </div>
+    <div class="row form-group">
+        <div class="col-md-12">
+            <label class="col-lg-3">
+                <span class="label-tooltip"
+                      data-toggle="tooltip"
+                      data-html="true"
+                      title=""
                       data-original-title="{l s='' mod='reverb'}">{l s='Country origin' mod='reverb'}
                 </span>
             </label>
