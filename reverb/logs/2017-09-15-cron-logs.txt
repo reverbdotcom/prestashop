@@ -1,0 +1,20 @@
+## 2017-09-15 17:21:33 : ##########################
+## 2017-09-15 17:21:33 : # END products sync CRON SUCCESS
+## 2017-09-15 17:21:33 : ##########################
+## 2017-09-15 17:21:33 : # {"status":"error","message":"Product reference is mandatory to sync on Reverb","last-synced":"2017-09-15 17:21:33"}
+## 2017-09-15 17:21:33 : # {"status":"error","message":"Product reference is mandatory to sync on Reverb","last-synced":"2017-09-15 17:21:33"}
+## 2017-09-15 17:21:33 : # {"status":"error","message":"Product reference is mandatory to sync on Reverb","last-synced":"2017-09-15 17:21:32"}
+## 2017-09-15 17:21:32 : # {"status":"error","message":"Product reference is mandatory to sync on Reverb","last-synced":"2017-09-15 17:21:32"}
+## 2017-09-15 17:21:32 : # {"status":"error","message":"Product reference is mandatory to sync on Reverb","last-synced":"2017-09-15 17:21:32"}
+## 2017-09-15 17:21:32 : # {"status":"error","message":"Product reference is mandatory to sync on Reverb","last-synced":"2017-09-15 17:21:32"}
+## 2017-09-15 17:21:32 : # 6 product(s) to sync
+## 2017-09-15 17:21:32 : ##########################
+## 2017-09-15 17:21:32 : # BEGIN products sync CRON
+## 2017-09-15 17:21:32 : ##########################
+## 2017-09-15 17:19:57 : ##########################
+## 2017-09-15 17:19:57 : # END products sync CRON SUCCESS
+## 2017-09-15 17:19:57 : ##########################
+## 2017-09-15 17:19:57 : # 0 product(s) to sync
+## 2017-09-15 17:19:57 : ##########################
+## 2017-09-15 17:19:57 : # BEGIN products sync CRON
+## 2017-09-15 17:19:57 : ##########################
