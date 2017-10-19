@@ -104,8 +104,9 @@ class ProductMapper
         $product->finish = $product_ps['finish'];
         $product->origin_country_code = $product_ps['origin_country_code'];
         $product->year = $product_ps['year'];
-        $product->seller_cost = Tools::ps_round($product_ps['wholesale_price'],2);
-        $product->tax_exempt = null;
+        $wholesaleprice = Tools::ps_round($product_ps['wholesale_price'],2);
+        $product->seller_cost = (string)$wholesaleprice;
+        $product->tax_exempt = $product_ps['tax_exempt'] ? 1 : false;
         $product = $this->mapShipping($product, $product_ps);
         $product = $this->processMappingAccordingSettings($product, $product_ps, $productExists);
 
@@ -222,7 +223,8 @@ class ProductMapper
             $currency = Currency::getDefaultCurrency();
             $isoCode = $currency->iso_code;
         }
-        return new Reverb\Mapper\Models\Price($product_ps['price'], $isoCode);
+        $price = Tools::ps_round($product_ps['price'],2);
+        return new Reverb\Mapper\Models\Price($price, $isoCode);
     }
 
     /*

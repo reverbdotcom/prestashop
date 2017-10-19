@@ -229,7 +229,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
         $page = Tools::getValue('page_reverb_search', 1);
 
-        $orderBy = Tools::getValue('order_by_reverb_search','reference');
+        $orderBy = Tools::getValue('order_by_reverb_search','p.reference');
         $orderWay = Tools::getValue('order_by_reverb_search','ASC');
         $nbPerPage = Tools::getValue('nb_per_page_reverb_search',100);
 
@@ -258,7 +258,21 @@ class AdminReverbConfigurationController extends ModuleAdminController
             die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
         }
 
+        if ($bulkAction == 'mass-edit-all') {
+            if ($productIds !== 'all') {
+                $this->module->logs->errorLogs('## Mass edit ALL action asked but $productIds is not \'all\'');
+                die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
+            }
+            // Get filtered products
+            $search = array();
+            if (Tools::getValue('tags_reverb_search')) {
+                $search = explode(',', Tools::getValue('tags_reverb_search'));
+            }
+            $productIds = $this->_getAllProductsIds($search);
+        }
+
         switch ($bulkAction) {
+            case 'mass-edit-all':
             case 'mass-edit':
                 $this->_massEditProducts($productIds);
                 break;
@@ -301,6 +315,22 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $this->_treatmentMassEditBoolean('reverb_enabled', $productIds);
     }
 
+    /**
+     * @param $search array
+     * @return array
+     */
+    private function _getAllProductsIds($search)
+    {
+        // Get all products by filters
+        $reverbSync = new \ReverbSync($this->module);
+        $products = $reverbSync->getAllProductsIds($search);
+        $productIds = array();
+        foreach ($products as $product) {
+            $productIds[] = $product['id_product'];
+        }
+        return $productIds;
+    }
+
     private function _massEditProducts($productIds)
     {
         $fields = array(
@@ -311,6 +341,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
             "reverb_year" => "year",
             "reverb_offers_enabled" => "offers_enabled",
             "reverb_country" => "origin_country_code",
+            "reverb_tax_exempt" => "tax_exempt",
             "reverb_shipping_profile" => "id_shipping_profile",
             "reverb_shipping_local" => "shipping_local"
         );
@@ -511,6 +542,57 @@ class AdminReverbConfigurationController extends ModuleAdminController
             $this->module->logs->cronLogs('# END sync CRON FAILED');
             $this->module->logs->cronLogs('##########################');
         }
+    }
+
+    public function ajaxProcessChildCategories()
+    {
+        if (!$this->module instanceof Reverb) {
+            die(json_encode(array('status' => 'error', 'message' => 'An error occured')));
+        }
+        // load category parent
+        $category_parent = '';
+        $category_parent_name = '';
+        if (Tools::getValue('category_parent')) {
+            $category = new Category((int)Tools::getValue('category_parent'));
+            $category_parent = $category->id;
+            $category_parent_name = $category->getName();
+        }
+
+        // load all children categories
+        $ps_categories = array();
+        $cat = new Category($category_parent);
+        // get all category children
+        $all_cat = $cat->getAllChildren();
+        foreach ($all_cat as $subcat) {
+            if (isset($subcat->id) && $subcat->id > 0) {
+                $ps_categories[] = array(
+                    "id_mapping" => ReverbMapping::getMappingId($subcat->id),
+                    "ps_category_id" => $subcat->id,
+                    "reverb_code" => ReverbMapping::getReverbCode($subcat->id),
+                    "name" => '<i>level '. $subcat->level_depth . '</i> - ' . $subcat->name,
+                );
+            }
+        }
+
+        //load reverb categories list
+        $reverb_categories = array();
+        $reverbCategories = new \Reverb\ReverbCategories($this->module);
+        foreach($reverbCategories->getFormattedCategories() as $code=>$name) {
+            $reverb_categories[] = array('code'=>$code,'name'=>$name);
+        }
+
+        $result = array(
+            'status' => 'ok',
+            'category_parent' => array(
+                'id' =>  $category_parent,
+                'name'=> $category_parent_name
+            ),
+            'reverb_categories' => $reverb_categories,
+            'data'=> $ps_categories,
+        );
+
+
+        die(json_encode($result));
     }
 
     protected function sendErrorRequest($response)

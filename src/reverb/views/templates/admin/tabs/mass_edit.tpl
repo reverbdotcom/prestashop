@@ -101,6 +101,7 @@
                             <option value="mass-offer">{l s='On / Off Make an offers' mod='reverb'}</option>
                             <option value="mass-local-pickup">{l s='On / Off Local pickup' mod='reverb'}</option>
                             <option value="mass-edit">{l s='Edit products in bulk' mod='reverb'}</option>
+                            <option value="mass-edit-all">{l s='Edit all products' mod='reverb'}</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -277,6 +278,31 @@
                             </div>
                         </div>
                      </div>
+                    <div class="row form-group">
+                        <div class="col-md-12">
+                            <!-- SWITCH reverb_tax_exempt MODE START -->
+                            <div class="form-group">
+                                <label class="control-label col-lg-3">
+                                    <span class="label-tooltip"
+                                          data-toggle="tooltip"
+                                          data-html="true"
+                                          title="">
+                                        {l s='Tax exempt' mod='reverb'}
+                                    </span>
+                                </label>
+                                <div class="col-lg-9">
+                                    <span class="switch prestashop-switch fixed-width-lg">
+                                        <input type="radio" name="reverb_tax_exempt" id="reverb_tax_exempt_switchmode_on" value="1" checked>
+                                        <label for="reverb_tax_exempt_switchmode_on">{l s='Yes' mod='reverb'}</label>
+                                        <input type="radio" name="reverb_tax_exempt" id="reverb_tax_exempt_switchmode_off" value="0">
+                                        <label for="reverb_tax_exempt_switchmode_off">{l s='No' mod='reverb'}</label>
+                                        <a class="slide-button btn"></a>
+                                    </span>
+                                </div>
+                                <!-- SWITCH reverb_tax_exempt MODE END -->
+                            </div>
+                        </div>
+                    </div>
                     <div class="row form-group">
                         <div class="col-md-12">
                             <label class="col-lg-3">
@@ -461,6 +487,28 @@
         </div>
     </div>
 </div>
+<!-- Modal mass edit all validation-->
+<div class="modal fade" id="mass-edit-modal-all" tabindex="-1" role="dialog" aria-labelledby="confirmMassEditAll" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="confirmMassEditAll">{l s='Warning'  mod='reverb'}</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>{l s='Are you sure you want to mass-edit all products?'  mod='reverb'}</strong></p>
+                <p>{l s='If you continue, please fill last shipping region and method.'  mod='reverb'}</p>
+                <p>{l s='Note: the Model field is Read only and when the form is saved by default the model field is the product name. '   mod='reverb'}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="mass-edit-cancel-all">{l s='Cancel'  mod='reverb'}</button>
+                <button type="button" id="mass-edit-all-ok" class="btn btn-primary">{l s='Continue'  mod='reverb'}</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Modal pre edit confirmation -->
 <div class="modal fade" id="mass-edit-modal-confirmation" tabindex="-1" role="dialog" aria-labelledby="confirmMassEditSubmit" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -477,6 +525,26 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">{l s='Cancel'  mod='reverb'}</button>
                 <button type="button" id="mass-edit-ok-confirm" class="btn btn-primary">{l s='Continue'  mod='reverb'}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal pre edit all confirmation -->
+<div class="modal fade" id="mass-edit-all-modal-confirmation" tabindex="-1" role="dialog" aria-labelledby="confirmMassEditSubmit" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="confirmMassEditSubmit">{l s='Warning'  mod='reverb'}</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>{l s='Are you sure you want to mass-edit all products?'  mod='reverb'}</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{l s='Cancel'  mod='reverb'}</button>
+                <button type="button" id="mass-edit-all-ok-confirm" class="btn btn-primary">{l s='Continue'  mod='reverb'}</button>
             </div>
         </div>
     </div>
@@ -722,6 +790,13 @@
                     $('#reverb_offers_enabled_switchmode_on').removeAttr('checked');
                     $('#reverb_offers_enabled_switchmode_off').attr('checked', 'checked');
                 }
+                if (product['tax_exempt'] == '1') {
+                    $('#reverb_tax_exempt_switchmode_on').attr('checked', 'checked');
+                    $('#reverb_tax_exempt_switchmode_off').removeAttr('checked');
+                } else {
+                    $('#reverb_tax_exempt_switchmode_on').removeAttr('checked');
+                    $('#reverb_tax_exempt_switchmode_off').attr('checked', 'checked');
+                }
                 $('#country_select>option[value="'+product['origin_country_code']+'"]').attr('selected', 'selected');
 
                 if (product['id_shipping_profile'] !== '0') {
@@ -806,17 +881,25 @@
         });
 
         $('#btn-bulk-action').live('click', function () {
-            if ($('.checkbox-bulk:checked').length == 0) {
-                showErrorMessage("{l s='Please select at least one product' mod='reverb'}");
-                return false;
+            if ($('#bulk-action').val() == 'mass-edit-all') {
+                massEditType = 'all';
+                var productIds = 'productIds=all';
             }
-            var productIds = '';
-            $('.checkbox-bulk:checked').each(function(i,e){
-                productIds += 'productIds[]=' + $(e).attr('value') + '&';
-            });
-
+            else {
+                if ($('.checkbox-bulk:checked').length == 0) {
+                    showErrorMessage("{l s='Please select at least one product' mod='reverb'}");
+                    return false;
+                }
+                massEditType = 'mass'
+                var productIds = '';
+                $('.checkbox-bulk:checked').each(function(i,e){
+                    productIds += 'productIds[]=' + $(e).attr('value') + '&';
+                });
+            }
             if ($('#bulk-action').val() === 'mass-edit') {
                 $('#mass-edit-modal').modal('show');
+            } else if ($('#bulk-action').val() == 'mass-edit-all') {
+                $('#mass-edit-modal-all').modal('show');
             } else {
                 // Disable model field and show hide button
                 $('input[name="reverb_model"]').val('').attr('readonly', 'readonly');
@@ -825,48 +908,57 @@
             }
         });
 
-        $('#mass-edit-ok').live('click', function () {
+        $('#mass-edit-ok, #mass-edit-all-ok').live('click', function () {
             $('#products-to-edit').val('');
             // Disable model field and show save button
             $('input[name="reverb_model"]').val('').attr('readonly', 'readonly');
             $('#mass-edit-panel-footer').show();
-            $('#mass-edit-modal').modal('hide');
+            $('#mass-edit-modal, #mass-edit-modal-all').modal('hide');
         });
 
-        $('#mass-edit-cancel').live('click', function () {
+        $('#mass-edit-cancel, #mass-edit-cancel-all').live('click', function () {
             $('#products-to-edit').val('');
             // Disable model field and show save button
             $('#mass-edit-panel-footer').hide();
-            $('#mass-edit-modal').modal('hide');
+            $('#mass-edit-modal, #mass-edit-modal-all').modal('hide');
         });
 
-        $('#mass-edit-ok-confirm').live('click', function () {
-            $('#mass-edit-modal-confirmation').modal('hide');
+        $('#mass-edit-ok-confirm, #mass-edit-all-ok-confirm').live('click', function () {
+            $('#mass-edit-modal-confirmation, #mass-edit-all-modal-confirmation').modal('hide');
             var productIds = '';
+            var action = 'mass-edit';
             if ($('#products-to-edit').val() === '') {
                 // Mass edit
                 var massEdit = true;
                 var nbProducts = 0;
-                $('.checkbox-bulk:checked').each(function (i, e) {
-                    nbProducts++;
-                    productIds += 'productIds[]=' + $(e).attr('value') + '&';
-                });
+                if (massEditType == 'all') {
+                    action = 'mass-edit-all';
+                    productIds = 'productIds=all&tags_reverb_search=' + $('#tags_reverb_search').val() + '&';
+                 } else {
+                    $('.checkbox-bulk:checked').each(function (i, e) {
+                        nbProducts++;
+                        productIds += 'productIds[]=' + $(e).attr('value') + '&';
+                    });
+                }
             } else {
                 var massEdit = false;
                 // Single edit
                 var nbProducts = 1;
                 productIds = 'productIds[]=' + $('#products-to-edit').val() + '&';
             }
-            data = productIds + 'bulkAction=mass-edit' + '&' + $('#edit_form').serialize();
+            data = productIds + 'bulkAction=' + action + '&' + $('#edit_form').serialize();
 
             processMassEditAjax(data, massEdit);
 
             return false;
         });
 
-
         $('#form_mass_edit_button').live('click', function () {
-            $('#mass-edit-modal-confirmation').modal('show');
+            if (massEditType == 'mass') {
+                $('#mass-edit-modal-confirmation').modal('show');
+            } else if (massEditType == 'all') {
+                $('#mass-edit-all-modal-confirmation').modal('show');
+            }
         });
     });
 </script>

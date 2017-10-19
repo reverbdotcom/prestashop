@@ -59,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.2.9';
+        $this->version = '1.3.0';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -116,20 +116,18 @@ class Reverb extends Module
             `date` datetime,
             `origin` text,
             PRIMARY KEY  (`id_sync`),
-            FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `' . _DB_PREFIX_ . 'product` (id_product),
-            FOREIGN KEY fk_reverb_sync_product_2(id_product_attribute) REFERENCES `' . _DB_PREFIX_ . 'product_attribute` (id_product_attribute),
+            CONSTRAINT `ps_reverb_sync_ibfk_1` FOREIGN KEY fk_reverb_sync_product(id_product) REFERENCES `' . _DB_PREFIX_ . 'product` (id_product) ON DELETE CASCADE,
+            CONSTRAINT `ps_reverb_sync_ibfk_2` FOREIGN KEY fk_reverb_sync_product_2(id_product_attribute) REFERENCES `' . _DB_PREFIX_ . 'product_attribute` (id_product_attribute) ON DELETE CASCADE,
             UNIQUE (id_product, id_product_attribute)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'reverb_mapping` (
             `id_mapping` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_category` int(10) unsigned NOT NULL,
             `reverb_code` varchar(50) NOT NULL,
             PRIMARY KEY  (`id_mapping`),
-            FOREIGN KEY fk_reverb_mapping_category(id_category) REFERENCES `' . _DB_PREFIX_ . 'category` (id_category),
+            CONSTRAINT `ps_reverb_mapping_ibfk_1` FOREIGN KEY fk_reverb_mapping_category(id_category) REFERENCES `' . _DB_PREFIX_ . 'category` (id_category) ON DELETE CASCADE,
             UNIQUE (id_category)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'reverb_attributes` (
             `id_attribute` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
@@ -137,6 +135,7 @@ class Reverb extends Module
             `model` varchar(50),
             `id_lang` ' . (version_compare(_PS_VERSION_, '1.7', '<') ? 'int(10) unsigned' : 'int(11)') . ' NOT NULL,
             `offers_enabled` tinyint(1),
+            `tax_exempt` tinyint(1),
             `finish` varchar(50),
             `origin_country_code` varchar(50),
             `year` varchar(50),
@@ -144,21 +143,19 @@ class Reverb extends Module
             `id_shipping_profile` int(10) unsigned,
             `shipping_local` tinyint(1),
             PRIMARY KEY (`id_attribute`),
-            FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `' . _DB_PREFIX_ . 'product` (id_product),
-            FOREIGN KEY fk_reverb_attributes_lang(id_lang) REFERENCES `' . _DB_PREFIX_ . 'lang` (id_lang),
+            CONSTRAINT `ps_reverb_attributes_ibfk_1` FOREIGN KEY fk_reverb_attributes_product(id_product) REFERENCES `' . _DB_PREFIX_ . 'product` (id_product) ON DELETE CASCADE,
+            CONSTRAINT `ps_reverb_attributes_ibfk_2` FOREIGN KEY fk_reverb_attributes_lang(id_lang) REFERENCES `' . _DB_PREFIX_ . 'lang` (id_lang) ON DELETE CASCADE,
             UNIQUE (id_product)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'reverb_shipping_methods` (
             `id_shipping_method` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_attribute` int(10) unsigned NOT NULL,
             `region_code` varchar(50) NOT NULL,
             `rate` decimal(20,2) NOT NULL,
             PRIMARY KEY (`id_shipping_method`),
-            FOREIGN KEY fk_reverb_shipping_methods_attribute(id_attribute) REFERENCES `' . _DB_PREFIX_ . 'reverb_attributes` (id_attribute),
+            CONSTRAINT `ps_reverb_shipping_methods_ibfk_1` FOREIGN KEY fk_reverb_shipping_methods_attribute(id_attribute) REFERENCES `' . _DB_PREFIX_ . 'reverb_attributes` (id_attribute) ON DELETE CASCADE,
             UNIQUE (id_attribute, region_code)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'reverb_crons` (
             `id_cron` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `code` varchar(50) NOT NULL,
@@ -169,7 +166,6 @@ class Reverb extends Module
             `details` text,
             PRIMARY KEY  (`id_cron`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'reverb_sync_history` (
             `id_sync_history` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_product` int(10) unsigned NOT NULL,
@@ -179,10 +175,9 @@ class Reverb extends Module
             `date` datetime NOT NULL,
             `details` text NOT NULL,
             PRIMARY KEY  (`id_sync_history`),
-            FOREIGN KEY fk_reverb_sync_history_product(id_product) REFERENCES `' . _DB_PREFIX_ . 'product` (id_product),
-            FOREIGN KEY fk_reverb_sync_history_product_attribute(id_product_attribute) REFERENCES `' . _DB_PREFIX_ . 'product_attribute` (id_product_attribute)
+            CONSTRAINT `ps_reverb_sync_history_ibfk_1` FOREIGN KEY fk_reverb_sync_history_product(id_product) REFERENCES `' . _DB_PREFIX_ . 'product` (id_product) ON DELETE CASCADE,
+            CONSTRAINT `ps_reverb_sync_history_ibfk_2` FOREIGN KEY fk_reverb_sync_history_product_attribute(id_product_attribute) REFERENCES `' . _DB_PREFIX_ . 'product_attribute` (id_product_attribute) ON DELETE CASCADE
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'reverb_orders` (
             `id_reverb_orders` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `id_order` int(10) unsigned,
@@ -769,8 +764,7 @@ class Reverb extends Module
             $this->processResetFilters(self::LIST_ID);
         }
 
-        // Bulk sync all
-        //if (Tools::isSubmit('submitFilterps_product')) {
+        // Bulk sync selected products
         if (Tools::isSubmit('submitBulkSyncronizeps_product_reverb')) {
             $identifiers = Tools::getValue('ps_product_reverbBox');
             if (!empty($identifiers)) {
@@ -787,6 +781,81 @@ class Reverb extends Module
             } else {
                 $this->_errors[] = $this->l('Please select at least one product.');
             }
+        }
+
+        // Bulk sync all
+        if (Tools::isSubmit('submitBulkSyncronize_allps_product_reverb')) {
+            $fields_list = array(
+                'id_product' => array(
+                    'title' => $this->l('ID'),
+                    'width' => 30,
+                    'type' => 'int',
+                    'filter_key' => 'p!id_product'
+                ),
+                'reverb_id' => array(
+                    'title' => $this->l('Reverb ID'),
+                    'width' => 70,
+                    'type' => 'text',
+                    'filter_key' => 'rs!id_sync'
+                ),
+                'reference' => array(
+                    'title' => $this->l('SKU'),
+                    'width' => 140,
+                    'type' => 'text',
+                    'filter_key' => 'p!reference'
+                ),
+                'name' => array(
+                    'title' => $this->l('Name'),
+                    'width' => 140,
+                    'type' => 'text',
+                    'filter_key' => 'pl!name'
+                ),
+                'status' => array(
+                    'title' => $this->l('Sync Status'),
+                    'width' => 50,
+                    'type' => 'select',
+                    'search' => true,
+                    'orderby' => true,
+                    'filter_key' => 'rs!status',
+                    'badge_success' => true,
+                    'list' => array('success' => 'success',
+                        'error' => 'error',
+                        'to_sync' => 'to_sync')
+                ),
+                'details' => array(
+                    'title' => $this->l('Sync Detail'),
+                    'width' => 300,
+                    'type' => 'text',
+                    'search' => 'true',
+                    'orderby' => 'true',
+                    'filter_key' => 'details'
+                ),
+                'date' => array(
+                    'title' => $this->l('Last synced'),
+                    'width' => 140,
+                    'type' => 'datetime',
+                    'filter_key' => 'date'
+                ),
+                'reverb_slug' => array(
+                    'title' => '',
+                    'search' => false,
+                    'orderby' => false,
+                )
+            );
+            //=========================================
+            //         GET DATAS FOR LIST
+            //=========================================
+            $datas = $this->reverbSync->getListProductsWithStatus($fields_list, true, false);
+            foreach ($datas as $data) {
+                $identifier = $data['identifier'];
+                $ids = explode('-', $identifier);
+                if (!empty($ids) && count($ids) == 2) {
+                    $id_product = $ids[0];
+                    $id_product_attribute = $ids[1];
+                    $this->reverbSync->setProductToSync($id_product, $id_product_attribute, ReverbSync::ORIGIN_MANUAL_SYNC_ALL);
+                }
+            }
+            $this->_successes[] = $this->l('The ' . count($datas) . ' products will be synced soon');
         }
 
         // Get log file content
@@ -858,7 +927,10 @@ class Reverb extends Module
     {
         if (Tools::getValue('controller') == 'AdminProducts' || Tools::getValue('configure') == $this->name) {
             $this->context->controller->addJS($this->_path . 'views/js/back.js');
+            $this->context->controller->addJS($this->_path . 'views/js/datatables/datatables.min.js');
+            $this->context->controller->addJS($this->_path . 'views/js/datatables/dataTables.bootstrap.min.js');
             $this->context->controller->addCSS($this->_path . 'views/css/back.css', 'all');
+            $this->context->controller->addCSS($this->_path . 'views/css/datatables/dataTables.bootstrap.min.css', 'all');
         }
     }
 
@@ -870,6 +942,9 @@ class Reverb extends Module
         if (Tools::getValue('controller') == 'AdminProducts' || Tools::getValue('configure') == $this->name) {
             $this->context->controller->addJS($this->_path . 'views/js/back.js');
             $this->context->controller->addCSS($this->_path . 'views/css/back.css', 'all');
+            $this->context->controller->addJS($this->_path . 'views/js/datatables/datatables.min.js');
+            $this->context->controller->addJS($this->_path . 'views/js/datatables/dataTables.bootstrap.min.js');
+            $this->context->controller->addCSS($this->_path . 'views/css/datatables/dataTables.bootstrap.min.css', 'all');
             $this->context->controller->addJqueryUi('ui.widget');
             $this->context->controller->addJqueryPlugin('tagify');
         }
@@ -909,6 +984,7 @@ class Reverb extends Module
                 'reverb_condition' => $attribute['id_condition'],
                 'reverb_year' => $attribute['year'],
                 'reverb_offers_enabled' => $attribute['offers_enabled'],
+                'reverb_tax_exempt' => $attribute['tax_exempt'],
                 'reverb_country' => $attribute['origin_country_code'],
                 'reverb_list_conditions' => $reverbConditions->getFormattedConditions(),
                 'reverb_list_country' => Country::getCountries($this->context->language->id),
@@ -1070,6 +1146,7 @@ class Reverb extends Module
             $finish = Tools::getValue('reverb_finish');
             $year = Tools::getValue('reverb_year');
             $offers_enabled = Tools::getValue('offers_enabled');
+            $tax_exempt = Tools::getValue('tax_exempt');
             $reverb_country = Tools::getValue('reverb_country');
             $reverb_shipping = Tools::getValue('reverb_shipping');
             $reverb_shipping_profile = Tools::getValue('reverb_shipping_profile');
@@ -1084,6 +1161,7 @@ class Reverb extends Module
                 'finish' => pSQL($finish),
                 'year' => pSql($year),
                 'offers_enabled' => pSql($offers_enabled),
+                'tax_exempt' => pSql($tax_exempt),
                 'origin_country_code' => pSql($reverb_country)
             );
             if ($reverb_shipping == 'reverb') {
@@ -1336,6 +1414,11 @@ class Reverb extends Module
                 'text' => $this->l('Syncronize selected products'),
                 'icon' => 'icon-refresh',
                 'confirm' => $this->l('Are you sure ?')
+            ),
+            'Syncronize_all' => array(
+                'text' => $this->l('Syncronize all products'),
+                'icon' => 'icon-refresh',
+                'confirm' => $this->l('Are you sure ?')
             )
         );
 
@@ -1461,6 +1544,11 @@ class Reverb extends Module
             ),
             'reverb_category' => array(
                 'title' => $this->l('Reverb Name'),
+                'width' => 70,
+                'search' => false,
+            ),
+            'action' => array(
+                'title' => $this->l('Action'),
                 'width' => 70,
                 'search' => false,
             ),

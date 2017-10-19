@@ -70,6 +70,31 @@ class ReverbMapping
         return $categories;
     }
     /**
+     * Return formatted PS child-categories for mapping select form
+     *
+     * @param int $languageId
+     * @return array
+     */
+    public static function getFormattedPsChildCategories($id_parent, $languageId, $shop_id)
+    {
+        $sql = '
+		SELECT c.`id_category`, c.`id_parent`, cl.`name`, rm.`reverb_code`, rm.`id_mapping`,
+		IF((
+			SELECT COUNT(*)
+			FROM `'._DB_PREFIX_.'category` c2
+			WHERE c2.`id_parent` = c.`id_category`
+		) > 0, 1, 0) AS has_children
+		FROM `'._DB_PREFIX_.'category` c
+		LEFT JOIN `'._DB_PREFIX_.'category_lang` cl ON (c.`id_category` = cl.`id_category` '.Shop::addSqlRestrictionOnLang('cl', $shop_id).')
+		LEFT JOIN `'._DB_PREFIX_.'category_shop` cs ON (c.`id_category` = cs.`id_category` AND cs.`id_shop` = '.(int)$shop_id.')
+		LEFT JOIN `'._DB_PREFIX_.'reverb_mapping` rm ON (rm.`id_category` = c.`id_category`)
+		WHERE `id_lang` = '.(int)$languageId.'
+		AND c.`id_parent` = '.(int)$id_parent;
+        $sql .= ' AND cs.`id_shop` = '.(int)$shop_id;
+        
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+    }
+    /**
      * Return number of PS categories for mapping
      *
      * @param int $languageId

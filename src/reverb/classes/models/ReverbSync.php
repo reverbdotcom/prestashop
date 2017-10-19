@@ -12,6 +12,7 @@ class ReverbSync
 {
     const ORIGIN_MANUAL_SYNC_SINGLE = 'manual_sync_single';
     const ORIGIN_MANUAL_SYNC_MULTIPLE = 'manual_sync_multiple';
+    const ORIGIN_MANUAL_SYNC_ALL = 'manual_sync_all';
     const ORIGIN_PRODUCT_UPDATE = 'product_update';
     const ORIGIN_ORDER = 'order';
     const ORIGIN_CRON = 'cron';
@@ -31,8 +32,9 @@ class ReverbSync
      * Construct base of query
      * @param DbQuery $sql
      * @param array $list_field
+     * @param array $force_search boolean
      */
-    private function getListBaseSql(DbQuery $sql, $list_field = array())
+    private function getListBaseSql(DbQuery $sql, $list_field = array(), $force_search = false)
     {
         $sql->from('reverb_attributes', 'ra')
             ->innerJoin('product', 'p', 'ra.`id_product` = p.`id_product`')
@@ -51,7 +53,7 @@ class ReverbSync
         //=========================================
         //          WHERE CLAUSE
         //=========================================
-        if (Tools::isSubmit('submitFilter')) {
+        if (Tools::isSubmit('submitFilter') || $force_search) {
             $this->processFilter($list_field, $sql);
         }
     }
@@ -81,10 +83,12 @@ class ReverbSync
      *
      * Load list of products for sync view
      *
-     * @param $list_field
+     * @param $list_field array
+     * @param $force_search boolean
+     * @param $paginate boolean
      * @return array|false|mysqli_result|null|PDOStatement|resource
      */
-    public function getListProductsWithStatus($list_field)
+    public function getListProductsWithStatus($list_field, $force_search = false, $paginate = true)
     {
         //=========================================
         //          SELECT CLAUSE
@@ -107,7 +111,7 @@ class ReverbSync
             'pa.id_product_attribute as id_product_attribute'
         );
 
-        $this->getListBaseSql($sql, $list_field);
+        $this->getListBaseSql($sql, $list_field, $force_search);
 
         //=========================================
         //          ORDER CLAUSE
@@ -119,13 +123,14 @@ class ReverbSync
         //=========================================
         //          PAGINATION
         //=========================================
-        $page = (int)Tools::getValue('submitFilterps_product_reverb');
-        if ($page > 1) {
-            $sql->limit(Tools::getValue('selected_pagination'), $page * Tools::getValue('selected_pagination'));
-        } else {
-            $sql->limit(50);
+        if ($paginate) {
+            $page = (int)Tools::getValue('submitFilterps_product_reverb');
+            if ($page > 1) {
+                $sql->limit(Tools::getValue('selected_pagination'), $page * Tools::getValue('selected_pagination'));
+            } else {
+                $sql->limit(50);
+            }
         }
-
         $result = Db::getInstance()->executeS($sql);
 
         return $result;
@@ -627,7 +632,7 @@ class ReverbSync
      * @param string $orderWay
      * @return DbQuery
      */
-    public function getAllProductsQuery($search = array(), $orderBy = 'reference', $orderWay = 'ASC')
+    public function getAllProductsQuery($search = array(), $orderBy = 'p.reference', $orderWay = 'ASC')
     {
         //=========================================
         //          SELECT CLAUSE
@@ -676,12 +681,11 @@ class ReverbSync
      * @param string $orderWay
      * @return array|false|mysqli_result|null|PDOStatement|resource
      */
-    public function getAllProductsNb($search = array(), $orderBy = 'reference', $orderWay = 'ASC')
+    public function getAllProductsNb($search = array(), $orderBy = 'p.reference', $orderWay = 'ASC')
     {
         /** @var DbQuery $sql */
         $sql = $this->getAllProductsQuery($search, $orderBy, $orderWay);
         $sql->select('COUNT(p.id_product) as count');
-
         $result = Db::getInstance()->getRow($sql);
         return $result;
     }
@@ -696,7 +700,7 @@ class ReverbSync
      * @param integer $page
      * @return array
      */
-    public function getAllProductsPagination($search = array(), $orderBy = 'reference', $orderWay = 'ASC', $page = 1, $nbPerPage = 100)
+    public function getAllProductsPagination($search = array(), $orderBy = 'p.reference', $orderWay = 'ASC', $page = 1, $nbPerPage = 100)
     {
         $count = $this->getAllProductsNb($search, $orderBy, $orderWay);
 
@@ -712,6 +716,7 @@ class ReverbSync
             'ra.offers_enabled, ' .
             'ra.finish, ' .
             'ra.origin_country_code, ' .
+            'ra.tax_exempt, ' .
             'ra.year, ' .
             'ra.id_condition, ' .
             'ra.id_shipping_profile, ' .
@@ -726,6 +731,7 @@ class ReverbSync
                 'ra.model, ' .
                 'ra.offers_enabled, ' .
                 'ra.finish, ' .
+                'ra.tax_exempt, ' .
                 'ra.origin_country_code, ' .
                 'ra.year, ' .
                 'ra.id_condition, ' .
@@ -743,6 +749,24 @@ class ReverbSync
         $nbPage = ceil((int) $count['count'] / $nbPerPage);
 
         return array_merge($count, array('products' => $result, 'page' => $page, 'nbPage' => $nbPage));
+    }
+
+    /**
+     *
+     * Load list of products for mass edit
+     *
+     * @param array $search
+     * @return array
+     */
+    public function getAllProductsIds($search = array())
+    {
+        /** @var DbQuery $sql */
+        $sql = $this->getAllProductsQuery($search);
+        $sql->leftJoin('reverb_shipping_methods', 'rsm', 'ra.`id_attribute` = rsm.`id_attribute`')
+            ->select('p.id_product')
+            ->groupBy('p.id_product');
+        //print_r($sql->__toString());exit();
+        return Db::getInstance()->executeS($sql);
     }
 
     /**
@@ -768,6 +792,7 @@ class ReverbSync
                 'ra.model, ' .
                 'ra.offers_enabled, ' .
                 'ra.finish, ' .
+                'ra.tax_exempt, ' .
                 'ra.origin_country_code, ' .
                 'ra.year, ' .
                 'ra.id_condition, ' .
@@ -782,6 +807,7 @@ class ReverbSync
                 'ra.reverb_enabled, ' .
                 'ra.model, ' .
                 'ra.offers_enabled, ' .
+                'ra.tax_exempt, ' .
                 'ra.finish, ' .
                 'ra.origin_country_code, ' .
                 'ra.year, ' .

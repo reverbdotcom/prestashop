@@ -157,6 +157,30 @@
                       data-toggle="tooltip"
                       data-html="true"
                       title=""
+                      data-original-title="{l s='' mod='reverb'}">{l s='Tax exempt' mod='reverb'}
+                </span>
+            </label>
+            <div class="col-lg-9">
+                <span class="switch prestashop-switch fixed-width-lg">
+                    <input type="radio" name="tax_exempt" id="reverb_tax_exempt_on" value="1"
+                           {if ($reverb_tax_exempt)}checked="checked"{/if}>
+                    <label for="reverb_tax_exempt_on">Yes</label>
+
+                    <input type="radio" name="tax_exempt" id="reverb_tax_exempt_off" value="0"
+                           {if !($reverb_tax_exempt)}checked="checked"{/if}>
+                    <label for="reverb_tax_exempt_off">No</label>
+                    <a class="slide-button btn"></a>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="row form-group">
+        <div class="col-md-12">
+            <label class="col-lg-3">
+                <span class="label-tooltip"
+                      data-toggle="tooltip"
+                      data-html="true"
+                      title=""
                       data-original-title="{l s='' mod='reverb'}">{l s='Country origin' mod='reverb'}
                 </span>
             </label>

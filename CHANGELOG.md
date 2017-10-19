@@ -1,3 +1,10 @@
+# Version 1.3.0
+
+- Fix: cascading product deletion in SQL
+- New: New sync button to manage all product in the list
+- New: New mass-edit button to update all products in the list
+- New: Management the category mapping
+
 # Version 1.2.9
 
 - Fix: Mass edit search compatible multisite
