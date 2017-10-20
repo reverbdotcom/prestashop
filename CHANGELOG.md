@@ -1,3 +1,7 @@
+# Version 1.3.1
+
+- Fix: Error update module - duplicate entry SQL query
+
 # Version 1.3.0
 
 - Fix: cascading product deletion in SQL
