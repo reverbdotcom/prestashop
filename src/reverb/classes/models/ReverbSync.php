@@ -74,9 +74,9 @@ class ReverbSync
 
         $this->getListBaseSql($sql, $list_field);
 
-        $result = Db::getInstance()->getRow($sql);
+        $result = Db::getInstance()->executeS($sql);
 
-        return $result['totals'];
+        return count($result);
     }
 
     /**

@@ -1,3 +1,7 @@
+# Version 1.3.2
+
+- Fix: Pagination in Sync status tab
+
 # Version 1.3.1
 
 - Fix: Error update module - duplicate entry SQL query
