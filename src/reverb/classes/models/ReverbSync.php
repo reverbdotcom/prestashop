@@ -125,11 +125,8 @@ class ReverbSync
         //=========================================
         if ($paginate) {
             $page = (int)Tools::getValue('submitFilterps_product_reverb');
-            if ($page > 1) {
-                $sql->limit(Tools::getValue('selected_pagination'), $page * Tools::getValue('selected_pagination'));
-            } else {
-                $sql->limit(50);
-            }
+            $n = Tools::getValue('selected_pagination') ? Tools::getValue('selected_pagination'):50;
+            $sql->limit((int)$n, ($page-1) * (int)$n);
         }
         $result = Db::getInstance()->executeS($sql);
 
