@@ -292,9 +292,9 @@
                                 </label>
                                 <div class="col-lg-9">
                                     <span class="switch prestashop-switch fixed-width-lg">
-                                        <input type="radio" name="reverb_tax_exempt" id="reverb_tax_exempt_switchmode_on" value="1" checked>
+                                        <input type="radio" name="reverb_tax_exempt" id="reverb_tax_exempt_switchmode_on" value="1" >
                                         <label for="reverb_tax_exempt_switchmode_on">{l s='Yes' mod='reverb'}</label>
-                                        <input type="radio" name="reverb_tax_exempt" id="reverb_tax_exempt_switchmode_off" value="0">
+                                        <input type="radio" name="reverb_tax_exempt" id="reverb_tax_exempt_switchmode_off" value="0" checked>
                                         <label for="reverb_tax_exempt_switchmode_off">{l s='No' mod='reverb'}</label>
                                         <a class="slide-button btn"></a>
                                     </span>
@@ -743,6 +743,7 @@
     }
 
     $(document).ready(function () {
+        var massEditType = 'mass';
 
         showShippingMode($('#shipping_select').val());
 
@@ -890,7 +891,7 @@
                     showErrorMessage("{l s='Please select at least one product' mod='reverb'}");
                     return false;
                 }
-                massEditType = 'mass'
+                massEditType = 'mass';
                 var productIds = '';
                 $('.checkbox-bulk:checked').each(function(i,e){
                     productIds += 'productIds[]=' + $(e).attr('value') + '&';
