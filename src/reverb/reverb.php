@@ -59,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.3.2';
+        $this->version = '1.3.3';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -926,6 +926,7 @@ class Reverb extends Module
     public function hookBackOfficeHeader()
     {
         if (Tools::getValue('controller') == 'AdminProducts' || Tools::getValue('configure') == $this->name) {
+            $this->context->controller->addJquery();
             $this->context->controller->addJS($this->_path . 'views/js/back.js');
             $this->context->controller->addJS($this->_path . 'views/js/datatables/datatables.min.js');
             $this->context->controller->addJS($this->_path . 'views/js/datatables/dataTables.bootstrap.min.js');
@@ -940,6 +941,7 @@ class Reverb extends Module
     public function hookDisplayBackOfficeHeader()
     {
         if (Tools::getValue('controller') == 'AdminProducts' || Tools::getValue('configure') == $this->name) {
+            $this->context->controller->addJquery();
             $this->context->controller->addJS($this->_path . 'views/js/back.js');
             $this->context->controller->addCSS($this->_path . 'views/css/back.css', 'all');
             $this->context->controller->addJS($this->_path . 'views/js/datatables/datatables.min.js');
@@ -1395,7 +1397,7 @@ class Reverb extends Module
         $helper->table = self::LIST_ID;
         $helper->allow_export = true;
         $helper->shopLinkType = '';
-        $helper->default_pagination = 20;
+        $helper->default_pagination = 50;
         $helper->listTotal = $this->reverbSync->getListProductsWithStatusTotals($this->fields_list);
         $helper->module = $this;
         $helper->no_link = true;
@@ -1403,11 +1405,6 @@ class Reverb extends Module
         $helper->simple_header = false;
         $helper->show_toolbar = true;
         $helper->identifier = 'identifier';
-
-        /*        $helper->toolbar_btn['new'] =  array(
-                    'href' => AdminController::$currentIndex.'&configure='.$this->name.'&add'.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'),
-                    'desc' => $this->l('Add new')
-                );*/
 
         $helper->bulk_actions = array(
             'Syncronize' => array(

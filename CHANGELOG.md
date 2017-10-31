@@ -1,3 +1,8 @@
+# Version 1.3.3
+
+- Fix: Pagination in Sync status tab (last page is empty)
+- Fix: Bug jQuery conflict for dependencies
+
 # Version 1.3.2
 
 - Fix: Pagination in Sync status tab
