@@ -1,3 +1,8 @@
+# Version 1.3.4
+
+- Fix: tax-exempt is false by default in mass-edit
+- Fix: JS variable undefined massEditType
+
 # Version 1.3.3
 
 - Fix: Pagination in Sync status tab (last page is empty)
