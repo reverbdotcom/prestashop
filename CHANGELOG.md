@@ -1,3 +1,7 @@
+# Version 1.3.5
+
+- Fix: tax-exempt is false by default in mass-edit
+
 # Version 1.3.4
 
 - Fix: tax-exempt is false by default in mass-edit

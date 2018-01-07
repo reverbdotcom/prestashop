@@ -735,6 +735,7 @@
                 }
                 $('#prev-page > a').data('page', parseInt(pagination.page) - 1);
                 $('#next-page > a').data('page', parseInt(pagination.page) + 1);
+                $('#last-page > a').data('page', parseInt(pagination.nbPage));
             }
             $('#table-products-list tbody').html(trHTML);
         }).fail(function (error) {

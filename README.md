@@ -40,7 +40,7 @@ Go to the administrative panel of your hosting in order to learn how to set up t
 
 The following cron Tasks must be configured:
 
-`*/5 * * * * php /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log`
+`*/5 * * * * php /var/www/html/modules/reverb/cron.php?code=products > /var/log/cron.log`
 
 `*/8 * * * * php /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log`
 
