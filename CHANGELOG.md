@@ -1,6 +1,10 @@
-# Version 1.3.5
+# Version 1.4.0
 
-- Fix: tax-exempt is false by default in mass-edit
+- Fix: optimize the quality images sunced to Reverb
+- Fix: Pagination last-page in mass-edit
+- Fix: Documentation about the stock management + optimize the workflow between Prestashop and Reverb
+- New: Add Brand to the search by tags in Mass-edit tab
+- New: Add a popup in sync status tab to inform the number of products treated
 
 # Version 1.3.4
 
