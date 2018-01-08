@@ -56,7 +56,7 @@
 							<p>{l s='CRON Tasks is a program that allows users of Unix systems to automatically run scripts, commands, or software at a specified date and time or in a pre-defined cycle. Go to the administrative panel of your hosting in order to learn how to set up the ordering of your CRON, otherwise get closer to your host.' mod='reverb'}</p>
 							<p>{l s='The following cron Tasks must be configured:' mod='reverb'}</p>
 							<ul>
-							<li>*/5 * * * *  php /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log</li>
+							<li>*/5 * * * *  php /var/www/html/modules/reverb/cron.php?code=products > /var/log/cron.log</li>
 							<li>*/8 * * * *  php /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log"</li>
 							</ul>
 							<p>{l s='The first cron is a script executed every 5 minutes about the product sync - PrestaShop to Reverb. The second cron is a script executed every 8 minutes about the order sync - Reverb to PrestaShop.' mod='reverb'}</p>

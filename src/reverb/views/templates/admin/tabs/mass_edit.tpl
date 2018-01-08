@@ -28,14 +28,14 @@
                       enctype="multipart/form-data">
                     <div class="col-md-10">
                         <input
-                            type="text"
-                            id="tags_reverb_search"
-                            class="tagify updateCurrentText"
-                            name="tags_reverb_search"
-                            value=""
-                            style="display: none;"
-                            aria-describedby="searchHelp" />
-                        <small id="emailHelp" class="form-text text-muted"><strong>{l s='Search by Sku or Name or Category' mod='reverb'}</strong></small>
+                                type="text"
+                                id="tags_reverb_search"
+                                class="tagify updateCurrentText"
+                                name="tags_reverb_search"
+                                value=""
+                                style="display: none;"
+                                aria-describedby="searchHelp" />
+                        <small id="emailHelp" class="form-text text-muted"><strong>{l s='Search by Sku, Name, Category or Brand and press ENTER' mod='reverb'}</strong></small>
                     </div>
                     <div class="col-md-2">
                         <div class="input-group-btn">
@@ -274,10 +274,10 @@
                                         <a class="slide-button btn"></a>
                                     </span>
                                 </div>
-                            <!-- SWITCH reverb_offers_enabled MODE END -->
+                                <!-- SWITCH reverb_offers_enabled MODE END -->
                             </div>
                         </div>
-                     </div>
+                    </div>
                     <div class="row form-group">
                         <div class="col-md-12">
                             <!-- SWITCH reverb_tax_exempt MODE START -->
@@ -735,6 +735,8 @@
                 }
                 $('#prev-page > a').data('page', parseInt(pagination.page) - 1);
                 $('#next-page > a').data('page', parseInt(pagination.page) + 1);
+                $('#last-page > a').data('page', parseInt(pagination.nbPage));
+                console.log($('#last-page > a').data('page'));
             }
             $('#table-products-list tbody').html(trHTML);
         }).fail(function (error) {
@@ -763,7 +765,7 @@
 
             // Ajax call with secure token
             $.post('{$ajax_url}&action=LoadProduct&ajax=true', {
-                    'id_product': id_product,
+                'id_product': id_product,
             }, function (response) {
                 product = JSON.parse(response);
 
@@ -833,9 +835,9 @@
                 // Uncheck all products
                 $('.checkbox-bulk').removeAttr('checked');
             })
-            .fail(function() {
-                showErrorMessage("{l s='An error has occured. Please try again' mod='reverb'}");
-            })
+                    .fail(function() {
+                        showErrorMessage("{l s='An error has occured. Please try again' mod='reverb'}");
+                    })
             return false;
         });
 
@@ -847,25 +849,25 @@
 
             // Ajax call with secure token
             $.post('{$ajax_url}&action=ToggleActiveSyncronization&ajax=true', {
-                    'id_product': id_product,
-                }, function (response) {
-                    response = JSON.parse(response);
-                    showSuccessMessage("{l s='Synchronization updated' mod='reverb'}");
-                    if (response.enabled) {
-                        link.children('i').removeClass().addClass('icon-ok-sign');
-                        link.attr('title', "{l s='Enabled' mod='reverb'}");
-                    } else {
-                        link.children('i').removeClass().addClass('icon-remove');
-                        link.attr('title', "{l s='Disabled' mod='reverb'}");
+                        'id_product': id_product,
+                    }, function (response) {
+                        response = JSON.parse(response);
+                        showSuccessMessage("{l s='Synchronization updated' mod='reverb'}");
+                        if (response.enabled) {
+                            link.children('i').removeClass().addClass('icon-ok-sign');
+                            link.attr('title', "{l s='Enabled' mod='reverb'}");
+                        } else {
+                            link.children('i').removeClass().addClass('icon-remove');
+                            link.attr('title', "{l s='Disabled' mod='reverb'}");
+                        }
                     }
-                }
             )
-            .fail(function() {
-                showErrorMessage("{l s='An error has occured. Please try again' mod='reverb'}");
-            })
-            .always(function() {
-                link.removeAttr('disabled');
-            });
+                    .fail(function() {
+                        showErrorMessage("{l s='An error has occured. Please try again' mod='reverb'}");
+                    })
+                    .always(function() {
+                        link.removeAttr('disabled');
+                    });
             return false;
         });
 
@@ -935,7 +937,7 @@
                 if (massEditType == 'all') {
                     action = 'mass-edit-all';
                     productIds = 'productIds=all&tags_reverb_search=' + $('#tags_reverb_search').val() + '&';
-                 } else {
+                } else {
                     $('.checkbox-bulk:checked').each(function (i, e) {
                         nbProducts++;
                         productIds += 'productIds[]=' + $(e).attr('value') + '&';

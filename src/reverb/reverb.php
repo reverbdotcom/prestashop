@@ -59,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.3.4';
+        $this->version = '1.4.0';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -691,7 +691,7 @@ class Reverb extends Module
             foreach (array_keys($form_values) as $key) {
                 $value = Tools::getValue($key);
                 if (!empty($value) && (!$this->reverbConfig[self::KEY_SANDBOX_MODE] && $key == self::KEY_API_TOKEN ||
-                        ($this->reverbConfig[self::    KEY_SANDBOX_MODE] && $key == self::KEY_API_TOKEN_SANDBOX))
+                        ($this->reverbConfig[self::KEY_SANDBOX_MODE] && $key == self::KEY_API_TOKEN_SANDBOX))
                 ) {
                     $mode = 'PRODUCTION';
                     if ((bool)$this->reverbConfig[self::KEY_SANDBOX_MODE] ||

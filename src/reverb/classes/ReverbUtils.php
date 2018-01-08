@@ -52,7 +52,14 @@ class ReverbUtils extends ReverbClient
         $this->module->logs->requestLogs('# END Request GET ' . $endPoint);
         $this->module->logs->requestLogs('##########################');
 
-        return $uuid ? $list : $list[$key];
+        $return = '';
+        if ($uuid) {
+            $return = $list;
+        } else {
+            $return = $list[$key];
+        }
+
+        return $return;
     }
 
     /**

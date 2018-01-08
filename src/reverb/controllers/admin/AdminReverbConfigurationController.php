@@ -466,8 +466,8 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
         $this->module->logs->cronLogs('start ajax cron manually products');
         $return = $this->curlCron('products');
-        $this->module->logs->cronLogs($return);
-        die($return);
+        $this->module->logs->cronLogs($return['message']);
+        die(json_encode($return));
     }
     /**
      *  Ajax Order sync
@@ -481,20 +481,22 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
         $this->module->logs->cronLogs('start ajax cron manually orders');
         $return = $this->curlCron('orders');
-        $this->module->logs->cronLogs($return);
-        die($return);
+        $this->module->logs->cronLogs($return['message']);
+        die(json_encode($return, true));
     }
 
     /**
      * Curl action to launch cron with a param
      *
      * @param $param
+     * @return array
      */
     private function curlCron($param)
     {
         try {
             $helper = new \HelperCron($this->module);
             $code_cron = $param;
+            $message = '';
 
             if (!isset($code_cron) || !in_array($code_cron, array('orders',  'products'))) {
                 throw new \Exception('No code cron corresponding. ' . $code_cron);
@@ -520,6 +522,11 @@ class AdminReverbConfigurationController extends ModuleAdminController
                             $res = $reverbProduct->syncProduct($product, ReverbSync::ORIGIN_CRON);
                             $this->module->logs->cronLogs('# ' . json_encode($res));
                         }
+                        switch (count($products)) {
+                            case 0: $message = $this->module->l('No products to sync'); break;
+                            case 1: $message = sprintf($this->module->l('%s product was bulk-synced successfully'), count($products)); break;
+                            default: $message = sprintf($this->module->l('%s products were bulk-synced successfully'), count($products)); break;
+                        }
                         break;
                 }
             } else {
@@ -529,6 +536,11 @@ class AdminReverbConfigurationController extends ModuleAdminController
             $this->module->logs->cronLogs('##########################');
             $this->module->logs->cronLogs('# END ' . $code_cron . ' sync CRON SUCCESS');
             $this->module->logs->cronLogs('##########################');
+
+            return array(
+                'success' => true,
+                'message' => $message
+            );
         } catch (\Exception $e) {
             $error = 'Error in cron ' . (isset($code_cron) ? $code_cron . ' ' : ' ') . $e->getMessage();
             $this->module->logs->cronLogs($error);
@@ -541,6 +553,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
             $this->module->logs->cronLogs('##########################');
             $this->module->logs->cronLogs('# END sync CRON FAILED');
             $this->module->logs->cronLogs('##########################');
+            return array('success' => false, 'message' => $error);
         }
     }
 

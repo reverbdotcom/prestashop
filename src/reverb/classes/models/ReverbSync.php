@@ -534,7 +534,7 @@ class ReverbSync
     {
         $this->module->logs->infoLogs(
             'Set sync status : ' . \Reverb\ReverbProduct::REVERB_CODE_TO_SYNC . ' for product ' . $id_product .
-             ' (attribute ' . var_export($id_product_attribute, true) . ') from : ' . $origin
+            ' (attribute ' . var_export($id_product_attribute, true) . ') from : ' . $origin
         );
 
         $productSync = $this->getProductSync($id_product, $id_product_attribute);
@@ -642,10 +642,11 @@ class ReverbSync
             ->leftJoin('category_lang', 'cl', 'cp.`id_category` = cl.`id_category`')
             ->leftJoin('reverb_mapping', 'rmp', 'cp.`id_category` = rmp.`id_category`')
             ->leftJoin('product_shop', 'prs', 'p.`id_product` = prs.`id_product`')
+            ->leftJoin('manufacturer', 'm', 'm.`id_manufacturer` = p.`id_manufacturer`')
             ->where('pl.`id_lang` = ' . (int)$this->module->language_id)
             ->where('prs.`id_shop` = ' . (int)Context::getContext()->shop->id)
             ->where('prs.`active` = 1');
-            //->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date');
+        //->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date');
 
         //=========================================
         //         SEARCH CLAUSE(only sku and name)
@@ -657,6 +658,7 @@ class ReverbSync
                 $where .= 'LOWER(pl.name) LIKE "%'.Tools::strtolower($value).'%"';
                 $where .= ' OR LOWER(p.reference) LIKE "%'.Tools::strtolower($value).'%"';
                 $where .= ' OR LOWER(cl.name) LIKE "%'.Tools::strtolower($value).'%"';
+                $where .= ' OR LOWER(m.name) LIKE "%'.Tools::strtolower($value).'%"';
             }
             $sql->where($where);
         }
@@ -705,21 +707,21 @@ class ReverbSync
         $sql = $this->getAllProductsQuery($search, $orderBy, $orderWay);
         $sql->leftJoin('reverb_shipping_methods', 'rsm', 'ra.`id_attribute` = rsm.`id_attribute`')
             ->select(
-            'p.id_product, ' .
-            'p.reference as reference,' .
-            'pl.name as name,' .
-            'ra.reverb_enabled as reverb_enabled, ' .
-            'ra.model, ' .
-            'ra.offers_enabled, ' .
-            'ra.finish, ' .
-            'ra.origin_country_code, ' .
-            'ra.tax_exempt, ' .
-            'ra.year, ' .
-            'ra.id_condition, ' .
-            'ra.id_shipping_profile, ' .
-            'ra.shipping_local, ' .
-            'GROUP_CONCAT(CONCAT (rsm.region_code, \':\', rsm.rate) SEPARATOR \'|\') AS shippings'
-        )
+                'p.id_product, ' .
+                'p.reference as reference,' .
+                'pl.name as name,' .
+                'ra.reverb_enabled as reverb_enabled, ' .
+                'ra.model, ' .
+                'ra.offers_enabled, ' .
+                'ra.finish, ' .
+                'ra.origin_country_code, ' .
+                'ra.tax_exempt, ' .
+                'ra.year, ' .
+                'ra.id_condition, ' .
+                'ra.id_shipping_profile, ' .
+                'ra.shipping_local, ' .
+                'GROUP_CONCAT(CONCAT (rsm.region_code, \':\', rsm.rate) SEPARATOR \'|\') AS shippings'
+            )
             ->groupBy(
                 'p.id_product, ' .
                 'p.reference,' .

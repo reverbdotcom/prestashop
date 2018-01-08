@@ -67,7 +67,14 @@ class HelperCron
             );
         }
 
-        return $id ? $id : true;
+        $return = '';
+        if ($id) {
+            $return = $id;
+        } else {
+            $return = true;
+        }
+
+        return $return;
     }
 
     /**
@@ -109,10 +116,11 @@ class HelperCron
      */
     private function insertSyncStatus($idCron, $code, $status = null, $details = null, $nbToSync = null, $nbSync = null)
     {
+        $date = new \DateTime();
         $exec = Db::getInstance()->insert(
             'reverb_crons',
             array(
-                'date' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'date' => $date->format('Y-m-d H:i:s'),
                 'code' => $code,
                 'number_to_sync' => (int)$nbToSync,
                 'number_sync' => (int)$nbSync,

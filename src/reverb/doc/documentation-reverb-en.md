@@ -323,6 +323,16 @@ In the message block, the Reverb module logs some information so that it can mat
 
 Your product was not sold on Reverb.com but on your ecommerce site. Upon confirmation of the order, the Reverb module sends a notification to Reverb.com to update the stock of the product. Only on products that are ready for synchronization!
 
+
+Your product was not sold on Reverb.com but on your ecommerce site. This only affects products that are synced to Reverb.
+
+Here is the detail of the stock update procedure:
+
+* Your customer places an order on your site with one or more products synced to Reverb
+* Prestashop created the order in your back office
+* The Reverb module, at the creation of the order, will update the status "To_sync" to products synchronized on Reverb
+* Your CRON system for product synchronization, launched every 5min you have set up on your hosting, will trigger the update of the stock of your products on Reverb.com
+
 _Note: You may also already have products on the Reverb.com site but whose products on PrestaShop have never been synchronized. If a command is validated on Reverb.com, the module will save the command to PrestaShop by specifying in a message of the command that the product is not synchronized and that you must pay attention to this command._
 
 ### FAQ

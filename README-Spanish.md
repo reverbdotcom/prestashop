@@ -40,7 +40,7 @@ Ve al panel administrativo de tu “hosting” para aprender como habilitar CRON
  
 Los siguientes Tasks de Cron deben configurarse:
  
-`*/5 * * * * php /var/www/html/modules/reverb/cron.php?code=product > /var/log/cron.log`
+`*/5 * * * * php /var/www/html/modules/reverb/cron.php?code=products > /var/log/cron.log`
  
 `*/8 * * * * php /var/www/html/modules/reverb/cron.php?code=orders > /var/log/cron.log`
  

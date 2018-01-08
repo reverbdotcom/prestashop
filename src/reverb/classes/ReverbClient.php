@@ -167,7 +167,15 @@ class ReverbClient extends Client
             if (!$uuid && !isset($list[$key])) {
                 $this->convertException(new \Exception($this->getEndPoint() . ' not found'));
             }
-            return $uuid ? $list : $list[$key];
+
+            $return = '';
+            if ($uuid) { 
+                $return = $list; 
+            } else {
+                $return = $list[$key];
+            }
+            
+            return $return;
         } else {
             return $list;
         }
