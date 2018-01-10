@@ -1,3 +1,7 @@
+# Version 1.4.2
+
+- Fix: Add max_execution_time = 20min for slow server
+
 # Version 1.4.1
 
 - Fix: Request for the pagination in the mass edit tab
