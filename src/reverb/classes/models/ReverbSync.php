@@ -701,8 +701,6 @@ class ReverbSync
      */
     public function getAllProductsPagination($search = array(), $orderBy = 'p.reference', $orderWay = 'ASC', $page = 1, $nbPerPage = 100)
     {
-        $count = $this->getAllProductsNb($search, $orderBy, $orderWay);
-
         /** @var DbQuery $sql */
         $sql = $this->getAllProductsQuery($search, $orderBy, $orderWay);
         $sql->leftJoin('reverb_shipping_methods', 'rsm', 'ra.`id_attribute` = rsm.`id_attribute`')
@@ -738,6 +736,13 @@ class ReverbSync
                 'ra.shipping_local'
             );
 
+        //=========================================
+        //          Count Products
+        //=========================================
+        $products_count = Db::getInstance()->executeS($sql);
+        $count['count'] = count($products_count);
+        unset($products_count);
+        //=======================
         //=========================================
         //          PAGINATION
         //=========================================
