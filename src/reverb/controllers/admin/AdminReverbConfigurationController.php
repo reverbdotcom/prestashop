@@ -333,6 +333,7 @@ class AdminReverbConfigurationController extends ModuleAdminController
 
     private function _massEditProducts($productIds)
     {
+        ini_set('max_execution_time', 1200);
         $fields = array(
             "reverb_enabled" => "reverb_enabled",
             "reverb_condition" => "id_condition",
