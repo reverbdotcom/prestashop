@@ -1,3 +1,7 @@
+# Version 1.4.1
+
+- Fix: Request for the pagination in the mass edit tab
+
 # Version 1.4.0
 
 - Fix: optimize the quality images sunced to Reverb
