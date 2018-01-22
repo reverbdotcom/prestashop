@@ -245,12 +245,16 @@ class ProductMapper
     private function getImagesUrl($product)
     {
         $urls = array();
+        $type_img = "large_default";
+        if (version_compare(_PS_VERSION_, '1.7', '<')) {
+            $type_img = "thickbox";
+        }
         if (strstr(getenv('PS_DOMAIN'), 'localhost')) {
             $urls[] = 'https://www.easyzic.com/common/datas/dossiers/6/6/acoustique-yamaha-c40-1.jpg';
         } else {
             $images = Image::getImages((int)$product['id_lang'], (int)$product['id_product']);
             foreach ($images as $image) {
-                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], $this->getImageTypeFormattedName('large'));
+                $urls[] = $this->context->link->getImageLink($product['link_rewrite'], $image['id_image'], $this->getImageTypeFormattedName($type_img));
             }
         }
         return $urls;

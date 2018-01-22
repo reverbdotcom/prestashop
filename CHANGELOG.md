@@ -1,3 +1,7 @@
+# Version 1.4.3
+
+- Fix: quality image compatibility between Prestashop 1.6 and 1.7
+
 # Version 1.4.2
 
 - Fix: Add max_execution_time = 20min for slow server
