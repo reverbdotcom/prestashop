@@ -560,9 +560,9 @@ class OrdersSyncEngine
         $this->logInfoCrons('# initCart : ' . $id_address . ' ' . $id_currency);
 
         $cart = new Cart();
-        $cart->id_shop_group = $this->context->getIdShop();
-        $cart->id_shop = $this->context->getIdShopGroup();
-        $cart->id_customer = $this->context->getIdCustomer();
+        $cart->id_shop_group = $this->context->shop->getContextShopGroupID();
+        $cart->id_shop = $this->context->shop->getContextShopID();
+        $cart->id_customer = $this->context->customer->id;
         $cart->id_carrier = 0;
         $cart->id_address_delivery = $id_address;
         $cart->id_address_invoice = $id_address;
@@ -676,9 +676,10 @@ class OrdersSyncEngine
     {
         $this->playUpdate = false;
 
+        $this->context = Context::getContext()->cloneContext();
         // Check if currency exists and is active
         $extra_vars = array('reverb_order_number' => Tools::safeOutput($orderReverb['order_number']));
-        $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product_subtotal']['currency'], $this->context->getIdShop());
+        $id_currency = Currency::getIdByIsoCode($orderReverb['amount_product_subtotal']['currency'], $this->context->shop->id);
         if (empty($id_currency)) {
             throw new Exception('Reverb order is in currency ' . $orderReverb['amount_product_subtotal']['currency'] . ' wich is not activated on your shop ' . $this->context->getIdShop());
         }
@@ -689,7 +690,7 @@ class OrdersSyncEngine
         // Create Customer
         $customer = $this->initCustomer($orderReverb);
 
-        $this->context->setIdCustomer($customer->id);
+        $this->context->customer->id = $customer->id;
         // Add customer to Context if empty
         if (!Context::getContext()->customer) {
             Context::getContext()->customer = $customer;
@@ -699,12 +700,17 @@ class OrdersSyncEngine
         $cart = $this->initCart($this->customerAddressId, $id_currency, $product, $orderReverb);
 
         $this->module->getContext()->cart = $cart;
-        $this->module->customer = new Customer($this->context->getIdCustomer());
+        $this->module->customer = new Customer($this->context->customer->id);
         $this->module->currency = new Currency((int)$this->module->getContext()->cart->id_currency);
         $this->module->language = new Language((int)$this->module->getContext()->customer->id_lang);
 
-        $shop = new Shop($this->context->getIdShop());
-        Shop::setContext(Shop::CONTEXT_SHOP, $this->context->getIdShop());
+        $shop = new Shop($cart->id_shop);
+        Shop::setContext(Shop::CONTEXT_SHOP, $cart->id_shop);
+        
+        $country = new Country($customer->getCurrentCountry($customer->id, $cart));
+        Context::getContext()->country = $country;
+
+        Context::getContext()->cloneContext();
 
         $payment_module = new \ReverbPayment();
 
@@ -751,10 +757,29 @@ class OrdersSyncEngine
         // Validate order with amount paid without shipping cost
         $this->logInfoCrons('## validateOrder');
         $amount_tax = isset($orderReverb['amount_tax']) ? (float)$orderReverb['amount_tax']['amount']:0;
+
+        $this->logInfoCrons('amount_tax= '.$amount_tax);
+        $this->logInfoCrons('order_reverb-amount-tax= '.$orderReverb['amount_tax']);
+        $this->logInfoCrons('order_reverb-amount-tax-amount= '.(float)$orderReverb['amount_tax']['amount']);
+
         $amount_without_shipping = (float)$orderReverb['amount_product_subtotal']['amount']+$amount_tax;
+
+        $this->logInfoCrons('amount_without_shipping= '.$amount_without_shipping);
+
         Configuration::set('PS_TAX',0);
+
+        $this->logInfoCrons('get ps_tax= '.Configuration::get('PS_TAX'));
+
         $cart_delivery_option = false;
-        $this->logInfoCrons(var_export(array_keys($cart_delivery_option), true));
+
+        //$this->logInfoCrons(var_export(array_keys($cart_delivery_option), true));
+
+        $this->logInfoCrons('$cart->id= '.$cart->id);
+        $this->logInfoCrons('(int)$id_order_state= '.(int)$id_order_state);
+
+        //$this->logInfoCrons('context country = ' . print_r($this->context->country,true));
+        $this->logInfoCrons(Configuration::get('PS_TAX_ADDRESS_TYPE') .'== id_address_delivery');
+
         $payment_module->validateOrder(
             $cart->id,
             (int)$id_order_state,
@@ -773,6 +798,9 @@ class OrdersSyncEngine
         // Update order object with real amounts paid (product price + shipping)
         $this->logInfoCrons('## Update order');
         $order = new Order((int)$payment_module->currentOrder);
+
+        $this->logInfoCrons('currentOrder = '.(int)$payment_module->currentOrder);
+        //$this->logInfoCrons(print_r($order,true));
 
         // check and get tax informations
         $this->checkTaxReverb($order, $orderReverb);
