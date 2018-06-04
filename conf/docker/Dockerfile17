@@ -1,6 +1,6 @@
 FROM prestashop/prestashop:1.7-7.1-apache
 
-MAINTAINER support.wallet <support.wallet@hipay.com>
+MAINTAINER Johan PROTIN <jprotin@boutiquedubio.fr>
 
 RUN apt-get update \
         && apt-get install -y ssmtp vim git cron \
