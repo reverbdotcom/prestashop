@@ -1059,56 +1059,21 @@ class OrdersSyncEngine
      */
     private function checkTaxReverb(Order $order, array $orderReverb)
     {
-        $this->logInfoCrons('#### 1');
-
         if (isset($orderReverb['total'])) {
             $total = $orderReverb['total']['amount'];
         } else {
             $total = $orderReverb['amount_product_subtotal']['amount']+$orderReverb['shipping']['amount'];
         }
-
-        $this->logInfoCrons('#### 2');
-
         $productReverb  = $this->findProductByReverbOrder($orderReverb);
-
-        $this->logInfoCrons('#### 3');
-
         $product        = new Product($this->id_product);
-
-        $this->logInfoCrons('#### 4');
-
         $address        = new Address($order->id_address_delivery);
-
-        $this->logInfoCrons('#### 5');
-
         $rate           = $product->getTaxesRate($address);
-
-        $this->logInfoCrons('#### 6');
-
         $id_tax_rules_group = Product::getIdTaxRulesGroupByIdProduct($this->id_product);
-
-        $this->logInfoCrons('#### 7');
-
         $sql = 'SELECT id_tax FROM '._DB_PREFIX_.'tax_rule WHERE id_country='. $address->id_country . ' AND id_tax_rules_group = '.$id_tax_rules_group;
-
-        $this->logInfoCrons('#### 8');
-
         $id_tax = Db::getInstance()->getValue($sql);
-
-        $this->logInfoCrons('#### 9');
-
         $shipping_tax = (float)Tools::ps_round(($orderReverb['shipping']['amount'] * (abs($rate) / 100)), _PS_PRICE_COMPUTE_PRECISION_);
-
-        $this->logInfoCrons('#### 10');
-
         $amount_tax = (float)Tools::ps_round(($orderReverb['amount_product_subtotal']['amount'] * (abs($rate) / 100)), _PS_PRICE_COMPUTE_PRECISION_);
-
-        $this->logInfoCrons('#### 11');
-
         $shipping_rate = 0;
-
-        $this->logInfoCrons('#### 12');
-
         $rate_product = 0;
 
         $this->logInfoCrons('### amount_tax = '.$amount_tax);
