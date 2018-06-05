@@ -703,6 +703,8 @@ class OrdersSyncEngine
         $this->module->currency = new Currency((int)$this->module->getContext()->cart->id_currency);
         $this->module->language = new Language((int)$this->module->getContext()->customer->id_lang);
 
+        $this->module->getContext()->language->id = (int)$this->module->getContext()->customer->id_lang;
+
         $shop = new Shop($this->context->getIdShop());
         Shop::setContext(Shop::CONTEXT_SHOP, $this->context->getIdShop());
 
@@ -754,28 +756,56 @@ class OrdersSyncEngine
         $amount_without_shipping = (float)$orderReverb['amount_product_subtotal']['amount']+$amount_tax;
         Configuration::set('PS_TAX',0);
         $cart_delivery_option = false;
-        $this->logInfoCrons(var_export(array_keys($cart_delivery_option), true));
-        $payment_module->validateOrder(
-            $cart->id,
-            (int)$id_order_state,
-            $amount_without_shipping,
-            $payment_method,
-            Tools::jsonEncode($message),
-            $extra_vars,
-            $id_currency,
-            false,
-            $this->module->customer->secure_key,
-            $shop
-        );
 
-        $this->logInfoCrons('## validateOrder finished');
+        // fix no duplicate order if error or can't load status
+        $order_id = Order::getByCartId($cart->id);
+        if (is_int($order_id)) {
+            // order exist, update only status
+            // update order status
+            $this->logInfoCrons('## update status');
+            $objOrder = new Order((int)$order_id, $this->module->getContext()->language->id);
+            // check if the status is lie the current status
+            if ($objOrder->getCurrentState() != $id_order_state) {
+                $this->logInfoCrons('## status is different = ' . $objOrder->getCurrentState() . '!=' . $id_order_state);
+                $this->updateOrderStatus($order_id,$id_order_state);
+                $this->logInfoCrons('## update status ok');
+            } else {
+                $this->logInfoCrons('## Status is same like current status ' . $objOrder->getCurrentState() . '!=' . $id_order_state);
+            }
+        } else {
+            // create new order
+            $this->logInfoCrons('## validateOrder start');
+            $payment_module->validateOrder(
+                $cart->id,
+                (int)$id_order_state,
+                $amount_without_shipping,
+                $payment_method,
+                json_encode($message),
+                $extra_vars,
+                $id_currency,
+                false,
+                $this->module->customer->secure_key,
+                $shop
+            );
+            $this->logInfoCrons('## validateOrder finished');
+        }
 
         // Update order object with real amounts paid (product price + shipping)
         $this->logInfoCrons('## Update order');
-        $order = new Order((int)$payment_module->currentOrder);
+        $this->logInfoCrons('##id order = ' . (int)$payment_module->currentOrder );
+        try{
+            $order = new Order((int)$payment_module->currentOrder, $this->module->getContext()->language->id);
+        }catch(Exception $e){
+            $this->module->logs->errorLogs($e->getMessage());
+        }
+
 
         // check and get tax informations
+        $this->logInfoCrons('## execute checkTaxReverb');
+
         $this->checkTaxReverb($order, $orderReverb);
+
+        $this->logInfoCrons('## end checkTaxReverb');
 
         if (in_array($orderReverb['status'], ReverbOrders::getReverbStatusesForInvoiceCreation())) {
             $this->updatePsOrderAmounts($order, $orderReverb);
@@ -945,7 +975,7 @@ class OrdersSyncEngine
         $this->logInfoCrons('### with firstname: ' . $order['buyer_first_name'] . ', lastname: ' . $order['buyer_last_name']);
         $this->logInfoCrons($sql);
         $res = Db::getInstance()->executeS($sql);
-        $this->logInfoCrons($res);
+        $this->logInfoCrons(print_r($res,TRUE));
 
         $customerIds = array();
 
@@ -1027,23 +1057,20 @@ class OrdersSyncEngine
     /**
      *
      */
-    private function checkTaxReverb(Order $order, array $orderReverb, $total)
+    private function checkTaxReverb(Order $order, array $orderReverb)
     {
         if (isset($orderReverb['total'])) {
             $total = $orderReverb['total']['amount'];
         } else {
             $total = $orderReverb['amount_product_subtotal']['amount']+$orderReverb['shipping']['amount'];
         }
-
         $productReverb  = $this->findProductByReverbOrder($orderReverb);
         $product        = new Product($this->id_product);
         $address        = new Address($order->id_address_delivery);
         $rate           = $product->getTaxesRate($address);
         $id_tax_rules_group = Product::getIdTaxRulesGroupByIdProduct($this->id_product);
-
         $sql = 'SELECT id_tax FROM '._DB_PREFIX_.'tax_rule WHERE id_country='. $address->id_country . ' AND id_tax_rules_group = '.$id_tax_rules_group;
         $id_tax = Db::getInstance()->getValue($sql);
-
         $shipping_tax = (float)Tools::ps_round(($orderReverb['shipping']['amount'] * (abs($rate) / 100)), _PS_PRICE_COMPUTE_PRECISION_);
         $amount_tax = (float)Tools::ps_round(($orderReverb['amount_product_subtotal']['amount'] * (abs($rate) / 100)), _PS_PRICE_COMPUTE_PRECISION_);
         $shipping_rate = 0;

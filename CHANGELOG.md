@@ -1,3 +1,9 @@
+# Version 1.4.4
+
+- Fix: no duplication of order when the status is on Error
+- Fix: update the language context before the validateOrder (block message Can't load status)
+- Fix: update dockerfile with the prestashop 1.7 latest
+
 # Version 1.4.3
 
 - Fix: quality image compatibility between Prestashop 1.6 and 1.7
