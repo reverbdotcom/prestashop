@@ -59,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.4.4';
+        $this->version = '1.4.5';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
