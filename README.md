@@ -82,10 +82,15 @@ Read the **[project documentation][doc-home-en] in English** for comprehensive i
 The **Reverb.com** is available under the **Apache 2.0 License**. Check out the [license file][project-license] for more information.
 
 
-[doc-home-fr]: https://github.com/jprotin/reverb-prestashop/blob/develop/src/reverb/doc/documentation-reverb-fr.md
-[doc-home-en]: https://github.com/jprotin/reverb-prestashop/blob/develop/src/reverb/doc/documentation-reverb-fr.md
+[doc-home-fr]: https://github.com/reverbdotcom/prestashop/blob/master/src/reverb/doc/documentation-reverb-fr.md
+[doc-home-en]: https://github.com/reverbdotcom/prestashop/blob/master/src/reverb/doc/documentation-reverb-en.md
 [reverb-help]: https://reverb.com/fr/page/contact
-[project-issues]: https://github.com/jprotin/reverb-prestashop
+[project-issues]: https://github.com/reverbdotcom/prestashop/
 [project-license]: LICENSE.md
 [project-changelog]: CHANGELOG.md
 [project-contributing]: CONTRIBUTING.md
+
++[doc-home-fr]: https://github.com/reverbdotcom/prestashop/blob/master/src/reverb/doc/documentation-reverb-fr.md
+-[doc-home-en]: https://github.com/jprotin/reverb-prestashop/blob/develop/src/reverb/doc/documentation-reverb-fr.md	+[doc-home-en]: https://github.com/reverbdotcom/prestashop/blob/master/src/reverb/doc/documentation-reverb-en.md
+ [reverb-help]: https://reverb.com/fr/page/contact	 [reverb-help]: https://reverb.com/fr/page/contact
+-[project-issues]: https://github.com/jprotin/reverb-prestashop	+[project-issues]: https://github.com/reverbdotcom/prestashop/
