@@ -245,7 +245,7 @@ class ProductMapper
     private function getImagesUrl($product)
     {
         $urls = array();
-        $type_img = "large_default";
+        $type_img = "large";
         if (version_compare(_PS_VERSION_, '1.7', '<')) {
             $type_img = "thickbox";
         }

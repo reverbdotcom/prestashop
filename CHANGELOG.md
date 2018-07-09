@@ -1,3 +1,7 @@
+# Version 1.4.5
+
+- Fix: replace image type "large_default" by "large" when the listing sync is n progress
+
 # Version 1.4.4
 
 - Fix: no duplication of order when the status is on Error
