@@ -58,6 +58,7 @@ class OrdersSyncEngine
     public $reverbSync;
 
     public $playUpdate = false;
+    public $originShipped = false;
 
     private $result_tax;
 
@@ -201,7 +202,15 @@ class OrdersSyncEngine
             $this->nbOrdersSynced++;
             $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is now synced with id : ' . $idOrder);
 
-            if ($this->playUpdate) {
+            if ($this->originShipped) {
+                // Origin status = shipped -> update status to Payment accepted
+                $distReverbOrder['status'] = ReverbOrders::REVERB_ORDERS_STATUS_PAID;
+                $this->updatePaidOrder($idOrder, $distReverbOrder);
+                // Origin status = shipped -> update status to Shipped after the payment accepted
+                $distReverbOrder['status'] = ReverbOrders::REVERB_ORDERS_STATUS_SHIPPED;
+                $this->updatePaidOrder($idOrder, $distReverbOrder);
+
+            } else if ($this->playUpdate && !$this->originShipped) {
                 $this->updatePaidOrder($idOrder, $distReverbOrder);
             }
 
@@ -308,7 +317,15 @@ class OrdersSyncEngine
                 $this->nbOrdersSynced++;
                 $this->logInfoCrons('# Order ' . $distReverbOrder['order_number'] . ' is now synced with id : ' . $idOrder);
 
-                if ($this->playUpdate) {
+                if ($this->originShipped) {
+                    // Origin status = shipped -> update status to Payment accepted
+                    $distReverbOrder['status'] = ReverbOrders::REVERB_ORDERS_STATUS_PAID;
+                    $this->updatePaidOrder($idOrder, $distReverbOrder);
+                    // Origin status = shipped -> update status to Shipped after the payment accepted
+                    $distReverbOrder['status'] = ReverbOrders::REVERB_ORDERS_STATUS_SHIPPED;
+                    $this->updatePaidOrder($idOrder, $distReverbOrder);
+
+                } else if ($this->playUpdate && !$this->originShipped) {
                     $this->updatePaidOrder($idOrder, $distReverbOrder);
                 }
 
@@ -454,14 +471,16 @@ class OrdersSyncEngine
         // Update PS order according reverb order status
         $id_order_state = ReverbOrders::getPsStateAccordingReverbStatus($distReverbOrder['status']);
 
-        $order_history = new OrderHistory();
-        $order_history->id_order = $psOrder->id;
-        $order_history->id_order_state = $id_order_state;
-        $order_history->changeIdOrderState($id_order_state, $psOrder->id);
-        $order_history->add();
+        if ($psOrder->current_state != $id_order_state) {
+            $order_history = new OrderHistory();
+            $order_history->id_order = $psOrder->id;
+            $order_history->id_order_state = $id_order_state;
+            $order_history->changeIdOrderState($id_order_state, $psOrder->id);
+            $order_history->add();
 
-        $psOrder->current_state = $id_order_state;
-        $psOrder->update();
+            $psOrder->current_state = $id_order_state;
+            $psOrder->update();
+        }
     }
 
     /**
@@ -675,6 +694,7 @@ class OrdersSyncEngine
     public function createPrestashopOrder($orderReverb)
     {
         $this->playUpdate = false;
+        $this->originShipped = false;
 
         // Check if currency exists and is active
         $extra_vars = array('reverb_order_number' => Tools::safeOutput($orderReverb['order_number']));
@@ -748,6 +768,15 @@ class OrdersSyncEngine
         if ($orderReverb['status'] == ReverbOrders::REVERB_ORDERS_STATUS_PAID) {
             $id_order_state = Configuration::get('REVERB_OS_PENDING_PAYMENT');
             $this->playUpdate = true;
+            $this->logInfoCrons('## no origin shipped - If status = '.$orderReverb['status'].' then Order state set to ' . $id_order_state);
+        }
+
+        // Exception for shipped status => pending payment anyway
+        if ($orderReverb['status'] == ReverbOrders::REVERB_ORDERS_STATUS_SHIPPED) {
+            $id_order_state = Configuration::get('REVERB_OS_PENDING_PAYMENT');
+            $this->playUpdate = true;
+            $this->originShipped = true;
+            $this->logInfoCrons('## origin shipped - If status = '.$orderReverb['status'].' then Order state set to ' . $id_order_state);
         }
 
         // Validate order with amount paid without shipping cost
@@ -758,7 +787,12 @@ class OrdersSyncEngine
         $cart_delivery_option = false;
 
         // fix no duplicate order if error or can't load status
-        $order_id = Order::getByCartId($cart->id);
+        //$order_id = Order::getByCartId($cart->id);
+        if (_PS_VERSION_ >= '1.7.1.0') {
+            $order_id = Order::getIdByCartId($cart->id);
+        } else {
+            $order_id = Order::getOrderByCartId($cart->id);
+        }
         if (is_int($order_id)) {
             // order exist, update only status
             // update order status
@@ -775,6 +809,18 @@ class OrdersSyncEngine
         } else {
             // create new order
             $this->logInfoCrons('## validateOrder start');
+
+
+            $this->logInfoCrons('## $cart->id = '.$cart->id);
+            $this->logInfoCrons('## (int)$id_order_state = '.(int)$id_order_state);
+            $this->logInfoCrons('## $amount_without_shipping = '.$amount_without_shipping);
+            $this->logInfoCrons('## $payment_method = '.$payment_method);
+            $this->logInfoCrons('## json_encode($message) = '.json_encode($message));
+            $this->logInfoCrons('## $extra_vars = '.json_encode($extra_vars));
+            $this->logInfoCrons('## $id_currency = '.$id_currency);
+            $this->logInfoCrons('## $this->module->customer->secure_key = '.$this->module->customer->secure_key);
+
+
             $payment_module->validateOrder(
                 $cart->id,
                 (int)$id_order_state,

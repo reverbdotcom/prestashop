@@ -1,3 +1,7 @@
+# Version 1.4.6
+
+- Fix: Integration Reverb orders with status shipped in Prestashop when Prestashop orders don't exist
+
 # Version 1.4.5
 
 - Fix: replace image type "large_default" by "large" when the listing sync is n progress

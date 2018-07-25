@@ -122,7 +122,7 @@ class ReverbOrders
             self::REVERB_ORDERS_STATUS_PAID,
             self::REVERB_ORDERS_STATUS_PARTIALLY_PAID,
             self::REVERB_ORDERS_STATUS_PICKED_UP,
-            self::REVERB_ORDERS_STATUS_SHIPPED,
+            //self::REVERB_ORDERS_STATUS_SHIPPED,
             self::REVERB_ORDERS_STATUS_RECEIVED,
         );
     }
@@ -146,9 +146,12 @@ class ReverbOrders
                 return Configuration::get('REVERB_OS_PARTIALLY_PAID');
                 break;
 
+            case self::REVERB_ORDERS_STATUS_SHIPPED:
+                return Configuration::get('PS_OS_SHIPPING');
+                break;
+
             /** Prestashop statuses */
             case self::REVERB_ORDERS_STATUS_PICKED_UP:
-            case self::REVERB_ORDERS_STATUS_SHIPPED:
             case self::REVERB_ORDERS_STATUS_RECEIVED:
                 return Configuration::get('PS_OS_DELIVERED');
                 break;
