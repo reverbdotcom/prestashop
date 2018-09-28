@@ -1,3 +1,7 @@
+# Version 1.4.7
+
+- Fix: If stock = 0 and Publish = true in the listing sync, the sync force publish = false.
+
 # Version 1.4.6
 
 - Fix: Integration Reverb orders with status shipped in Prestashop when Prestashop orders don't exist
