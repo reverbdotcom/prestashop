@@ -138,7 +138,7 @@ class ProductMapper
         }
 
         if ($this->module->getReverbConfig(\Reverb::KEY_SETTINGS_AUTO_PUBLISH)) {
-            $product->publish = 1;
+            $product->publish = $product_ps['quantity_stock'] > 0 ? 1 : false;
         }
 
         return $product;
