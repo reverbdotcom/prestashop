@@ -39,6 +39,7 @@ class ReverbSync
         $sql->from('reverb_attributes', 'ra')
             ->innerJoin('product', 'p', 'ra.`id_product` = p.`id_product`')
             ->innerJoin('product_lang', 'pl', 'pl.`id_product` = p.`id_product`')
+            ->innerJoin('product_shop', 'ps', 'ps.`id_product` = p.`id_product`')
             ->leftJoin('product_attribute', 'pa', 'pa.`id_product` = p.`id_product`')
             ->leftJoin('reverb_sync', 'rs', 'rs.`id_product` = p.`id_product` AND (pa.`id_product_attribute` IS NULL OR rs.`id_product_attribute` = pa.`id_product_attribute`)')
             ->leftJoin('product_attribute_combination', 'pac', 'pac.`id_product_attribute` = pa.`id_product_attribute`')
@@ -46,8 +47,11 @@ class ReverbSync
             ->leftJoin('attribute_group', 'ag', 'ag.`id_attribute_group` = a.`id_attribute_group`')
             ->leftJoin('attribute_lang', 'al', 'al.`id_attribute` = a.`id_attribute` AND al.`id_lang` = ' . $this->module->language_id)
             ->leftJoin('attribute_group_lang', 'agl', 'agl.`id_attribute_group` = ag.`id_attribute_group` AND agl.`id_lang` = ' . $this->module->language_id)
+            ->leftJoin('stock_available','sa','sa.id_product=p.id_product AND sa.id_product_attribute=pa.id_product_attribute AND sa.id_product_attribute > 0')
+            ->leftJoin('stock_available','saa','saa.id_product=p.id_product AND saa.id_product_attribute = 0')
             ->where('ra.`reverb_enabled` = 1')
             ->where('pl.`id_lang` = ' . (int)$this->module->language_id)
+            ->where('ps.id_shop = '.(int)Context::getContext()->shop->id)
             ->groupBy('p.id_product, p.reference, rs.status, rs.reverb_id, rs.details, rs.reverb_slug, rs.date, pa.id_product_attribute, pa.upc, pa.ean13');
 
         //=========================================
@@ -108,7 +112,8 @@ class ReverbSync
             'rs.details as details,' .
             'rs.reverb_slug as reverb_slug, ' .
             'rs.date as date, ' .
-            'pa.id_product_attribute as id_product_attribute'
+            'pa.id_product_attribute as id_product_attribute, ' .
+            'IF (pa.id_product_attribute IS NULL, saa.quantity, sa.quantity) as quantity'
         );
 
         $this->getListBaseSql($sql, $list_field, $force_search);
@@ -128,6 +133,11 @@ class ReverbSync
             $n = Tools::getValue('selected_pagination') ? Tools::getValue('selected_pagination'):50;
             $sql->limit((int)$n, ($page-1) * (int)$n);
         }
+
+
+        $log_sql = $sql->__toString();
+        $this->module->logs->infoLogs('#*#*#*#'.$log_sql);
+
         $result = Db::getInstance()->executeS($sql);
 
         return $result;
