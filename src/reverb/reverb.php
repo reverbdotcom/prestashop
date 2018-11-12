@@ -800,7 +800,7 @@ class Reverb extends Module
                 ),
                 'reference' => array(
                     'title' => $this->l('SKU'),
-                    'width' => 140,
+                    'width' => 70,
                     'type' => 'text',
                     'filter_key' => 'p!reference'
                 ),
@@ -809,6 +809,12 @@ class Reverb extends Module
                     'width' => 140,
                     'type' => 'text',
                     'filter_key' => 'pl!name'
+                ),
+                'quantity'=> array(
+                    'title' => $this->l('Quantity'),
+                    'width' => 70,
+                    'type' => 'int',
+                    'filter_key' => 'sa!quantity'
                 ),
                 'status' => array(
                     'title' => $this->l('Sync Status'),
@@ -1354,6 +1360,15 @@ class Reverb extends Module
                 'width' => 140,
                 'type' => 'text',
                 'filter_key' => 'pl!name'
+            ),
+            'quantity'=> array(
+                'title' => $this->l('Quantity'),
+                'width' => 70,
+                'type' => 'int',
+                'search' => 'false',
+                'orderby' => 'true',
+                'filter_key' => 'quantity',
+                'class' => "no-show"
             ),
             'status' => array(
                 'title' => $this->l('Sync Status'),
