@@ -13,6 +13,18 @@ namespace Reverb;
 
 class ReverbUtils extends ReverbClient
 {
+    /**
+     * Get all values from $_POST/$_GET
+     * @return mixed
+     */
+    public static function getAllValues()
+    {
+        if (_PS_VERSION_ >= '1.6.1.0') {
+            return Tools::getAllValues();
+        } else {
+            return $_POST + $_GET;
+        }
+    }
 
     /**
      * Get all object for an endpoint or one by uuid

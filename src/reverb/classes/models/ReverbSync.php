@@ -178,7 +178,7 @@ class ReverbSync
      */
     protected function processFilter($list_field, DbQuery $sql)
     {
-        $values = Tools::getAllValues();
+        $values = ReverbUtils::getAllValues();
         $sql_filter = '';
 
         foreach ($values as $key => $params) {

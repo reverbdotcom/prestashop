@@ -36,10 +36,10 @@ echo "Import data = $IMPORT_SAMPLE_DATA"
 #    mysql -h mysql -u $DB_USER -p$DB_PASSWD $DB_NAME < /tmp/sql/reverb_ps_product.sql
 #fi
 
-if [ $ACTIVE_XDEBUG ];then
-    echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/xdebug.ini
-    echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
-fi
+#if [ $ACTIVE_XDEBUG ];then
+#    echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/xdebug.ini
+#    echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
+#fi
 
 #===================================#
 #       START WEBSERVER
