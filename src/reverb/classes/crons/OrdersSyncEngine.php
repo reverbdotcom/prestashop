@@ -31,8 +31,6 @@ class OrdersSyncEngine
     const ADDRESS_GENERIC = 'pickup';
 
     const CODE_CRON_ORDERS = 'orders';
-    const CODE_CRON_ORDERS_RECONCILIATION = 'orders-reconciliation';
-    const CODE_CRON_PRODUCTS = 'products';
 
     const ERROR_IGNORED = 2;
 

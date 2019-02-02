@@ -1730,6 +1730,15 @@ class Reverb extends Module
         }
         return false;
     }
+
+    public function getAllValues()
+    {
+        if (_PS_VERSION_ >= '1.6.1.0') {
+            return Tools::getAllValues();
+        } else {
+            return $_POST + $_GET;
+        }
+    }
 }
 
 require_once(dirname(__FILE__) . '/controllers/admin/AdminReverbConfigurationController.php');

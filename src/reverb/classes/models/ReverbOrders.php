@@ -243,7 +243,7 @@ class ReverbOrders
 
     protected function processFilter($list_field, DbQuery $sql)
     {
-        $values = ReverbUtils::getAllValues();
+        $values = $this->module->getAllValues();
 
         foreach ($values as $key => $params) {
             if (preg_match('/' . Reverb::LIST_ORDERS_ID . 'Filter_/', $key) && !empty($params)) {
