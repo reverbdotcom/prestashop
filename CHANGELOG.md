@@ -1,3 +1,7 @@
+# Version 1.5.1
+
+- Fix: retro-compatibility Tools::getAllValues() < PS 1.6.1.0
+
 # Version 1.5.0
 
 - New: Add a new column in the Sync status tab : quantity

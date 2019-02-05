@@ -59,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.5.0';
+        $this->version = '1.5.1';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -1729,6 +1729,15 @@ class Reverb extends Module
             return true;
         }
         return false;
+    }
+
+    public function getAllValues()
+    {
+        if (_PS_VERSION_ >= '1.6.1.0') {
+            return Tools::getAllValues();
+        } else {
+            return $_POST + $_GET;
+        }
     }
 }
 

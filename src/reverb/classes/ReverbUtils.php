@@ -13,7 +13,6 @@ namespace Reverb;
 
 class ReverbUtils extends ReverbClient
 {
-
     /**
      * Get all object for an endpoint or one by uuid
      *
