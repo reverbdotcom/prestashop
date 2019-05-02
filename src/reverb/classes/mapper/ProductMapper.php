@@ -91,6 +91,8 @@ class ProductMapper
         }
         if(!empty($product_ps['model'])){
             $product->model = $product_ps['model'];
+        } else {
+            $product->model = $product_ps['reference'];
         }
         $product->has_inventory = $product_ps['quantity_stock'] > 0 ? 1 : false;
         $product->inventory = $product_ps['quantity_stock'];

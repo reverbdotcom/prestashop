@@ -1,3 +1,7 @@
+# Version 1.5.2
+
+- Fix: If the Model field is empty then it is replaced by the sku automatically (available on PrestaShop product management and Reverb Bulk Edit)
+
 # Version 1.5.1
 
 - Fix: retro-compatibility Tools::getAllValues() < PS 1.6.1.0

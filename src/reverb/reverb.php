@@ -59,7 +59,7 @@ class Reverb extends Module
     {
         $this->name = 'reverb';
         $this->tab = 'market_place';
-        $this->version = '1.5.1';
+        $this->version = '1.5.2';
         $this->author = 'Johan PROTIN';
         $this->need_instance = 0;
 
@@ -1146,9 +1146,10 @@ class Reverb extends Module
     public function hookActionProductSave()
     {
         $id_product = Tools::getValue('id_product');
+        $sku = Tools::getValue('reference');
 
         if (isset($id_product) && $id_product) {
-            $model = Tools::getValue('reverb_model');
+            $model = (empty(Tools::getValue('reverb_model')) ? $sku : Tools::getValue('reverb_model'));
             $settingsReverb = Tools::getValue('reverb_enabled');
             $condition = Tools::getValue('reverb_condition');
             $finish = Tools::getValue('reverb_finish');

@@ -369,6 +369,14 @@ class AdminReverbConfigurationController extends ModuleAdminController
         $db = Db::getInstance();
 
         foreach ($productIds as $productId) {
+
+            // check if the model is empty
+            if (empty(Tools::getValue('reverb_model'))) {
+                $productObj = new Product($productId, false, $this->module->language_id);
+                $attributes['model'] =  $productObj->reference;
+                unset($productObj);
+            }
+
             // Get reverb attributes
             $attribute = $this->module->getAttribute($productId, TRUE);
 
